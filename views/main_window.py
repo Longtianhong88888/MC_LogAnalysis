@@ -10,6 +10,8 @@ class MainWindow(tk.Tk):
         self.geometry("800x600")
         self._create_menu()
         self._create_widgets()
+        self.keyword_var = tk.StringVar()
+        self.separator_var = tk.StringVar()
         # ... 其他初始化
 
     def _create_menu(self):
@@ -64,7 +66,10 @@ class MainWindow(tk.Tk):
         btn_frame.pack(pady=10)
         ttk.Button(btn_frame, text="开始解析", command=self.controller.run_parse).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_frame, text="清空结果", command=self.controller.clear_results).pack(side=tk.LEFT, padx=5)
-
+        # 进度条（初始隐藏）
+        self.progress = ttk.Progressbar(main_frame, orient='horizontal', length=400, mode='determinate')
+        self.progress.pack(pady=10)
+        self.progress.pack_forget()  # 隐藏
         # 结果显示区域（例如使用 Treeview 或 Text）
         result_frame = ttk.LabelFrame(main_frame, text="解析结果")
         result_frame.pack(fill=tk.BOTH, expand=True, pady=10)
@@ -78,9 +83,26 @@ class MainWindow(tk.Tk):
         result_frame.grid_rowconfigure(0, weight=1)
         result_frame.grid_columnconfigure(0, weight=1)
 
+
     def _show_about(self):
         messagebox.showinfo("关于", "MC Log Analysis Tool v1.0\n\n适用于多日志文件解析、筛选与拆分。")
 
     def update_result(self, text):
         self.result_text.insert(tk.END, text + "\n")
         self.result_text.see(tk.END)
+
+    def show_progress(self, value=0):
+            """显示进度条并设置当前值（0~100）"""
+            self.progress.pack(pady=10)
+            self.progress['value'] = value
+            self.update_idletasks()
+        
+    def update_progress(self, value):
+            """更新进度条数值"""
+            self.progress['value'] = value
+            self.update_idletasks()
+        
+    def hide_progress(self):
+            """完成后隐藏进度条"""
+            self.progress.pack_forget()
+   

@@ -73,3 +73,57 @@ class LogModel:
                 filtered_df.to_excel(writer, sheet_name='Filtered', index=False)
 
         return out_path
+def process(self, source_dir, output_dir, keywords=None, separator=None, progress_callback=None):
+    # 步骤1: 读取文件（占20%）
+    if progress_callback:
+        progress_callback(10)
+    all_data = read_files(source_dir)
+    if not all_data:
+        raise ValueError("未找到有效日志文件")
+    df_all = pd.DataFrame(all_data)
+    if progress_callback:
+        progress_callback(30)
+
+    # 步骤2: 筛选（占20%）
+    if keywords:
+        kw_list = re.split(r'[ ;、，]+', keywords)
+        kw_list = [k for k in kw_list if k]
+        if kw_list:
+            pattern = '|'.join(re.escape(k) for k in kw_list)
+            mask = df_all['Content'].str.contains(pattern, case=False, na=False)
+            filtered_df = df_all[mask].copy()
+        else:
+            filtered_df = df_all.copy()
+    else:
+        filtered_df = df_all.copy()
+    if progress_callback:
+        progress_callback(50)
+
+    # 步骤3: 判断是否生成Filtered及拆分（占30%）
+    has_filtered_rows = not filtered_df.empty
+    has_separator = separator is not None and separator != ''
+    generate_filtered = has_filtered_rows or has_separator
+
+    if generate_filtered:
+        if not has_filtered_rows and has_separator:
+            filtered_df = df_all.copy()
+            has_filtered_rows = True
+        if has_separator:
+            sep = separator
+            if sep == '\\t':
+                sep = '\t'
+            # 拆分逻辑...
+            # （此处略，保持原有代码）
+        if progress_callback:
+            progress_callback(70)
+
+    # 步骤4: 写入Excel（占30%）
+    out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
+    with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
+        df_all.to_excel(writer, sheet_name='AllLogs', index=False)
+        if generate_filtered and filtered_df is not None and not filtered_df.empty:
+            filtered_df.to_excel(writer, sheet_name='Filtered', index=False)
+    if progress_callback:
+        progress_callback(100)
+
+    return out_path
