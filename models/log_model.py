@@ -2,9 +2,11 @@ import os
 import re
 import pandas as pd
 from utils.file_utils import read_files, clean_for_excel
-
+import time  # 在文件顶部导入
 class LogModel:
     def process(self, source_dir, output_dir, keywords=None, separator=None, progress_callback=None):
+        # 强制延迟 0.5 秒，确保 Windows 渲染线程有时间刷新界面
+        time.sleep(0.5)
         # 步骤1: 读取文件（进度 10%）
         if progress_callback:
             progress_callback(10)

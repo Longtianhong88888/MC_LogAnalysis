@@ -91,17 +91,14 @@ class MainWindow(tk.Tk):
         self.result_text.see(tk.END)
 
     # ---- 修正缩进（改为4个空格） ----
-    def show_progress(self, value=0):
-        """显示进度条并设置当前值（0~100）"""
-        self.progress.pack(pady=10)
-        self.progress['value'] = value
-        self.update_idletasks()
+def show_progress(self, value=0):
+    self.progress.pack(pady=10)
+    self.progress['value'] = value
+    self.update()  # Windows 下强制刷新
 
-    def update_progress(self, value):
-        """更新进度条数值"""
-        self.progress['value'] = value
-        self.update_idletasks()
+def update_progress(self, value):
+    self.progress['value'] = value
+    self.update()  # 保证每一步都刷新
 
-    def hide_progress(self):
-        """完成后隐藏进度条"""
-        self.progress.pack_forget()
+def hide_progress(self):
+    self.after(1500, self.progress.pack_forget)  # 延迟 1.5 秒隐藏
