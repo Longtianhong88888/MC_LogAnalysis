@@ -9,9 +9,6 @@ class MainWindow(tk.Tk):
         self.geometry("800x600")
         self._create_menu()
         self._create_widgets()
-        # 删除下面两行，因为已经在 _create_widgets 中定义了
-        # self.keyword_var = tk.StringVar()
-        # self.separator_var = tk.StringVar()
 
     def _create_menu(self):
         menubar = tk.Menu(self)
@@ -35,7 +32,6 @@ class MainWindow(tk.Tk):
         main_frame = ttk.Frame(self)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # 路径区域
         path_frame = ttk.Frame(main_frame)
         path_frame.pack(fill=tk.X, pady=5)
         ttk.Label(path_frame, text="源文件夹：").grid(row=0, column=0, sticky=tk.W)
@@ -48,7 +44,6 @@ class MainWindow(tk.Tk):
         ttk.Entry(path_frame, textvariable=self.out_path_var, width=60).grid(row=1, column=1, padx=5)
         ttk.Button(path_frame, text="浏览", command=self.controller.browse_output).grid(row=1, column=2)
 
-        # 参数区域
         param_frame = ttk.LabelFrame(main_frame, text="解析参数")
         param_frame.pack(fill=tk.X, pady=10)
         ttk.Label(param_frame, text="关键词（空格/分号分隔）：").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
@@ -59,7 +54,6 @@ class MainWindow(tk.Tk):
         self.separator_var = tk.StringVar()
         ttk.Entry(param_frame, textvariable=self.separator_var, width=20).grid(row=1, column=1, sticky=tk.W, padx=5)
 
-        # 按钮区域
         btn_frame = ttk.Frame(main_frame)
         btn_frame.pack(pady=10)
         ttk.Button(btn_frame, text="开始解析", command=self.controller.run_parse).pack(side=tk.LEFT, padx=5)
@@ -70,7 +64,6 @@ class MainWindow(tk.Tk):
         self.progress.pack(pady=10)
         self.progress.pack_forget()
 
-        # 结果区域
         result_frame = ttk.LabelFrame(main_frame, text="解析结果")
         result_frame.pack(fill=tk.BOTH, expand=True, pady=10)
         self.result_text = tk.Text(result_frame, wrap=tk.NONE)
@@ -90,15 +83,23 @@ class MainWindow(tk.Tk):
         self.result_text.insert(tk.END, text + "\n")
         self.result_text.see(tk.END)
 
-    # ---- 修正缩进（改为4个空格） ----
-def show_progress(self, value=0):
-    self.progress.pack(pady=10)
-    self.progress['value'] = value
-    self.update()  # Windows 下强制刷新
+    def show_progress(self, value=0):
+        try:
+            self.progress.pack(pady=10)
+            self.progress['value'] = value
+            self.update()
+        except Exception as e:
+            print(f"进度条显示异常：{e}")
 
-def update_progress(self, value):
-    self.progress['value'] = value
-    self.update()  # 保证每一步都刷新
+    def update_progress(self, value):
+        try:
+            self.progress['value'] = value
+            self.update()
+        except:
+            pass
 
-def hide_progress(self):
-    self.after(1500, self.progress.pack_forget)  # 延迟 1.5 秒隐藏
+    def hide_progress(self):
+        try:
+            self.after(1500, self.progress.pack_forget)
+        except:
+            pass

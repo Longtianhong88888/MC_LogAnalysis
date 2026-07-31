@@ -2,24 +2,26 @@ import os
 import re
 import pandas as pd
 from utils.file_utils import read_files, clean_for_excel
-import time  # 在文件顶部导入
+import time   # 确保导入
+
 class LogModel:
     def process(self, source_dir, output_dir, keywords=None, separator=None, progress_callback=None):
-        # 强制延迟 0.5 秒，确保 Windows 渲染线程有时间刷新界面
-        time.sleep(0.5)
-        # 步骤1: 读取文件（进度 10%）
+        # 给进度条一个显示机会（在 Windows 下尤其重要）
+        if progress_callback:
+            progress_callback(5)
+        time.sleep(0.2)  # 200ms 让界面刷新
+
         if progress_callback:
             progress_callback(10)
-        
+
         all_data = read_files(source_dir)
         if not all_data:
             raise ValueError("未找到有效日志文件")
         df_all = pd.DataFrame(all_data)
-        
+
         if progress_callback:
             progress_callback(30)
 
-        # 步骤2: 筛选（进度 50%）
         if keywords:
             kw_list = re.split(r'[ ;、，]+', keywords)
             kw_list = [k for k in kw_list if k]
@@ -31,11 +33,10 @@ class LogModel:
                 filtered_df = df_all.copy()
         else:
             filtered_df = df_all.copy()
-        
+
         if progress_callback:
             progress_callback(50)
 
-        # 步骤3: 决定是否生成 Filtered 表及拆分（进度 70%）
         has_filtered_rows = not filtered_df.empty
         has_separator = separator is not None and separator != ''
         generate_filtered = has_filtered_rows or has_separator
@@ -44,7 +45,6 @@ class LogModel:
             if not has_filtered_rows and has_separator:
                 filtered_df = df_all.copy()
                 has_filtered_rows = True
-
             if has_separator:
                 sep = separator
                 if sep == '\\t':
@@ -68,13 +68,11 @@ class LogModel:
                     pd.DataFrame({'OriginalContent': filtered_df['Content']}),
                     split_df
                 ], axis=1)
-                # 删除原 Content 列（因为已经用 OriginalContent 替换）
                 filtered_df = filtered_df.drop(columns=['Content'])
 
         if progress_callback:
             progress_callback(70)
 
-        # 步骤4: 写入 Excel（进度 100%）
         out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
         with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
             df_all.to_excel(writer, sheet_name='AllLogs', index=False)
