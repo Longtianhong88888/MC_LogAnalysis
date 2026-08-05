@@ -88,6 +88,21 @@ class LogModelTest(unittest.TestCase):
             f.write("2026-07-08 00:00:00 真空信号不达标\n".encode("gbk"))
         self.assertIn(detect_encoding(path).lower(), ("gbk", "gb2312"))
 
+    def test_excel_formatting(self):
+        out = os.path.join(tempfile.mkdtemp(), "fmt.xlsx")
+        LogModel._write_sheets(out, {"S": pd.DataFrame({"名称": ["A", "B"], "数量": [1, ""]})})
+        from openpyxl import load_workbook
+        ws = load_workbook(out)["S"]
+        header = ws.cell(row=1, column=1)
+        self.assertIn("DDEBF7", str(header.fill.start_color.rgb))  # 表头浅蓝
+        self.assertTrue(header.font.bold)                           # 表头加粗
+        content = ws.cell(row=2, column=1)
+        self.assertEqual(content.border.left.style, "thin")        # 有内容加框线
+        self.assertEqual(content.alignment.horizontal, "center")   # 内容居中
+        empty = ws.cell(row=3, column=2)
+        self.assertIsNone(empty.border.left.style)                 # 空单元格无格线
+        self.assertGreaterEqual(ws.column_dimensions['A'].width, 6)  # 列宽自适应
+
 
 if __name__ == "__main__":
     unittest.main()

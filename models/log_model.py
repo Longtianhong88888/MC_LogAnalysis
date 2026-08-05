@@ -2,6 +2,9 @@ import os
 import re
 
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 
 from models.analysis import (
     analyze_status,
@@ -42,6 +45,52 @@ class LogModel:
                         chunk = df.iloc[i * max_rows:(i + 1) * max_rows]
                         name = f"{sheet_name}_{i + 1}"[:31]
                         chunk.to_excel(writer, sheet_name=name, index=False)
+        LogModel._format_workbook(out_path)
+
+    # 超大表逐格样式上限（超过则只做表头/列宽，避免卡死）
+    MAX_FORMAT_ROWS = 200000
+
+    @staticmethod
+    def _format_workbook(path):
+        """统一 Excel 样式：列宽自适应、内容居中、有内容加框线、表头浅蓝加粗。"""
+        thin = Side(style='thin')
+        border = Border(left=thin, right=thin, top=thin, bottom=thin)
+        center = Alignment(horizontal='center', vertical='center')
+        header_fill = PatternFill('solid', fgColor='DDEBF7')  # 浅蓝色
+        header_font = Font(bold=True)
+
+        wb = load_workbook(path)
+        for ws in wb.worksheets:
+            # 表头：浅蓝填充 + 加粗 + 居中
+            for cell in ws[1]:
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = center
+
+            # 列宽自适应（中文按 2 字符宽计）
+            for col_cells in ws.columns:
+                letter = get_column_letter(col_cells[0].column)
+                max_len = 0
+                for cell in col_cells:
+                    if cell.value is None:
+                        continue
+                    length = sum(2 if ord(ch) > 127 else 1 for ch in str(cell.value))
+                    if length > max_len:
+                        max_len = length
+                ws.column_dimensions[letter].width = min(max(max_len + 2, 8), 60)
+
+            # 超大表跳过逐格样式，避免导出卡死
+            if ws.max_row > LogModel.MAX_FORMAT_ROWS:
+                continue
+
+            # 内容单元格：居中 + 有内容加框线（空单元格保持无格线）
+            for row in ws.iter_rows(min_row=2):
+                for cell in row:
+                    if cell.value is None or str(cell.value) == '':
+                        continue
+                    cell.alignment = center
+                    cell.border = border
+        wb.save(path)
 
     # ---------- 功能一：文档合并与内容拆分 ----------
     def process(self, source_dir, output_dir, keywords=None, separator=None,
