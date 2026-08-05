@@ -66,6 +66,21 @@ PROCESS_TEMPLATES = {
             "file_filters": ["RAYPRUS交互记录"],
         },
     },
+    "FR 机台": {
+        "description": "FR 机台：RAYPRUS 协议日志（方括号时间戳），状态/EM 产量按协议解析，无单件完成标记，UPH 以 EM 口径为准",
+        "file_filters": None,
+        "UPH分析": {
+            "trigger_keywords": "",
+            "units_per_cycle": 1,
+            "normal_threshold": 10.0,
+            "planned_threshold": 900.0,
+        },
+        "EFF分析": {},
+        "报警分析": {
+            "alarm_keywords": "报警,ALARM,ERROR,NG,失败,异常,不达标",
+        },
+        "机台状态分析": {},
+    },
 }
 
 

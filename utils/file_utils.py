@@ -15,11 +15,17 @@ def detect_encoding(file_path):
     with open(file_path, 'rb') as f:
         raw = f.read(10000)
         result = chardet.detect(raw)
-        return result['encoding'] or 'utf-8'
+        enc = result['encoding'] or 'utf-8'
+        # chardet 对中文日志（UTF-8 或 GBK）常误判为单字节编码（latin-1/iso-8859-* 等）导致中文乱码。
+        # 遇到单字节编码时不信任该结果：优先按 UTF-8 尝试，失败后由调用方回退 GBK。
+        low = enc.lower()
+        if any(k in low for k in ('latin', 'iso-8859', 'windows-125', 'mac_')):
+            return 'utf-8'
+        return enc
 
 # ---------- 读取单个文件（带回退编码） ----------
 def read_file_with_fallback(file_path):
-    encodings = [detect_encoding(file_path), 'utf-8', 'gbk', 'gb2312', 'latin-1']
+    encodings = [detect_encoding(file_path), 'utf-8', 'gbk', 'gb2312']
     for enc in encodings:
         if enc is None:
             continue
@@ -30,11 +36,20 @@ def read_file_with_fallback(file_path):
             return cleaned_lines, enc
         except (UnicodeDecodeError, LookupError):
             continue
+    # strict 全部失败：中文机台日志常见 UTF-8（含少量非法字节）或 GBK。
+    # 用忽略模式分别解码，比较 UTF-8 丢失的字节比例：丢失少说明是 UTF-8，否则按 GBK 处理。
+    with open(file_path, 'rb') as f:
+        raw = f.read()
+    utf8_text = raw.decode('utf-8', errors='ignore')
+    total = len(raw)
+    dropped = total - len(utf8_text.encode('utf-8', errors='ignore'))
+    if dropped / total < 0.01:
+        cleaned_lines = [clean_for_excel(line.rstrip('\n\r')) for line in utf8_text.splitlines()]
+        return cleaned_lines, 'utf-8 (ignore)'
+    gbk_text = raw.decode('gbk', errors='ignore')
+    cleaned_lines = [clean_for_excel(line.rstrip('\n\r')) for line in gbk_text.splitlines()]
+    return cleaned_lines, 'gbk (ignore)'
     # 兜底
-    with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
-        lines = f.readlines()
-    cleaned_lines = [clean_for_excel(line.rstrip('\n\r')) for line in lines]
-    return cleaned_lines, 'utf-8 (with replacement)'
 
 # ---------- 批量读取目录中的所有日志文件（返回列表字典） ----------
 def read_files(source_dir, progress_callback=None, file_filters=None):

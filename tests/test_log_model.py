@@ -80,6 +80,14 @@ class LogModelTest(unittest.TestCase):
         self.assertEqual(len(xl.parse("AllLogs_1")), 1048575)
         self.assertEqual(len(xl.parse("AllLogs_2")), 10)
 
+    def test_detect_encoding_gbk_single_byte_fallback(self):
+        from utils.file_utils import detect_encoding
+        src = tempfile.mkdtemp()
+        path = os.path.join(src, "gbk.log")
+        with open(path, "wb") as f:
+            f.write("2026-07-08 00:00:00 真空信号不达标\n".encode("gbk"))
+        self.assertIn(detect_encoding(path).lower(), ("gbk", "gb2312"))
+
 
 if __name__ == "__main__":
     unittest.main()

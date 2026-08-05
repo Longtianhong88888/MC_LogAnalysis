@@ -36,6 +36,9 @@ class AnalysisTest(unittest.TestCase):
         self.assertIsNotNone(ts)
         self.assertEqual(ts.hour, 2)
         self.assertEqual(ts.second, 29)
+        bracket = parse_ts("[00:00:05] 左 图像数据获取完成")
+        self.assertIsNotNone(bracket)
+        self.assertEqual((bracket.hour, bracket.minute, bracket.second), (0, 0, 5))
 
     def test_trigger_boundary(self):
         # MarkEnd1 不应匹配 MarkEnd1_0
@@ -246,6 +249,21 @@ class AnalysisTest(unittest.TestCase):
         caw = PROCESS_TEMPLATES["CAW 组装"]
         self.assertEqual(caw["UPH分析"]["trigger_keywords"], "放熟料完成,放生料完成")
         self.assertEqual(caw["EFF分析"]["file_filters"], ["RAYPRUS交互记录"])
+        self.assertIn("FR 机台", PROCESS_TEMPLATES)
+        self.assertIn("不达标", PROCESS_TEMPLATES["FR 机台"]["报警分析"]["alarm_keywords"])
+
+    def test_status_time_only_multi_file(self):
+        # FR 风格：纯时间戳 + 按日分文件，跨日 23:59:58 -> 00:00:01 应为 3 秒
+        rows = [
+            {"FileName": "L06-25.log", "Content": "[23:59:58] Send: [PS][status:RUN,ReasonID:None]"},
+            {"FileName": "L06-26.log", "Content": "[00:00:01] Send: [PS][status:IDLE,ReasonID:0020000000]"},
+            {"FileName": "L06-26.log", "Content": "[00:00:31] Send: [PS][status:RUN,ReasonID:None]"},
+        ]
+        summary, hourly, detail = analyze_status(rows)
+        self.assertEqual(len(detail), 2)
+        s = summary.set_index('状态')
+        self.assertEqual(s.loc['RUN', '总时长(秒)'], 3.0)   # 跨日 3 秒；最后一条 RUN 无后续事件不计时长
+        self.assertEqual(s.loc['IDLE', '总时长(秒)'], 30.0)
 
 
 if __name__ == "__main__":

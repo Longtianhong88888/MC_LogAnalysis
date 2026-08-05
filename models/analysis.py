@@ -1,10 +1,12 @@
 import re
+import os
 from datetime import datetime
 
 import pandas as pd
 
 _TIME_RE = re.compile(
-    r'^(?:(?P<date>\d{4}-\d{2}-\d{2})[ T])?(?P<time>\d{2}:\d{2}:\d{2}(?:\.\d+)?)'
+    r'^(?:\[(?P<brackettime>\d{2}:\d{2}:\d{2}(?:\.\d+)?)\]|'
+    r'(?:(?P<date>\d{4}-\d{2}-\d{2})[ T])?(?P<time>\d{2}:\d{2}:\d{2}(?:\.\d+)?))'
 )
 
 _UNKNOWN_MODULE = '(未识别模块)'
@@ -15,11 +17,13 @@ def _module_label(module):
 
 
 def parse_ts(content):
-    """解析日志行开头的日期时间，支持 'YYYY-MM-DD HH:MM:SS(.mmm)' 与 'HH:MM:SS(.mmm)'。"""
+    """解析日志行开头的时间，支持 'YYYY-MM-DD HH:MM:SS(.mmm)'、'HH:MM:SS(.mmm)' 与 '[HH:MM:SS(.mmm)]'。"""
     m = _TIME_RE.match(content)
     if not m:
         return None
-    time_str = m.group('time')
+    time_str = m.group('brackettime') or m.group('time')
+    if not time_str:
+        return None
     base = (m.group('date') + ' ' + time_str) if m.group('date') else time_str
     for fmt in ('%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%H:%M:%S.%f', '%H:%M:%S'):
         try:
@@ -102,9 +106,9 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
 
     records = []
     for module, events in per_module.items():
-        # 带完整日期的按时间排序；纯时间日志保持文件行序（避免跨零点时 00:xx 被排到 23:xx 前面）
         if events and events[0]['ts'].year != 1900:
             events.sort(key=lambda e: e['ts'])
+        # 纯时间日志保持读取顺序（文件按名排序、行按写入顺序），可正确处理跨零点/跨日
         prev = None
         for ev in events:
             if prev is not None:
@@ -335,7 +339,9 @@ def analyze_status(rows):
             'reason': reason_m.group(1) if reason_m else '',
             'content': content,
         })
-    events.sort(key=lambda e: e['ts'])
+    if events and events[0]['ts'].year != 1900:
+        events.sort(key=lambda e: e['ts'])
+    # 纯时间日志保持读取顺序（文件按名排序、行按写入顺序），跨零点/跨日时长按 +86400 处理
 
     records = []
     for i in range(len(events) - 1):
@@ -376,7 +382,12 @@ def analyze_status(rows):
     hour_sums = {}
     for r in records:
         ts = r['_ts']
-        hour = ts.strftime('%H:00') if ts.year == 1900 else ts.strftime('%Y-%m-%d %H:00')
+        if ts.year == 1900:
+            # 纯时间日志按日分文件：小时带文件名前缀，避免多日数据合并到同一小时
+            stem = os.path.splitext(r['FileName'])[0]
+            hour = f"{stem} {ts.strftime('%H:00')}"
+        else:
+            hour = ts.strftime('%Y-%m-%d %H:00')
         hour_sums[(hour, r['Status'])] = hour_sums.get((hour, r['Status']), 0.0) + r['DurationSeconds']
     hours = sorted({h for h, _ in hour_sums})
     hourly_rows = []
