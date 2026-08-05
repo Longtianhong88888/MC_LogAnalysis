@@ -158,7 +158,9 @@ class LogModel:
 
         has_filtered_rows = not filtered_df.empty
         has_separator = separator is not None and separator != ''
-        generate_filtered = has_filtered_rows or has_separator
+        has_keywords = bool(keywords and str(keywords).strip())
+        # 无关键词且无分隔符时 Filtered 与 AllLogs 完全相同，跳过以加速大文件导出
+        generate_filtered = (has_filtered_rows or has_separator) and (has_keywords or has_separator)
 
         if generate_filtered:
             if not has_filtered_rows and has_separator:

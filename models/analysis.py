@@ -83,6 +83,17 @@ def keyword_pattern(kws, allow_trailing_digit=True):
     return '|'.join(parts)
 
 
+def _prefilter(rows, pattern, regex=True):
+    """向量化预筛选：返回 (contents, file_names, 匹配位置列表)，避免逐行正则扫描全部日志。"""
+    contents = [str(row.get('Content', '')) for row in rows]
+    file_names = [row.get('FileName', '') for row in rows]
+    if pattern:
+        mask = pd.Series(contents).str.contains(pattern, case=False, na=False, regex=regex)
+    else:
+        mask = pd.Series([False] * len(contents))
+    return contents, file_names, mask.index[mask]
+
+
 def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_threshold=900.0,
                     module_pattern=None, cancel_event=None):
     """
@@ -91,16 +102,15 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
     module_pattern: 可选正则，从日志行中提取模组名（如 FR 的左轴/右轴），未提供时用 模块名称: 字段
     """
     kws = split_keywords(trigger_keywords)
+    pattern = keyword_pattern(kws, allow_trailing_digit=False) if kws else None
+    contents, file_names, matched = _prefilter(rows, pattern)
     per_module = {}
-    for row in rows:
+    for idx in matched:
         if cancel_event is not None and cancel_event.is_set():
             raise OperationCancelled()
-        content = str(row.get('Content', ''))
+        content = contents[idx]
         ts = parse_ts(content)
         if ts is None:
-            continue
-        # 关键词匹配整行内容（兼容“动作名称:xxx”和普通消息两种日志格式）
-        if not kws or not re.search(keyword_pattern(kws, allow_trailing_digit=False), content, re.IGNORECASE):
             continue
         if module_pattern:
             m = re.search(module_pattern, content)
@@ -110,7 +120,7 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
             module = _module_label(module)
         per_module.setdefault(module, []).append({
             'ts': ts,
-            'file': row.get('FileName', ''),
+            'file': file_names[idx],
             'content': content,
         })
 
@@ -280,19 +290,18 @@ def down_pareto(status_detail):
 def summarize_alarms(rows, alarm_keywords, cancel_event=None):
     """报警统计：汇总（按模块）、按关键词计数、明细。"""
     kws = split_keywords(alarm_keywords)
-    pattern = keyword_pattern(kws) if kws else ''
+    pattern = keyword_pattern(kws) if kws else None
+    contents, file_names, matched = _prefilter(rows, pattern)
     detail = []
-    for row in rows:
+    for idx in matched:
         if cancel_event is not None and cancel_event.is_set():
             raise OperationCancelled()
-        content = str(row.get('Content', ''))
-        if not pattern:
-            continue
+        content = contents[idx]
         m = re.search(pattern, content, re.IGNORECASE)
         if m:
             module, _ = parse_fields(content)
             detail.append({
-                'FileName': row.get('FileName', ''),
+                'FileName': file_names[idx],
                 'Timestamp': format_ts(parse_ts(content)),
                 'Module': _module_label(module),
                 '命中关键词': m.group(0),
@@ -334,11 +343,12 @@ def analyze_status(rows, cancel_event=None):
     机台状态分析：识别 status:RUN/IDLE/DOWN 状态行，计算各状态时长与占比、按小时分布。
     返回 (汇总, 按小时, 明细)。
     """
+    contents, file_names, matched = _prefilter(rows, 'status:')
     events = []
-    for row in rows:
+    for idx in matched:
         if cancel_event is not None and cancel_event.is_set():
             raise OperationCancelled()
-        content = str(row.get('Content', ''))
+        content = contents[idx]
         m = _STATUS_RE.search(content)
         if not m:
             continue
@@ -348,7 +358,7 @@ def analyze_status(rows, cancel_event=None):
         reason_m = _REASON_RE.search(content)
         events.append({
             'ts': ts,
-            'file': row.get('FileName', ''),
+            'file': file_names[idx],
             'status': _normalize_status(m.group(1)),
             'reason': reason_m.group(1) if reason_m else '',
             'content': content,
@@ -444,13 +454,12 @@ def parse_em_production(rows, cancel_event=None):
     解析协议 EM（設備產量數據上傳）消息：
     [EM][lotno:...,inputqty:...,goodqty:...,ngqty:...,head:...,startdatetime:...,enddatetime:...,datetime:...]
     """
+    contents, file_names, matched = _prefilter(rows, '[EM]', regex=False)
     records = []
-    for row in rows:
+    for idx in matched:
         if cancel_event is not None and cancel_event.is_set():
             raise OperationCancelled()
-        content = str(row.get('Content', ''))
-        if '[EM]' not in content:
-            continue
+        content = contents[idx]
         fields = dict(_EM_FIELD_RE.findall(content))
         if not fields:
             continue
@@ -468,7 +477,7 @@ def parse_em_production(rows, cancel_event=None):
         end = parse_compact_dt(fields.get('enddatetime'))
         duration_h = ((end - start).total_seconds() / 3600.0) if (start and end and end > start) else None
         records.append({
-            'FileName': row.get('FileName', ''),
+            'FileName': file_names[idx],
             'Timestamp': format_ts(parse_ts(content)),
             'LotNo': fields.get('lotno', ''),
             'InputQty': input_qty,
