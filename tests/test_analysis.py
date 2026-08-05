@@ -252,6 +252,34 @@ class AnalysisTest(unittest.TestCase):
         self.assertIn("FR 机台", PROCESS_TEMPLATES)
         self.assertIn("不达标", PROCESS_TEMPLATES["FR 机台"]["报警分析"]["alarm_keywords"])
 
+    def test_ppt_report(self):
+        from models.report import build_ppt_report
+        from pptx import Presentation
+        src = tempfile.mkdtemp()
+        out = tempfile.mkdtemp()
+        lines = [
+            "2026-07-08 00:00:00.000 [PS][status:RUN,ReasonID:None]",
+            "2026-07-08 00:00:10.000 [PS][status:IDLE,ReasonID:0000010000]",
+            "2026-07-08 00:00:30.000 [PS][status:DOWN,ReasonID:0000000411]",
+            "2026-07-08 00:00:40.000 [PS][status:RUN,ReasonID:None]",
+            "2026-07-08 00:00:50.000 无料NG",
+            "2026-07-08 00:00:55.000 MarkEnd1",
+            "2026-07-08 00:00:58.000 MarkEnd1",
+            "2026-07-08 00:00:02.000 [EM][lotno:LOT1,inputqty:100,goodqty:98,ngqty:2,head:001,"
+            "startdatetime:20260708000000491,enddatetime:20260708000030000]",
+        ]
+        with open(os.path.join(src, "a.log"), "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        m = LogModel()
+        m.analyze_uph(src, out, trigger_keywords="MarkEnd1")
+        m.analyze_eff(src, out)
+        m.analyze_alarms(src, out)
+        m.analyze_status(src, out)
+        ppt = build_ppt_report(out)
+        prs = Presentation(ppt)
+        self.assertGreaterEqual(len(prs.slides), 6)  # 模板 2 页 + 内容页
+        self.assertTrue(any(shape.has_chart for s in prs.slides for shape in s.shapes))
+
     def test_status_time_only_multi_file(self):
         # FR 风格：纯时间戳 + 按日分文件，跨日 23:59:58 -> 00:00:01 应为 3 秒
         rows = [

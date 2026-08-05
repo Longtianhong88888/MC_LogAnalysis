@@ -82,6 +82,13 @@ class LogController:
                             **params,
                         )
                         results.append(f"{sub_feature}：{result}")
+                    try:
+                        from models.report import build_ppt_report
+                        ppt_path = build_ppt_report(self.output_dir)
+                        results.append(f"PPT报告：{ppt_path}")
+                    except Exception as exc:
+                        traceback.print_exc()
+                        results.append(f"PPT报告生成失败：{exc}")
                     result = results
                 else:
                     method_name = FEATURE_METHODS.get(feature, "process")

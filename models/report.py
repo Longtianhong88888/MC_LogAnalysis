@@ -1,0 +1,216 @@
+"""PPT 报告生成：读取一键分析产出的 4 个 Excel，生成包含各分析汇总与图表的报告。"""
+
+import os
+from datetime import datetime
+
+import pandas as pd
+from pptx import Presentation
+from pptx.chart.data import CategoryChartData
+from pptx.dml.color import RGBColor
+from pptx.enum.chart import XL_CHART_TYPE
+from pptx.enum.text import MSO_ANCHOR
+from pptx.util import Inches, Pt
+
+from utils.resource_utils import resource_path
+
+HEADER_FILL = RGBColor(0xDD, 0xEB, 0xF7)
+GRAY = RGBColor(0x60, 0x60, 0x60)
+TABLE_BORDER = RGBColor(0xBF, 0xBF, 0xBF)
+CHART_LEFT, CHART_TOP, CHART_W, CHART_H = 0.6, 1.6, 6.6, 5.2
+TABLE_LEFT, TABLE_W = 7.4, 5.3
+
+
+def _read_sheet(path, name):
+    if not os.path.exists(path):
+        return pd.DataFrame()
+    try:
+        xl = pd.ExcelFile(path)
+        if name in xl.sheet_names:
+            return xl.parse(name)
+    except Exception:
+        pass
+    return pd.DataFrame()
+
+
+def _to_float(value):
+    try:
+        if value is None or (isinstance(value, str) and value.strip() == ''):
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _content_layout(prs):
+    for layout in prs.slide_layouts:
+        if "content" in layout.name.lower():
+            return layout
+    return prs.slide_layouts[0] if prs.slide_layouts else None
+
+
+def _add_slide(prs, title, subtitle=""):
+    slide = prs.slides.add_slide(_content_layout(prs))
+    if slide.shapes.title is not None:
+        slide.shapes.title.text = title
+    else:
+        box = slide.shapes.add_textbox(Inches(0.5), Inches(0.25), Inches(12.3), Inches(0.8))
+        box.text_frame.text = title
+        box.text_frame.paragraphs[0].font.size = Pt(26)
+        box.text_frame.paragraphs[0].font.bold = True
+    if subtitle:
+        box2 = slide.shapes.add_textbox(Inches(0.5), Inches(1.2), Inches(12.3), Inches(0.35))
+        tf2 = box2.text_frame
+        tf2.text = subtitle
+        tf2.paragraphs[0].font.size = Pt(13)
+        tf2.paragraphs[0].font.color.rgb = GRAY
+    return slide
+
+
+def _add_table(slide, df, left, top, width, height, max_rows=12):
+    data = df.head(max_rows)
+    rows, cols = data.shape
+    if rows == 0 or cols == 0:
+        return
+    graphic = slide.shapes.add_table(
+        rows + 1, cols, Inches(left), Inches(top), Inches(width), Inches(height)
+    )
+    table = graphic.table
+    col_width = width / cols
+    for j in range(cols):
+        table.columns[j].width = Inches(col_width)
+    for j, col in enumerate(data.columns):
+        cell = table.cell(0, j)
+        cell.text = str(col)
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = HEADER_FILL
+        cell.text_frame.paragraphs[0].font.bold = True
+        cell.text_frame.paragraphs[0].font.size = Pt(10)
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+    for i, (_, row) in enumerate(data.iterrows(), start=1):
+        for j, value in enumerate(row):
+            cell = table.cell(i, j)
+            cell.text = "" if pd.isna(value) else str(value)
+            cell.text_frame.paragraphs[0].font.size = Pt(10)
+            cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+    return table
+
+
+def _add_chart(slide, chart_type, title, categories, values,
+               left=CHART_LEFT, top=CHART_TOP, width=CHART_W, height=CHART_H, legend=False):
+    chart_data = CategoryChartData()
+    chart_data.categories = list(categories)
+    chart_data.add_series("数值", [0 if v is None else v for v in values])
+    chart = slide.shapes.add_chart(
+        chart_type, Inches(left), Inches(top), Inches(width), Inches(height), chart_data
+    ).chart
+    chart.has_legend = legend
+    chart.has_title = True
+    chart.chart_title.text_frame.text = title
+    chart.chart_title.text_frame.paragraphs[0].font.size = Pt(13)
+    return chart
+
+
+def _metrics_table(df):
+    """单行指标表转置为 指标/数值 两列。"""
+    if df is None or df.empty:
+        return pd.DataFrame()
+    row = df.iloc[0]
+    return pd.DataFrame({"指标": row.index, "数值": row.values})
+
+
+def _fill_template_cover(prs):
+    """把模板封面中的占位文字 XXXXXXX 替换为报告标题，保留原样式。"""
+    if not prs.slides:
+        return
+    cover = prs.slides[0]
+    for shape in cover.shapes:
+        if not shape.has_text_frame:
+            continue
+        tf = shape.text_frame
+        if tf.text.strip() != "XXXXXXX":
+            continue
+        old_style = None
+        if tf.paragraphs and tf.paragraphs[0].runs:
+            run = tf.paragraphs[0].runs[0]
+            old_style = (run.font.size, run.font.bold)
+        tf.text = "MC Log 分析报告"
+        if old_style and tf.paragraphs[0].runs:
+            run = tf.paragraphs[0].runs[0]
+            run.font.size, run.font.bold = old_style
+        return
+
+
+def build_ppt_report(output_dir, report_name="Analysis_Report.pptx"):
+    """读取 output_dir 下 4 个分析 Excel，基于根目录 PPT模板.pptx 生成报告，返回报告路径。"""
+    out_path = os.path.join(output_dir, report_name)
+    template = resource_path("PPT模板.pptx")
+    template = template if os.path.exists(template) else None
+    prs = Presentation(template) if template else Presentation()
+    if template:
+        _fill_template_cover(prs)
+    else:
+        prs.slide_width = Inches(13.333)
+        prs.slide_height = Inches(7.5)
+        # ---------- 标题页（无模板时） ----------
+        slide = _add_slide(prs, "MC Log 分析报告", "UPH / EFF / 报警 / 机台状态")
+        box = slide.shapes.add_textbox(Inches(0.4), Inches(3.2), Inches(9.2), Inches(0.5))
+        box.text_frame.text = f"生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        box.text_frame.paragraphs[0].font.size = Pt(14)
+        box.text_frame.paragraphs[0].font.color.rgb = GRAY
+
+    # ---------- UPH 分析 ----------
+    ame = _read_sheet(os.path.join(output_dir, "UPH_Analysis.xlsx"), "AMESummary")
+    if not ame.empty:
+        slide = _add_slide(prs, "UPH 分析", "CoreTech AME：Pure UPH / Derated UPH M1 / M2")
+        labels = ["Pure UPH(个/小时)", "Derated UPH M1(个/小时)", "Derated UPH M2(个/小时)"]
+        vals = [_to_float(ame.iloc[0].get(c)) for c in labels]
+        _add_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "UPH 对比", labels, vals)
+        _add_table(slide, _metrics_table(ame), left=TABLE_LEFT, top=CHART_TOP, width=TABLE_W, height=CHART_H)
+
+    # ---------- EFF 分析 ----------
+    eff = _read_sheet(os.path.join(output_dir, "EFF_Analysis.xlsx"), "Summary")
+    if not eff.empty:
+        slide = _add_slide(prs, "EFF 分析", "EFF = 操作时间(运行+待机) / 计划生产时间")
+        row = eff.iloc[0]
+        cats = ["运行RUN", "待机IDLE", "停机DOWN"]
+        vals = [_to_float(row.get(c)) for c in ("运行时间RUN(秒)", "待机时间IDLE(秒)", "停机时间DOWN(秒)")]
+        _add_chart(slide, XL_CHART_TYPE.PIE, "时间构成（秒）", cats, vals, legend=True)
+        _add_table(slide, _metrics_table(eff), left=TABLE_LEFT, top=CHART_TOP, width=TABLE_W, height=CHART_H)
+
+        pareto = _read_sheet(os.path.join(output_dir, "EFF_Analysis.xlsx"), "DOWN_Pareto")
+        if not pareto.empty:
+            slide = _add_slide(prs, "停机 Pareto", "按 ReasonID 统计停机时长 Top10")
+            top = pareto.head(10)
+            _add_chart(slide, XL_CHART_TYPE.BAR_CLUSTERED, "停机时长（秒）", top["ReasonID"], top["总时长(秒)"])
+            _add_table(slide, top, left=TABLE_LEFT, top=CHART_TOP, width=TABLE_W, height=CHART_H)
+
+    # ---------- 报警分析 ----------
+    by_kw = _read_sheet(os.path.join(output_dir, "Alarm_Analysis.xlsx"), "ByKeyword")
+    alarm_summary = _read_sheet(os.path.join(output_dir, "Alarm_Analysis.xlsx"), "Summary")
+    if not by_kw.empty or not alarm_summary.empty:
+        slide = _add_slide(prs, "报警分析", "按关键词与模块统计报警")
+        if not by_kw.empty:
+            top = by_kw.head(10)
+            _add_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "报警次数 Top10", top["命中关键词"], top["报警次数"])
+            _add_table(slide, top, left=TABLE_LEFT, top=CHART_TOP, width=TABLE_W, height=CHART_H)
+        elif not alarm_summary.empty:
+            _add_table(slide, alarm_summary, left=CHART_LEFT, top=CHART_TOP, width=12.1, height=CHART_H)
+
+    # ---------- 机台状态 ----------
+    status = _read_sheet(os.path.join(output_dir, "Status_Analysis.xlsx"), "Summary")
+    if not status.empty:
+        slide = _add_slide(prs, "机台状态汇总", "RUN / IDLE / DOWN / WARN 时长与占比")
+        cats = list(status["状态"])
+        vals = [_to_float(v) for v in status["总时长(秒)"]]
+        _add_chart(slide, XL_CHART_TYPE.PIE, "状态时长（秒）", cats, vals, legend=True)
+        _add_table(slide, status, left=TABLE_LEFT, top=CHART_TOP, width=TABLE_W, height=CHART_H)
+
+        hourly = _read_sheet(os.path.join(output_dir, "Status_Analysis.xlsx"), "Hourly")
+        if not hourly.empty and "EFF(%)" in hourly.columns:
+            slide = _add_slide(prs, "机台状态趋势", "每小时 EFF 趋势")
+            _add_chart(slide, XL_CHART_TYPE.LINE_MARKERS, "每小时 EFF(%)",
+                       hourly["小时"], hourly["EFF(%)"],
+                       left=CHART_LEFT, top=CHART_TOP, width=12.1, height=CHART_H)
+
+    prs.save(out_path)
+    return out_path
