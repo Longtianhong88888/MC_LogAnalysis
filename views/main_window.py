@@ -36,6 +36,7 @@ class MainWindow(QMainWindow):
         self.controller = controller
         self.setWindowTitle("MC Log Analysis Tool")
         self.resize(800, 680)
+        self.statusBar().showMessage("就绪")
         icon = QIcon(resource_path("log.ico"))
         if not icon.isNull():
             self.setWindowIcon(icon)
@@ -282,6 +283,9 @@ class MainWindow(QMainWindow):
 
     def update_progress(self, value):
         self.progress.setValue(value)
+
+    def update_status(self, text):
+        self.statusBar().showMessage(text)
 
     def hide_progress(self):
         self.progress.hide()

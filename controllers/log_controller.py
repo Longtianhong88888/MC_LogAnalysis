@@ -1,6 +1,7 @@
 import queue
 import re
 import threading
+import time
 import traceback
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -9,7 +10,7 @@ from models.log_model import LogModel
 from models.process_templates import get_template, save_custom_template
 from views.main_window import ONE_CLICK_FEATURE
 
-ONE_CLICK_FEATURES = ["文档合并与内容拆分", "UPH分析", "EFF分析", "报警分析", "机台状态分析"]
+ONE_CLICK_FEATURES = ["UPH分析", "EFF分析", "报警分析", "机台状态分析", "文档合并与内容拆分"]
 
 FEATURE_METHODS = {
     "文档合并与内容拆分": "process",
@@ -27,6 +28,9 @@ class LogController:
         self.output_dir = ""
         self.worker = None
         self._progress_queue = queue.Queue()
+        self._current_step = None
+        self._step_started = 0.0
+        self._last_notify = 0.0
 
     def select_source_folder(self):
         dir_ = QFileDialog.getExistingDirectory(self.view, "选择源文件夹")
@@ -71,11 +75,26 @@ class LogController:
                 model = LogModel()
                 if feature == ONE_CLICK_FEATURE:
                     results = []
+                    model = LogModel()
+                    # 一次读取日志，供所有分析共享，避免重复加载大文件
+                    self._progress_queue.put(('step', '读取日志文件'))
+                    self._progress_queue.put(('partial', "正在读取日志文件 ..."))
+                    first_params = self._collect_params(ONE_CLICK_FEATURES[0])
+                    first_params.update(self._template_settings(template, ONE_CLICK_FEATURES[0]))
+                    rows = model.load_rows(
+                        self.source_dir,
+                        file_filters=first_params.get('file_filters'),
+                        progress_callback=lambda value: self._progress_queue.put(('progress', value)),
+                    )
                     for sub_feature in ONE_CLICK_FEATURES:
+                        self._progress_queue.put(('step', sub_feature))
+                        self._progress_queue.put(('partial', f"正在处理：{sub_feature} ..."))
                         try:
                             method_name = FEATURE_METHODS[sub_feature]
                             params = self._collect_params(sub_feature)
                             params.update(self._template_settings(template, sub_feature))
+                            params['rows'] = rows
+                            params.pop('file_filters', None)
                             result = getattr(model, method_name)(
                                 source_dir=self.source_dir,
                                 output_dir=self.output_dir,
@@ -83,10 +102,15 @@ class LogController:
                                 **params,
                             )
                             results.append(f"{sub_feature}：{result}")
+                            self._progress_queue.put(('partial', f"{sub_feature}：{result}"))
                         except Exception as exc:
                             traceback.print_exc()
                             results.append(f"{sub_feature}失败：{exc}")
+                            self._progress_queue.put(('partial', f"{sub_feature}失败：{exc}"))
+                    del rows
                     try:
+                        self._progress_queue.put(('step', 'PPT 报告'))
+                        self._progress_queue.put(('partial', "正在生成 PPT 报告 ..."))
                         from models.report import build_ppt_report
                         process_name = (
                             self.view.template_combo.currentText()
@@ -94,14 +118,17 @@ class LogController:
                         )
                         ppt_path = build_ppt_report(self.output_dir, process_name=process_name)
                         results.append(f"PPT报告：{ppt_path}")
+                        self._progress_queue.put(('partial', f"PPT报告：{ppt_path}"))
                     except Exception as exc:
                         traceback.print_exc()
                         results.append(f"PPT报告生成失败：{exc}")
+                        self._progress_queue.put(('partial', f"PPT报告生成失败：{exc}"))
                     result = results
                 else:
                     method_name = FEATURE_METHODS.get(feature, "process")
                     params = self._collect_params(feature)
                     params.update(self._template_settings(template, feature))
+                    self._progress_queue.put(('step', feature))
                     result = getattr(model, method_name)(
                         source_dir=self.source_dir,
                         output_dir=self.output_dir,
@@ -115,6 +142,11 @@ class LogController:
 
         self.worker = threading.Thread(target=worker, daemon=True)
         self.worker.start()
+        self._current_step = None
+        self._step_started = time.monotonic()
+        self._last_notify = 0.0
+        if hasattr(self.view, 'after'):
+            self.view.after(3000, self._watchdog)
         self._poll_worker()
 
     def _collect_params(self, feature):
@@ -187,6 +219,15 @@ class LogController:
                 if kind == 'progress':
                     if hasattr(self.view, 'update_progress'):
                         self.view.update_progress(payload[0])
+                elif kind == 'step':
+                    self._current_step = payload[0]
+                    self._step_started = time.monotonic()
+                    self._last_notify = 0.0
+                    if hasattr(self.view, 'update_status'):
+                        self.view.update_status(f"正在处理：{payload[0]} ...")
+                elif kind == 'partial':
+                    if hasattr(self.view, 'update_result'):
+                        self.view.update_result(payload[0])
                 elif kind == 'done':
                     result, error = payload
                     self.worker = None
@@ -203,11 +244,28 @@ class LogController:
                         else:
                             if hasattr(self.view, 'update_result'):
                                 self.view.update_result(f"成功导出：{result}")
+                    if hasattr(self.view, 'update_status'):
+                        self.view.update_status("就绪")
                     return
         except queue.Empty:
             pass
         if after is not None:
             after(100, self._poll_worker)
+
+    def _watchdog(self):
+        """卡顿检测：步骤运行超过 15 秒后，每 10 秒在状态栏提示已运行时长。"""
+        if self.worker is None or not self.worker.is_alive():
+            return
+        if self._current_step:
+            elapsed = time.monotonic() - self._step_started
+            if elapsed >= 15 and elapsed - self._last_notify >= 10:
+                self._last_notify = elapsed
+                if hasattr(self.view, 'update_status'):
+                    self.view.update_status(
+                        f"正在处理：{self._current_step}（已运行 {int(elapsed)} 秒）..."
+                    )
+        if hasattr(self.view, 'after'):
+            self.view.after(3000, self._watchdog)
 
     def clear_results(self):
         if hasattr(self.view, 'result_text'):

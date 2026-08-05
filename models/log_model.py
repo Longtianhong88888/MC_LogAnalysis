@@ -31,6 +31,10 @@ class LogModel:
             raise ValueError("日志文件内容均为空，无法解析")
         return all_data
 
+    def load_rows(self, source_dir, file_filters=None, progress_callback=None):
+        """读取日志行（供一键分析共享，避免每项重复读取大文件）。"""
+        return self._read_all(source_dir, progress_callback, file_filters=file_filters)
+
     @staticmethod
     def _write_sheets(out_path, sheets):
         max_rows = 1048575  # Excel 单表最大行数（含表头行）
@@ -94,10 +98,10 @@ class LogModel:
 
     # ---------- 功能一：文档合并与内容拆分 ----------
     def process(self, source_dir, output_dir, keywords=None, separator=None,
-                file_filters=None, progress_callback=None):
+                file_filters=None, rows=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        all_data = self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        all_data = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
         df_all = pd.DataFrame(all_data)
 
         if progress_callback:
@@ -168,10 +172,10 @@ class LogModel:
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,
                     normal_threshold=10.0, planned_threshold=900.0,
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
-                    pure_uph_factor=1.0, progress_callback=None):
+                    pure_uph_factor=1.0, rows=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(40)
         cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold,
@@ -203,11 +207,11 @@ class LogModel:
 
     # ---------- 功能三：EFF 分析 ----------
     def analyze_eff(self, source_dir, output_dir, planned_hours=None,
-                    pdt_reason_ids=None, file_filters=None, progress_callback=None):
+                    pdt_reason_ids=None, file_filters=None, rows=None, progress_callback=None):
         """CoreTech AME 效率：EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态。"""
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(50)
         status_summary, hourly, detail = analyze_status(rows)
@@ -232,10 +236,10 @@ class LogModel:
 
     # ---------- 功能四：报警分析 ----------
     def analyze_alarms(self, source_dir, output_dir, alarm_keywords="报警,ALARM,ERROR,NG,失败,异常,停止信号",
-                       file_filters=None, progress_callback=None):
+                       file_filters=None, rows=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(50)
         summary, by_keyword, detail = summarize_alarms(rows, alarm_keywords)
@@ -253,10 +257,10 @@ class LogModel:
         return out_path
 
     # ---------- 功能五：机台状态分析 ----------
-    def analyze_status(self, source_dir, output_dir, file_filters=None, progress_callback=None):
+    def analyze_status(self, source_dir, output_dir, file_filters=None, rows=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(50)
         summary, hourly, detail = analyze_status(rows)

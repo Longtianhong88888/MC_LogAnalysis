@@ -269,6 +269,14 @@ class AnalysisTest(unittest.TestCase):
     def test_one_click_includes_merge(self):
         from controllers.log_controller import ONE_CLICK_FEATURES
         self.assertIn("文档合并与内容拆分", ONE_CLICK_FEATURES)
+        self.assertEqual(ONE_CLICK_FEATURES[-1], "文档合并与内容拆分")  # 合并最后执行，先出分析结果
+
+    def test_analyze_uph_with_shared_rows(self):
+        # 共享已读日志：提供 rows 时不读目录，正常出结果
+        rows = [{"FileName": c["FileName"], "Content": c["Content"]} for c in CYCLE_ROWS]
+        out = tempfile.mkdtemp()
+        path = LogModel().analyze_uph("不存在的目录", out, trigger_keywords="放生料完成", rows=rows)
+        self.assertEqual(pd.ExcelFile(path).parse("Summary").iloc[0]['周期总数'], 3)
 
     def test_module_pattern_with_defect_completion(self):
         # 漏点件以"有漏点产品"代替"点胶完成"，周期序列应连续且分左/右轴
