@@ -84,7 +84,11 @@ class LogController:
                         results.append(f"{sub_feature}：{result}")
                     try:
                         from models.report import build_ppt_report
-                        ppt_path = build_ppt_report(self.output_dir)
+                        process_name = (
+                            self.view.template_combo.currentText()
+                            if hasattr(self.view, 'template_combo') else None
+                        )
+                        ppt_path = build_ppt_report(self.output_dir, process_name=process_name)
                         results.append(f"PPT报告：{ppt_path}")
                     except Exception as exc:
                         traceback.print_exc()

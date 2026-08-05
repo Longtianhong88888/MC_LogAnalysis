@@ -275,10 +275,15 @@ class AnalysisTest(unittest.TestCase):
         m.analyze_eff(src, out)
         m.analyze_alarms(src, out)
         m.analyze_status(src, out)
-        ppt = build_ppt_report(out)
+        ppt = build_ppt_report(out, process_name="LM 激光打标")
         prs = Presentation(ppt)
         self.assertGreaterEqual(len(prs.slides), 6)  # 模板 2 页 + 内容页
         self.assertTrue(any(shape.has_chart for s in prs.slides for shape in s.shapes))
+        cover_texts = [
+            sh.text_frame.text for sh in prs.slides[0].shapes
+            if sh.has_text_frame and sh.text_frame.text.strip() == "LM设备一键自动分析报告"
+        ]
+        self.assertTrue(cover_texts)
 
     def test_status_time_only_multi_file(self):
         # FR 风格：纯时间戳 + 按日分文件，跨日 23:59:58 -> 00:00:01 应为 3 秒
