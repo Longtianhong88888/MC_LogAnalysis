@@ -154,32 +154,31 @@ def _metrics_table(df):
 
 
 def _report_title(process_name):
-    """按制程生成报告标题，如 'LM设备一键自动分析报告'；未知制程用通用标题。"""
+    """按制程生成报告标题，如 'LM設備一鍵自動分析報告'；未知制程用通用标题。"""
     prefix = _TITLE_PREFIX.get(process_name)
     if prefix:
-        return f"{prefix}设备一键自动分析报告"
+        return f"{prefix}設備一鍵自動分析報告"
     return "MC Log 分析报告"
 
 
-def _fill_template_cover(prs, title):
-    """把模板封面中的占位文字 XXXXXXX 替换为报告标题，保留原样式。"""
+def _fill_template_cover(prs, process_name):
+    """把模板封面标题中的制程占位 'XX' 替换为制程字母（LM/CAW/FR），其余内容与样式保持不变。"""
     if not prs.slides:
+        return
+    prefix = _TITLE_PREFIX.get(process_name)
+    if prefix is None:
         return
     cover = prs.slides[0]
     for shape in cover.shapes:
         if not shape.has_text_frame:
             continue
         tf = shape.text_frame
-        if tf.text.strip() != "XXXXXXX":
+        if "XX" not in tf.text:
             continue
-        old_style = None
-        if tf.paragraphs and tf.paragraphs[0].runs:
-            run = tf.paragraphs[0].runs[0]
-            old_style = (run.font.size, run.font.bold)
-        tf.text = title
-        if old_style and tf.paragraphs[0].runs:
-            run = tf.paragraphs[0].runs[0]
-            run.font.size, run.font.bold = old_style
+        for paragraph in tf.paragraphs:
+            for run in paragraph.runs:
+                if "XX" in run.text:
+                    run.text = run.text.replace("XX", prefix)
         return
 
 
@@ -189,10 +188,10 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
     template = resource_path("PPT模板.pptx")
     template = template if os.path.exists(template) else None
     prs = Presentation(template) if template else Presentation()
-    title = _report_title(process_name)
     if template:
-        _fill_template_cover(prs, title)
+        _fill_template_cover(prs, process_name)
     else:
+        title = _report_title(process_name)
         prs.slide_width = Inches(13.333)
         prs.slide_height = Inches(7.5)
         # ---------- 标题页（无模板时） ----------

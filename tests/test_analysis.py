@@ -279,11 +279,11 @@ class AnalysisTest(unittest.TestCase):
         prs = Presentation(ppt)
         self.assertGreaterEqual(len(prs.slides), 6)  # 模板 2 页 + 内容页
         self.assertTrue(any(shape.has_chart for s in prs.slides for shape in s.shapes))
-        cover_texts = [
-            sh.text_frame.text for sh in prs.slides[0].shapes
-            if sh.has_text_frame and sh.text_frame.text.strip() == "LM设备一键自动分析报告"
-        ]
-        self.assertTrue(cover_texts)
+        cover_text = "\n".join(
+            sh.text_frame.text for sh in prs.slides[0].shapes if sh.has_text_frame
+        )
+        self.assertIn("LM設備一鍵自動分析報告", cover_text)
+        self.assertIn("——UPH、EFF、Alarm", cover_text)  # 模板副标题保留
 
     def test_status_time_only_multi_file(self):
         # FR 风格：纯时间戳 + 按日分文件，跨日 23:59:58 -> 00:00:01 应为 3 秒
