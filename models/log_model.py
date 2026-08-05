@@ -20,6 +20,9 @@ from utils.file_utils import read_files, clean_for_excel
 
 
 class LogModel:
+    # 文档合并的行数上限：超过后放弃合并，改为按日志文件逐个导出 Excel
+    MERGE_MAX_TOTAL_ROWS = 1_000_000
+
     # ---------- 通用：读取 / 导出 ----------
     def _read_all(self, source_dir, progress_callback=None, file_filters=None, cancel_event=None):
         def on_read_progress(frac):
@@ -40,15 +43,19 @@ class LogModel:
     @staticmethod
     def _write_sheets(out_path, sheets, cancel_event=None):
         max_rows = 1048575  # Excel 单表最大行数（含表头行）
+        heavy = False  # 是否包含超大表（>20万行）：跳过整体格式化，避免重新加载保存拖慢导出
         with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
             for sheet_name, df in sheets.items():
                 if cancel_event is not None and cancel_event.is_set():
                     from models.exceptions import OperationCancelled
                     raise OperationCancelled()
                 if len(df) <= max_rows:
+                    if len(df) > LogModel.MAX_FORMAT_ROWS:
+                        heavy = True
                     df.to_excel(writer, sheet_name=sheet_name, index=False)
                 else:
                     # 超限自动拆分：AllLogs → AllLogs_1, AllLogs_2 ...
+                    heavy = True
                     n = (len(df) + max_rows - 1) // max_rows
                     for i in range(n):
                         if cancel_event is not None and cancel_event.is_set():
@@ -57,7 +64,8 @@ class LogModel:
                         chunk = df.iloc[i * max_rows:(i + 1) * max_rows]
                         name = f"{sheet_name}_{i + 1}"[:31]
                         chunk.to_excel(writer, sheet_name=name, index=False)
-        LogModel._format_workbook(out_path)
+        if not heavy:
+            LogModel._format_workbook(out_path)
 
     # 超大表逐格样式上限（超过则只做表头/列宽，避免卡死）
     MAX_FORMAT_ROWS = 200000
@@ -116,6 +124,26 @@ class LogModel:
         if progress_callback:
             progress_callback(30)
 
+        if len(df_all) > self.MERGE_MAX_TOTAL_ROWS:
+            # 原始日志过大：放弃合并，按日志文件逐个导出 Excel
+            return self._process_per_file(
+                df_all, output_dir, keywords, separator, cancel_event, progress_callback,
+            )
+
+        sheets = self._build_merge_sheets(df_all, keywords, separator, cancel_event)
+
+        if progress_callback:
+            progress_callback(70)
+
+        out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+
+        if progress_callback:
+            progress_callback(100)
+        return out_path
+
+    def _build_merge_sheets(self, df_all, keywords, separator, cancel_event=None):
+        """关键词筛选 + 分隔符拆分，返回 {'AllLogs':..., 'Filtered':...}。"""
         if keywords:
             kw_list = re.split(r'[ ;、，]+', keywords)
             kw_list = [k for k in kw_list if k]
@@ -127,9 +155,6 @@ class LogModel:
                 filtered_df = df_all.copy()
         else:
             filtered_df = df_all.copy()
-
-        if progress_callback:
-            progress_callback(50)
 
         has_filtered_rows = not filtered_df.empty
         has_separator = separator is not None and separator != ''
@@ -167,18 +192,32 @@ class LogModel:
                 ], axis=1)
                 # Content 已由 OriginalContent 取代，无需（也无法）再删除
 
-        if progress_callback:
-            progress_callback(70)
-
         sheets = {'AllLogs': df_all}
         if generate_filtered and filtered_df is not None and not filtered_df.empty:
             sheets['Filtered'] = filtered_df
-        out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
-        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+        return sheets
 
+    def _process_per_file(self, df_all, output_dir, keywords, separator, cancel_event=None,
+                          progress_callback=None):
+        """日志过大：新建子文件夹，按日志文件逐个导出 Excel（文件名 = 日志文件名去掉扩展名）。"""
+        sub_dir = os.path.join(output_dir, 'LogAnalysis_Files')
+        os.makedirs(sub_dir, exist_ok=True)
+        file_names = sorted(df_all['FileName'].unique())
+        n = len(file_names)
+        for idx, fname in enumerate(file_names):
+            if cancel_event is not None and cancel_event.is_set():
+                from models.exceptions import OperationCancelled
+                raise OperationCancelled()
+            sub = df_all[df_all['FileName'] == fname].copy()
+            sheets = self._build_merge_sheets(sub, keywords, separator, cancel_event)
+            stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
+            out_path = os.path.join(sub_dir, f'{stem}.xlsx')
+            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+            if progress_callback:
+                progress_callback(30 + int(60 * (idx + 1) / n))
         if progress_callback:
             progress_callback(100)
-        return out_path
+        return f"{sub_dir}（日志过大，已按文件分别导出 {n} 个 Excel）"
 
     # ---------- 功能二：UPH 分析 ----------
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,

@@ -79,6 +79,34 @@ class LogModelTest(unittest.TestCase):
         self.assertEqual(xl.sheet_names, ["AllLogs_1", "AllLogs_2"])
         self.assertEqual(len(xl.parse("AllLogs_1")), 1048575)
         self.assertEqual(len(xl.parse("AllLogs_2")), 10)
+        from openpyxl import load_workbook
+        ws = load_workbook(out)["AllLogs_1"]
+        self.assertNotIn("DDEBF7", str(ws.cell(row=1, column=1).fill.start_color.rgb))  # 超大表跳过格式化
+
+    def test_process_per_file_when_too_large(self):
+        rows = []
+        for fname, cnt in (("a.log", 4), ("b.log", 4)):
+            for i in range(cnt):
+                rows.append({"FileName": fname, "Content": f"2026-07-08 00:00:0{i} x"})
+        out = tempfile.mkdtemp()
+        old = LogModel.MERGE_MAX_TOTAL_ROWS
+        LogModel.MERGE_MAX_TOTAL_ROWS = 5  # 共 8 行 > 5 → 按文件导出
+        try:
+            result = LogModel().process("不存在的目录", out, rows=rows)
+        finally:
+            LogModel.MERGE_MAX_TOTAL_ROWS = old
+        self.assertIn("已按文件分别导出 2 个 Excel", result)
+        sub = os.path.join(out, "LogAnalysis_Files")
+        self.assertTrue(os.path.isdir(sub))
+        self.assertTrue(os.path.exists(os.path.join(sub, "a.xlsx")))
+        self.assertTrue(os.path.exists(os.path.join(sub, "b.xlsx")))
+        self.assertFalse(os.path.exists(os.path.join(out, "LogAnalysis.xlsx")))
+
+    def test_process_merged_when_small(self):
+        rows = [{"FileName": "a.log", "Content": "2026-07-08 00:00:00 x"}]
+        out = tempfile.mkdtemp()
+        path = LogModel().process("不存在的目录", out, rows=rows)
+        self.assertTrue(os.path.exists(path))  # LogAnalysis.xlsx
 
     def test_detect_encoding_gbk_single_byte_fallback(self):
         from utils.file_utils import detect_encoding
