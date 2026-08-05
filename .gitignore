@@ -14,3 +14,6 @@ LM log/
 # 客户保密文档（不入库）
 自定义协议.pdf
 CoreTech Optical AME Key Metrics Definition v0.8.pdf
+
+# 用户自定义制程模板（本地持久化）
+custom_template.json

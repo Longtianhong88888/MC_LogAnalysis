@@ -18,27 +18,37 @@ from utils.file_utils import read_files, clean_for_excel
 
 class LogModel:
     # ---------- 通用：读取 / 导出 ----------
-    def _read_all(self, source_dir, progress_callback=None):
+    def _read_all(self, source_dir, progress_callback=None, file_filters=None):
         def on_read_progress(frac):
             if progress_callback:
                 progress_callback(10 + int(19 * frac))
 
-        all_data = read_files(source_dir, progress_callback=on_read_progress)
+        all_data = read_files(source_dir, progress_callback=on_read_progress, file_filters=file_filters)
         if not all_data:
             raise ValueError("日志文件内容均为空，无法解析")
         return all_data
 
     @staticmethod
     def _write_sheets(out_path, sheets):
+        max_rows = 1048575  # Excel 单表最大行数（含表头行）
         with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
             for sheet_name, df in sheets.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+                if len(df) <= max_rows:
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
+                else:
+                    # 超限自动拆分：AllLogs → AllLogs_1, AllLogs_2 ...
+                    n = (len(df) + max_rows - 1) // max_rows
+                    for i in range(n):
+                        chunk = df.iloc[i * max_rows:(i + 1) * max_rows]
+                        name = f"{sheet_name}_{i + 1}"[:31]
+                        chunk.to_excel(writer, sheet_name=name, index=False)
 
     # ---------- 功能一：文档合并与内容拆分 ----------
-    def process(self, source_dir, output_dir, keywords=None, separator=None, progress_callback=None):
+    def process(self, source_dir, output_dir, keywords=None, separator=None,
+                file_filters=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        all_data = self._read_all(source_dir, progress_callback)
+        all_data = self._read_all(source_dir, progress_callback, file_filters=file_filters)
         df_all = pd.DataFrame(all_data)
 
         if progress_callback:
@@ -108,10 +118,10 @@ class LogModel:
     # ---------- 功能二：UPH 分析 ----------
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,
                     normal_threshold=10.0, planned_threshold=900.0,
-                    ideal_ct=None, max_ct=None, progress_callback=None):
+                    ideal_ct=None, max_ct=None, file_filters=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback)
+        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(40)
         cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold)
@@ -141,11 +151,11 @@ class LogModel:
 
     # ---------- 功能三：EFF 分析 ----------
     def analyze_eff(self, source_dir, output_dir, planned_hours=None,
-                    pdt_reason_ids=None, progress_callback=None):
+                    pdt_reason_ids=None, file_filters=None, progress_callback=None):
         """CoreTech AME 效率：EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态。"""
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback)
+        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(50)
         status_summary, hourly, detail = analyze_status(rows)
@@ -170,10 +180,10 @@ class LogModel:
 
     # ---------- 功能四：报警分析 ----------
     def analyze_alarms(self, source_dir, output_dir, alarm_keywords="报警,ALARM,ERROR,NG,失败,异常,停止信号",
-                       progress_callback=None):
+                       file_filters=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback)
+        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(50)
         summary, by_keyword, detail = summarize_alarms(rows, alarm_keywords)
@@ -191,10 +201,10 @@ class LogModel:
         return out_path
 
     # ---------- 功能五：机台状态分析 ----------
-    def analyze_status(self, source_dir, output_dir, progress_callback=None):
+    def analyze_status(self, source_dir, output_dir, file_filters=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = self._read_all(source_dir, progress_callback)
+        rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(50)
         summary, hourly, detail = analyze_status(rows)

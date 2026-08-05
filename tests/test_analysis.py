@@ -201,6 +201,52 @@ class AnalysisTest(unittest.TestCase):
         self.assertIn("EMProduction", xl.sheet_names)
         self.assertEqual(xl.parse("Summary").iloc[0]['周期总数'], 3)
 
+    def test_analyze_uph_with_file_filters(self):
+        src = tempfile.mkdtemp()
+        out = tempfile.mkdtemp()
+        with open(os.path.join(src, "记录PLC2当前工位当前步数记录.log"), "w", encoding="utf-8") as f:
+            for c in CYCLE_ROWS:
+                f.write(c["Content"] + "\n")
+        with open(os.path.join(src, "RAYPRUS交互记录.log"), "w", encoding="utf-8") as f:
+            f.write("2026-07-28 00:27:39.715 [EM][lotno:LOT1,inputqty:100,goodqty:98,ngqty:2,head:001,"
+                    "startdatetime:20260728000000491,enddatetime:20260728002739713]\n")
+        with open(os.path.join(src, "Debug记录.log"), "w", encoding="utf-8") as f:
+            f.write("2026-07-28 00:00:00.000 无料NG\n")
+        path = LogModel().analyze_uph(
+            src, out, trigger_keywords="放生料完成",
+            file_filters=["记录PLC2当前工位当前步数记录", "RAYPRUS交互记录"],
+        )
+        xl = pd.ExcelFile(path)
+        self.assertEqual(xl.parse("Summary").iloc[0]['周期总数'], 3)  # 只读 PLC2 文件
+        self.assertEqual(len(xl.parse("EMProduction")), 1)            # EM 来自 RAYPRUS 文件
+
+    def test_custom_template_roundtrip(self):
+        from models.process_templates import get_template, load_custom_template, save_custom_template
+        tpl = {
+            "description": "用户自定义模板",
+            "file_filters": ["记录PLC2", "RAYPRUS"],
+            "UPH分析": {"trigger_keywords": "放生料完成", "units_per_cycle": 1},
+            "EFF分析": {"planned_hours": 22.0, "pdt_reason_ids": "411"},
+            "报警分析": {"alarm_keywords": "NG,异常"},
+            "机台状态分析": {},
+        }
+        path = os.path.join(tempfile.mkdtemp(), "custom_template.json")
+        save_custom_template(tpl, path)
+        loaded = load_custom_template(path)
+        self.assertEqual(loaded["UPH分析"]["trigger_keywords"], "放生料完成")
+        self.assertEqual(loaded["EFF分析"]["pdt_reason_ids"], "411")
+        got = get_template("自定义", path)
+        self.assertEqual(got["file_filters"], ["记录PLC2", "RAYPRUS"])
+
+    def test_builtin_templates(self):
+        from models.process_templates import PROCESS_TEMPLATES
+        self.assertEqual(
+            PROCESS_TEMPLATES["LM 激光打标"]["UPH分析"]["trigger_keywords"], "MarkEnd1"
+        )
+        caw = PROCESS_TEMPLATES["CAW 组装"]
+        self.assertEqual(caw["UPH分析"]["trigger_keywords"], "放熟料完成,放生料完成")
+        self.assertEqual(caw["EFF分析"]["file_filters"], ["RAYPRUS交互记录"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,9 +20,11 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from models.process_templates import CUSTOM_TEMPLATE_NAME, PROCESS_TEMPLATES, get_template
 from utils.resource_utils import resource_path
 
-FEATURES = ["文档合并与内容拆分", "UPH分析", "EFF分析", "报警分析", "机台状态分析"]
+ONE_CLICK_FEATURE = "一键分析（全部）"
+FEATURES = ["文档合并与内容拆分", "UPH分析", "EFF分析", "报警分析", "机台状态分析", ONE_CLICK_FEATURE]
 
 DEFAULT_TRIGGER_KEYWORDS = "MarkEnd1"
 DEFAULT_ALARM_KEYWORDS = "报警,ALARM,ERROR,NG,失败,异常,停止信号"
@@ -66,6 +68,27 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
 
+        # 制程模板
+        template_row = QHBoxLayout()
+        template_row.addWidget(QLabel("制程模板："))
+        self.template_combo = QComboBox()
+        self.template_combo.addItems(list(PROCESS_TEMPLATES.keys()))
+        self.template_combo.currentIndexChanged.connect(self._on_template_changed)
+        template_row.addWidget(self.template_combo)
+        self.save_template_btn = QPushButton("保存为自定义模板")
+        self.save_template_btn.clicked.connect(self.controller.save_custom_template)
+        template_row.addWidget(self.save_template_btn)
+        template_row.addStretch(1)
+        root.addLayout(template_row)
+
+        # 自定义模板的日志文件筛选
+        filter_row = QHBoxLayout()
+        filter_row.addWidget(QLabel("日志文件筛选："))
+        self.custom_filter_edit = QLineEdit()
+        self.custom_filter_edit.setPlaceholderText("逗号分隔文件名关键词，留空=全部（仅自定义模板生效）")
+        filter_row.addWidget(self.custom_filter_edit, 1)
+        root.addLayout(filter_row)
+
         # 功能选择
         feature_row = QHBoxLayout()
         feature_row.addWidget(QLabel("功能选择："))
@@ -83,8 +106,10 @@ class MainWindow(QMainWindow):
         self._build_eff_page()
         self._build_alarm_page()
         self._build_status_page()
+        self._build_all_page()
         root.addWidget(self.param_stack)
         self._on_feature_changed(0)
+        self._apply_template()
 
         # 路径
         path_box = QGroupBox("路径")
@@ -204,6 +229,36 @@ class MainWindow(QMainWindow):
                       "统计各状态时长与占比，并按小时输出分布。")
         note.setWordWrap(True)
         form.addRow(note)
+
+    def _build_all_page(self):
+        form = self._new_param_page()
+        note = QLabel("按当前制程模板依次运行 UPH / EFF / 报警 / 机台状态四项分析，\n"
+                      "分别输出 UPH_Analysis.xlsx、EFF_Analysis.xlsx、Alarm_Analysis.xlsx、Status_Analysis.xlsx。")
+        note.setWordWrap(True)
+        form.addRow(note)
+
+    def _on_template_changed(self, index):
+        self._apply_template()
+
+    def _apply_template(self):
+        """按当前制程模板预填各功能参数；自定义模板同时回填保存的配置。"""
+        tpl = get_template(self.template_combo.currentText())
+        uph = tpl.get("UPH分析") or {}
+        eff = tpl.get("EFF分析") or {}
+        alarm = tpl.get("报警分析") or {}
+        if hasattr(self, 'uph_trigger_edit'):
+            self.uph_trigger_edit.setText(str(uph.get("trigger_keywords") or DEFAULT_TRIGGER_KEYWORDS))
+            self.uph_units_spin.setValue(int(uph.get("units_per_cycle") or 1))
+            self.uph_normal_spin.setValue(float(uph.get("normal_threshold") or 10.0))
+            self.uph_planned_spin.setValue(float(uph.get("planned_threshold") or 900.0))
+            self.uph_ideal_ct_edit.setText("" if not uph.get("ideal_ct") else str(uph["ideal_ct"]))
+            self.uph_max_ct_edit.setText("" if not uph.get("max_ct") else str(uph["max_ct"]))
+            self.eff_planned_hours_edit.setText("" if not eff.get("planned_hours") else str(eff["planned_hours"]))
+            self.eff_pdt_reason_edit.setText(str(eff.get("pdt_reason_ids") or ""))
+            self.alarm_keywords_edit.setText(str(alarm.get("alarm_keywords") or DEFAULT_ALARM_KEYWORDS))
+            if self.template_combo.currentText() == CUSTOM_TEMPLATE_NAME:
+                filters = tpl.get("file_filters")
+                self.custom_filter_edit.setText(", ".join(filters) if filters else "")
 
     def _on_feature_changed(self, index):
         self.param_stack.setCurrentIndex(index)

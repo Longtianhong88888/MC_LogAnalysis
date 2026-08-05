@@ -58,6 +58,28 @@ class LogModelTest(unittest.TestCase):
         self.assertIn("day1/station1/a.log", names)
         self.assertIn("b.txt", names)
 
+    def test_read_files_file_filters(self):
+        from utils.file_utils import read_files
+        src = tempfile.mkdtemp()
+        with open(os.path.join(src, "RAYPRUS交互记录.log"), "w", encoding="utf-8") as f:
+            f.write("2026-07-08 00:00:01.000 x\n")
+        with open(os.path.join(src, "记录PLC2当前工位当前步数记录.log"), "w", encoding="utf-8") as f:
+            f.write("2026-07-08 00:00:02.000 y\n")
+        with open(os.path.join(src, "Debug记录.log"), "w", encoding="utf-8") as f:
+            f.write("2026-07-08 00:00:03.000 z\n")
+        rows = read_files(src, file_filters=["记录PLC2", "RAYPRUS"])
+        names = {r["FileName"] for r in rows}
+        self.assertEqual(names, {"记录PLC2当前工位当前步数记录.log", "RAYPRUS交互记录.log"})
+
+    def test_write_sheets_split_large(self):
+        big = pd.DataFrame({"a": range(1048575 + 10)})
+        out = os.path.join(tempfile.mkdtemp(), "big.xlsx")
+        LogModel._write_sheets(out, {"AllLogs": big})
+        xl = pd.ExcelFile(out)
+        self.assertEqual(xl.sheet_names, ["AllLogs_1", "AllLogs_2"])
+        self.assertEqual(len(xl.parse("AllLogs_1")), 1048575)
+        self.assertEqual(len(xl.parse("AllLogs_2")), 10)
+
 
 if __name__ == "__main__":
     unittest.main()
