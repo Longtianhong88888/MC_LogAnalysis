@@ -21,3 +21,7 @@ custom_template.json
 
 # PowerPoint 临时锁文件
 ~$*
+
+# PPT 报告模板（含内部数据，不随代码/包分发，用户自行放置）
+Analysis_Report.pptx
+PPT模板.pptx

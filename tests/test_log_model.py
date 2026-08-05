@@ -88,6 +88,33 @@ class LogModelTest(unittest.TestCase):
             f.write("2026-07-08 00:00:00 真空信号不达标\n".encode("gbk"))
         self.assertIn(detect_encoding(path).lower(), ("gbk", "gb2312"))
 
+    def test_find_external_resource(self):
+        from utils.resource_utils import find_external_resource
+        self.assertTrue(os.path.exists(find_external_resource("Analysis_Report.pptx") or ""))
+
+    def test_find_external_resource_frozen(self):
+        import sys as _sys
+        from utils import resource_utils
+        tmp = tempfile.mkdtemp()
+        fake_exe = os.path.join(tmp, "MC_LogAnalysis.exe")
+        with open(fake_exe, "wb") as f:
+            f.write(b"")
+        with open(os.path.join(tmp, "Analysis_Report.pptx"), "wb") as f:
+            f.write(b"x")
+        old_frozen = getattr(_sys, "frozen", None)
+        old_exe = _sys.executable
+        _sys.frozen = True
+        _sys.executable = fake_exe
+        try:
+            found = resource_utils.find_external_resource("Analysis_Report.pptx")
+            self.assertEqual(found, os.path.join(tmp, "Analysis_Report.pptx"))
+        finally:
+            if old_frozen is None:
+                del _sys.frozen
+            else:
+                _sys.frozen = old_frozen
+            _sys.executable = old_exe
+
     def test_excel_formatting(self):
         out = os.path.join(tempfile.mkdtemp(), "fmt.xlsx")
         LogModel._write_sheets(out, {"S": pd.DataFrame({"名称": ["A", "B"], "数量": [1, ""]})})

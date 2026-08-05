@@ -12,7 +12,7 @@
   3. **EFF 分析**：按 CoreTech AME 定义 EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态计算，可拆分为 pDT/uDT，导出 `EFF_Analysis.xlsx`
   4. **报警分析**：统计报警关键词命中记录（按模块、按关键词汇总），导出 `Alarm_Analysis.xlsx`
   5. **机台状态分析**：识别 `status:RUN / IDLE / DOWN` 状态行，统计各状态时长与占比，导出 `Status_Analysis.xlsx`
-  6. **一键分析（全部）**：按当前制程模板依次运行 UPH/EFF/报警/机台状态四项，分别导出 4 个 Excel，并基于 `Analysis_Report.pptx`（备用 `PPT模板.pptx`）自动生成汇总 PPT 报告（含各分析 summary 与图表）
+  6. **一键分析（全部）**：按当前制程模板依次运行 UPH/EFF/报警/机台状态四项，分别导出 4 个 Excel，并基于 `Analysis_Report.pptx` 自动生成汇总 PPT 报告（含各分析 summary 与图表）
 - 解析在后台线程执行，界面不卡顿，带进度条
 - 启动画面（`Machine.png`）与应用图标（`log.ico`）
 
@@ -40,6 +40,8 @@ pyinstaller --onefile --windowed --icon log.ico --add-data "Machine.png;." --add
 ```
 
 也可以推送 `main` / `master` 分支，由 GitHub Actions 自动构建（见 `.github/workflows/build.yml`）。
+
+> PPT 报告模板（`Analysis_Report.pptx`）包含内部数据，**不随 exe 打包**。打包后的用户将模板放到 exe 同目录即可生效；开发模式下放到项目根目录。未放置模板时自动使用内置的简洁版式。
 
 ## 项目结构
 

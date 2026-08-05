@@ -17,7 +17,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-from utils.resource_utils import resource_path
+from utils.resource_utils import find_external_resource
 
 HEADER_FILL = RGBColor(0xDD, 0xEB, 0xF7)
 GRAY = RGBColor(0x60, 0x60, 0x60)
@@ -350,7 +350,7 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
     """读取 output_dir 下 4 个分析 Excel，基于最终模板生成报告，返回报告路径。"""
     out_path = os.path.join(output_dir, report_name)
     template = next(
-        (p for p in (resource_path(name) for name in _TEMPLATE_CANDIDATES) if os.path.exists(p)),
+        (p for p in (find_external_resource(name) for name in _TEMPLATE_CANDIDATES) if p),
         None,
     )
     prs = Presentation(template) if template else Presentation()
