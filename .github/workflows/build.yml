@@ -25,7 +25,7 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --add-data "PPT模板.pptx;." --name MC_LogAnalysis main.py
+        pyinstaller --onefile --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --add-data "Analysis_Report.pptx;." --add-data "PPT模板.pptx;." --name MC_LogAnalysis main.py
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:

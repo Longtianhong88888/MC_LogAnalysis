@@ -275,15 +275,22 @@ class AnalysisTest(unittest.TestCase):
         m.analyze_eff(src, out)
         m.analyze_alarms(src, out)
         m.analyze_status(src, out)
-        ppt = build_ppt_report(out, process_name="LM 激光打标")
+        ppt = build_ppt_report(out, process_name="CAW 组装")
         prs = Presentation(ppt)
-        self.assertGreaterEqual(len(prs.slides), 6)  # 模板 2 页 + 内容页
+        self.assertEqual(len(prs.slides), 7)  # 封面 + 6 内容页（模板目录页已删除）
+        self.assertFalse(any('agenda' in s.slide_layout.name.lower() for s in prs.slides))
         self.assertTrue(any(shape.has_chart for s in prs.slides for shape in s.shapes))
         cover_text = "\n".join(
             sh.text_frame.text for sh in prs.slides[0].shapes if sh.has_text_frame
         )
-        self.assertIn("LM設備一鍵自動分析報告", cover_text)
+        self.assertIn("CAW設備一鍵自動分析報告", cover_text)  # 制程字母已替换
         self.assertIn("——UPH、EFF、Alarm", cover_text)  # 模板副标题保留
+        self.assertIn("1 /", cover_text)
+        self.assertIn("7", cover_text)  # 封面总页数
+        uph_page = "\n".join(
+            sh.text_frame.text for sh in prs.slides[1].shapes if sh.has_text_frame
+        )
+        self.assertIn("2/7", uph_page)  # 内容页页码同步（与模板样式一致）
 
     def test_status_time_only_multi_file(self):
         # FR 风格：纯时间戳 + 按日分文件，跨日 23:59:58 -> 00:00:01 应为 3 秒
