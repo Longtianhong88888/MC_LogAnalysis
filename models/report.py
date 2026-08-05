@@ -8,7 +8,7 @@ from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE
-from pptx.enum.text import MSO_ANCHOR
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
 from utils.resource_utils import resource_path
@@ -48,8 +48,21 @@ def _content_layout(prs):
     return prs.slide_layouts[0] if prs.slide_layouts else None
 
 
+def _clean_placeholders(slide):
+    """删除内容页上空白的 body/clipart 占位符（保留标题、页脚、页码），避免与图表/表格重叠。"""
+    for shape in list(slide.shapes):
+        if not shape.is_placeholder:
+            continue
+        idx = shape.placeholder_format.idx
+        if idx == 0 or idx in (3, 4):  # 标题、页脚、页码
+            continue
+        sp = shape._element
+        sp.getparent().remove(sp)
+
+
 def _add_slide(prs, title, subtitle=""):
     slide = prs.slides.add_slide(_content_layout(prs))
+    _clean_placeholders(slide)
     if slide.shapes.title is not None:
         slide.shapes.title.text = title
     else:
@@ -58,7 +71,7 @@ def _add_slide(prs, title, subtitle=""):
         box.text_frame.paragraphs[0].font.size = Pt(26)
         box.text_frame.paragraphs[0].font.bold = True
     if subtitle:
-        box2 = slide.shapes.add_textbox(Inches(0.5), Inches(1.2), Inches(12.3), Inches(0.35))
+        box2 = slide.shapes.add_textbox(Inches(0.5), Inches(1.18), Inches(12.3), Inches(0.32))
         tf2 = box2.text_frame
         tf2.text = subtitle
         tf2.paragraphs[0].font.size = Pt(13)
@@ -71,13 +84,28 @@ def _add_table(slide, df, left, top, width, height, max_rows=12):
     rows, cols = data.shape
     if rows == 0 or cols == 0:
         return
+    # 高度按行数自适应，避免行数少时出现超大空行
+    total_h = min(height, 0.42 + (rows + 1) * 0.30)
     graphic = slide.shapes.add_table(
-        rows + 1, cols, Inches(left), Inches(top), Inches(width), Inches(height)
+        rows + 1, cols, Inches(left), Inches(top), Inches(width), Inches(total_h)
     )
     table = graphic.table
-    col_width = width / cols
+    # 列宽按内容长度比例分配（中文按 2 字符宽计），并归一化到总宽
+    lens = []
+    for j, col in enumerate(data.columns):
+        m = sum(2 if ord(ch) > 127 else 1 for ch in str(col))
+        for value in data[col]:
+            s = "" if pd.isna(value) else str(value)
+            m = max(m, sum(2 if ord(ch) > 127 else 1 for ch in s))
+        lens.append(max(m, 5))
+    total_len = sum(lens)
+    raw_widths = [max(width * ln / total_len, 0.6) for ln in lens]
+    scale = width / sum(raw_widths)
     for j in range(cols):
-        table.columns[j].width = Inches(col_width)
+        table.columns[j].width = Inches(raw_widths[j] * scale)
+    table.rows[0].height = Inches(0.38)
+    for i in range(1, rows + 1):
+        table.rows[i].height = Inches(0.30)
     for j, col in enumerate(data.columns):
         cell = table.cell(0, j)
         cell.text = str(col)
@@ -85,12 +113,14 @@ def _add_table(slide, df, left, top, width, height, max_rows=12):
         cell.fill.fore_color.rgb = HEADER_FILL
         cell.text_frame.paragraphs[0].font.bold = True
         cell.text_frame.paragraphs[0].font.size = Pt(10)
+        cell.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
         cell.vertical_anchor = MSO_ANCHOR.MIDDLE
     for i, (_, row) in enumerate(data.iterrows(), start=1):
         for j, value in enumerate(row):
             cell = table.cell(i, j)
             cell.text = "" if pd.isna(value) else str(value)
             cell.text_frame.paragraphs[0].font.size = Pt(10)
+            cell.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE
     return table
 
