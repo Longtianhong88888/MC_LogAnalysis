@@ -47,24 +47,18 @@ PROCESS_TEMPLATES = {
     },
     "CAW 组装": {
         "description": "CAW 组装机：PLC2 步数记录算周期，RAYPRUS 交互记录取状态与 EM 产量",
-        "file_filters": None,
+        "file_filters": ["记录PLC", "RAYPRUS", "Debug", "设备状态"],
         "UPH分析": {
-            "file_filters": ["记录PLC2当前工位当前步数记录", "RAYPRUS交互记录"],
             "trigger_keywords": "放熟料完成,放生料完成",
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
         },
-        "EFF分析": {
-            "file_filters": ["RAYPRUS交互记录"],
-        },
+        "EFF分析": {},
         "报警分析": {
-            "file_filters": ["RAYPRUS", "记录PLC", "Debug", "设备状态"],
             "alarm_keywords": DEFAULT_ALARM_KEYWORDS,
         },
-        "机台状态分析": {
-            "file_filters": ["RAYPRUS交互记录"],
-        },
+        "机台状态分析": {},
     },
     "FR 机台": {
         "description": "FR 点胶机：轴点胶完成/有漏点产品为单件完成标记（漏点件以有漏点产品代替点胶完成），左轴/右轴分模组",

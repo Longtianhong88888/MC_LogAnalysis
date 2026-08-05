@@ -6,10 +6,10 @@ import traceback
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 from models.log_model import LogModel
-from models.process_templates import CUSTOM_TEMPLATE_NAME, get_template, save_custom_template, template_file_filters
+from models.process_templates import get_template, save_custom_template
 from views.main_window import ONE_CLICK_FEATURE
 
-ONE_CLICK_FEATURES = ["UPH分析", "EFF分析", "报警分析", "机台状态分析"]
+ONE_CLICK_FEATURES = ["文档合并与内容拆分", "UPH分析", "EFF分析", "报警分析", "机台状态分析"]
 
 FEATURE_METHODS = {
     "文档合并与内容拆分": "process",
@@ -72,16 +72,20 @@ class LogController:
                 if feature == ONE_CLICK_FEATURE:
                     results = []
                     for sub_feature in ONE_CLICK_FEATURES:
-                        method_name = FEATURE_METHODS[sub_feature]
-                        params = self._collect_params(sub_feature)
-                        params.update(self._template_settings(template, sub_feature))
-                        result = getattr(model, method_name)(
-                            source_dir=self.source_dir,
-                            output_dir=self.output_dir,
-                            progress_callback=lambda value: self._progress_queue.put(('progress', value)),
-                            **params,
-                        )
-                        results.append(f"{sub_feature}：{result}")
+                        try:
+                            method_name = FEATURE_METHODS[sub_feature]
+                            params = self._collect_params(sub_feature)
+                            params.update(self._template_settings(template, sub_feature))
+                            result = getattr(model, method_name)(
+                                source_dir=self.source_dir,
+                                output_dir=self.output_dir,
+                                progress_callback=lambda value: self._progress_queue.put(('progress', value)),
+                                **params,
+                            )
+                            results.append(f"{sub_feature}：{result}")
+                        except Exception as exc:
+                            traceback.print_exc()
+                            results.append(f"{sub_feature}失败：{exc}")
                     try:
                         from models.report import build_ppt_report
                         process_name = (
@@ -141,12 +145,9 @@ class LogController:
         return {"keywords": keywords or None, "separator": separator or None}
 
     def _template_settings(self, template, feature):
-        """取当前模板下某功能的非界面参数（文件筛选、模组提取等）；自定义模板优先使用界面输入的筛选关键词。"""
-        if hasattr(self.view, 'template_combo') and self.view.template_combo.currentText() == CUSTOM_TEMPLATE_NAME:
-            text = self.view.custom_filter_edit.text().strip()
-            filters = [k for k in re.split(r'[,，、;；\s]+', text) if k] if text else None
-        else:
-            filters = template_file_filters(template, feature)
+        """取当前模板下某功能的非界面参数（文件筛选、模组提取等）；日志文件筛选框对所有制程生效且可手动修改。"""
+        text = self.view.custom_filter_edit.text().strip()
+        filters = [k for k in re.split(r'[,，、;；\s]+', text) if k] if text else None
         settings = {}
         if filters:
             settings["file_filters"] = filters

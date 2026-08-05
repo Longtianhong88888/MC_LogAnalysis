@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         filter_row = QHBoxLayout()
         filter_row.addWidget(QLabel("日志文件筛选："))
         self.custom_filter_edit = QLineEdit()
-        self.custom_filter_edit.setPlaceholderText("逗号分隔文件名关键词，留空=全部（仅自定义模板生效）")
+        self.custom_filter_edit.setPlaceholderText("逗号分隔文件名关键词，留空=全部；随制程自动填充，可手动修改")
         filter_row.addWidget(self.custom_filter_edit, 1)
         root.addLayout(filter_row)
 
@@ -256,9 +256,8 @@ class MainWindow(QMainWindow):
             self.eff_planned_hours_edit.setText("" if not eff.get("planned_hours") else str(eff["planned_hours"]))
             self.eff_pdt_reason_edit.setText(str(eff.get("pdt_reason_ids") or ""))
             self.alarm_keywords_edit.setText(str(alarm.get("alarm_keywords") or DEFAULT_ALARM_KEYWORDS))
-            if self.template_combo.currentText() == CUSTOM_TEMPLATE_NAME:
-                filters = tpl.get("file_filters")
-                self.custom_filter_edit.setText(", ".join(filters) if filters else "")
+            filters = tpl.get("file_filters")
+            self.custom_filter_edit.setText(", ".join(filters) if filters else "")
 
     def _on_feature_changed(self, index):
         self.param_stack.setCurrentIndex(index)

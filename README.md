@@ -12,7 +12,7 @@
   3. **EFF 分析**：按 CoreTech AME 定义 EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态计算，可拆分为 pDT/uDT，导出 `EFF_Analysis.xlsx`
   4. **报警分析**：统计报警关键词命中记录（按模块、按关键词汇总），导出 `Alarm_Analysis.xlsx`
   5. **机台状态分析**：识别 `status:RUN / IDLE / DOWN` 状态行，统计各状态时长与占比，导出 `Status_Analysis.xlsx`
-  6. **一键分析（全部）**：按当前制程模板依次运行 UPH/EFF/报警/机台状态四项，分别导出 4 个 Excel，并基于 `Analysis_Report.pptx` 自动生成汇总 PPT 报告（含各分析 summary 与图表）
+  6. **一键分析（全部）**：按当前制程模板依次运行 文档合并与内容拆分/UPH/EFF/报警/机台状态，导出 5 个 Excel，并基于 `Analysis_Report.pptx` 自动生成汇总 PPT 报告（含各分析 summary 与图表）
 - 解析在后台线程执行，界面不卡顿，带进度条
 - 启动画面（`Machine.png`）与应用图标（`log.ico`）
 
@@ -30,6 +30,7 @@ python main.py
 1. 选择源文件夹（递归扫描其中的 `.log` / `.txt` 文件）
 2. 选择输出文件夹
 3. 选择制程模板（通用/自定义/LM 激光打标/CAW 组装/FR 机台），参数自动预填
+   - “日志文件筛选”随制程自动填充，可手动修改（留空=全部文件）
 4. 选择分析功能（或"一键分析（全部）"）
 5. 点击“开始解析”，完成后结果写入输出文件夹
 

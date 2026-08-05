@@ -257,7 +257,7 @@ class AnalysisTest(unittest.TestCase):
         )
         caw = PROCESS_TEMPLATES["CAW 组装"]
         self.assertEqual(caw["UPH分析"]["trigger_keywords"], "放熟料完成,放生料完成")
-        self.assertEqual(caw["EFF分析"]["file_filters"], ["RAYPRUS交互记录"])
+        self.assertEqual(caw["file_filters"], ["记录PLC", "RAYPRUS", "Debug", "设备状态"])
         self.assertIn("FR 机台", PROCESS_TEMPLATES)
         fr = PROCESS_TEMPLATES["FR 机台"]
         self.assertIn("不达标", fr["报警分析"]["alarm_keywords"])
@@ -265,6 +265,10 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(fr["UPH分析"]["trigger_keywords"], "轴点胶完成,有漏点产品")
         self.assertEqual(fr["UPH分析"]["module_pattern"], "(左轴|右轴)")
         self.assertEqual(fr["UPH分析"]["pure_uph_factor"], 0.5)
+
+    def test_one_click_includes_merge(self):
+        from controllers.log_controller import ONE_CLICK_FEATURES
+        self.assertIn("文档合并与内容拆分", ONE_CLICK_FEATURES)
 
     def test_module_pattern_with_defect_completion(self):
         # 漏点件以"有漏点产品"代替"点胶完成"，周期序列应连续且分左/右轴
