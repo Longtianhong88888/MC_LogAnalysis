@@ -153,6 +153,8 @@ class LogController:
         feature_tpl = template.get(feature) or {}
         if feature_tpl.get("module_pattern"):
             settings["module_pattern"] = feature_tpl["module_pattern"]
+        if feature_tpl.get("pure_uph_factor") is not None:
+            settings["pure_uph_factor"] = float(feature_tpl["pure_uph_factor"])
         return settings
 
     def save_custom_template(self):

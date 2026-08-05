@@ -72,6 +72,7 @@ PROCESS_TEMPLATES = {
         "UPH分析": {
             "trigger_keywords": "轴点胶完成,有漏点产品",
             "module_pattern": "(左轴|右轴)",
+            "pure_uph_factor": 0.5,
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,

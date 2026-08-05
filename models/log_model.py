@@ -168,7 +168,7 @@ class LogModel:
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,
                     normal_threshold=10.0, planned_threshold=900.0,
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
-                    progress_callback=None):
+                    pure_uph_factor=1.0, progress_callback=None):
         if progress_callback:
             progress_callback(5)
         rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
@@ -176,7 +176,8 @@ class LogModel:
             progress_callback(40)
         cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold,
                                  module_pattern=module_pattern)
-        summary = summarize_uph(cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct)
+        summary = summarize_uph(cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct,
+                                pure_uph_factor=pure_uph_factor)
         em = parse_em_production(rows)
         status_summary, _, _ = analyze_status(rows)
         run_seconds = None
@@ -185,7 +186,7 @@ class LogModel:
             run_seconds = float(run_rows.sum()) if len(run_rows) else None
         ame_summary = summarize_uph_ame(
             cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct,
-            em_df=em, run_seconds=run_seconds,
+            em_df=em, run_seconds=run_seconds, pure_uph_factor=pure_uph_factor,
         )
         if progress_callback:
             progress_callback(70)

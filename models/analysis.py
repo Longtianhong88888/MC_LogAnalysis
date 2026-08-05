@@ -143,11 +143,11 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
     )
 
 
-def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None):
+def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0):
     """
     按模块汇总 UPH（CoreTech AME 定义）：
     - UPH(个/小时)：产出数 / 统计时长（实际平均）
-    - Pure UPH：3600 × 每周期产出 / 理想周期CT（未提供时取正常周期平均）
+    - Pure UPH：3600 × 每周期产出 / 理想周期CT × pure_uph_factor（未提供时取正常周期平均；并行工位可设 0.5）
     - Derated UPH M2：3600 × 每周期产出 / 平均I/O周期（剔除 <0.9×理想CT 和 >1.1×最大理论CT 的离群点）
     """
     rows = []
@@ -159,8 +159,8 @@ def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None):
         total_sec = g['CycleSeconds'].sum()
         output_count = len(g) * units_per_cycle
         uph = round(output_count / (total_sec / 3600.0), 2) if total_sec > 0 else ''
-        pure = round(3600.0 * units_per_cycle / ideal_ct, 2) if ideal_ct else (
-            round(3600.0 * units_per_cycle / avg_normal, 2) if avg_normal else ''
+        pure = round(3600.0 * units_per_cycle / ideal_ct * pure_uph_factor, 2) if ideal_ct else (
+            round(3600.0 * units_per_cycle / avg_normal * pure_uph_factor, 2) if avg_normal else ''
         )
         valid = g['CycleSeconds']
         if ideal_ct:
@@ -187,14 +187,14 @@ def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None):
 
 
 def summarize_uph_ame(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None,
-                      em_df=None, run_seconds=None):
+                      em_df=None, run_seconds=None, pure_uph_factor=1.0):
     """CoreTech AME 整机 UPH 指标：Pure UPH、Derated UPH M1（投入/运行时间）、Derated UPH M2。"""
     total_cycles = len(cycles_df)
     total_sec = cycles_df['CycleSeconds'].sum() if total_cycles else 0.0
     normal = cycles_df.loc[cycles_df['Class'] == '正常周期', 'CycleSeconds'] if total_cycles else pd.Series(dtype=float)
     avg_normal = normal.mean() if len(normal) else None
-    pure = round(3600.0 * units_per_cycle / ideal_ct, 2) if ideal_ct else (
-        round(3600.0 * units_per_cycle / avg_normal, 2) if avg_normal else ''
+    pure = round(3600.0 * units_per_cycle / ideal_ct * pure_uph_factor, 2) if ideal_ct else (
+        round(3600.0 * units_per_cycle / avg_normal * pure_uph_factor, 2) if avg_normal else ''
     )
     valid = cycles_df['CycleSeconds'] if total_cycles else pd.Series(dtype=float)
     if ideal_ct:
