@@ -186,7 +186,7 @@ class LogModel:
             run_seconds = float(run_rows.sum()) if len(run_rows) else None
         ame_summary = summarize_uph_ame(
             cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct,
-            em_df=em, run_seconds=run_seconds, pure_uph_factor=pure_uph_factor,
+            em_df=em, run_seconds=run_seconds,
         )
         if progress_callback:
             progress_callback(70)

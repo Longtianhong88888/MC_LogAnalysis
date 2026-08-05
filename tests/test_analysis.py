@@ -84,13 +84,13 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(row0['Derated UPH M2(个/小时)'], 240.0)   # 剔除 241 后 avg=15 → 3600/15
 
     def test_pure_uph_factor(self):
-        # FR 并行工位：Pure UPH ×0.5，M2 不变
+        # FR 并行工位：单轴 Pure UPH ×0.5；整机 AME Pure 为左右合并，不乘系数
         df = build_cycles_df(CYCLE_ROWS, "放生料完成,放熟料完成")
         normal = summarize_uph(df, 1, pure_uph_factor=0.5)
-        ame = summarize_uph_ame(df, 1, pure_uph_factor=0.5)
+        ame = summarize_uph_ame(df, 1)
         self.assertEqual(normal.iloc[0]['Pure UPH(个/小时)'], 180.0)   # 360/2
         self.assertEqual(normal.iloc[0]['Derated UPH M2(个/小时)'], normal.iloc[0]['UPH(个/小时)'])
-        self.assertEqual(ame.iloc[0]['Pure UPH(个/小时)'], 180.0)
+        self.assertEqual(ame.iloc[0]['Pure UPH(个/小时)'], 360.0)      # 整机不乘系数
 
     def test_eff_coretech(self):
         rows = [

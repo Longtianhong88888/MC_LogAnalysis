@@ -187,14 +187,14 @@ def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure
 
 
 def summarize_uph_ame(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None,
-                      em_df=None, run_seconds=None, pure_uph_factor=1.0):
-    """CoreTech AME 整机 UPH 指标：Pure UPH、Derated UPH M1（投入/运行时间）、Derated UPH M2。"""
+                      em_df=None, run_seconds=None):
+    """CoreTech AME 整机 UPH 指标：Pure UPH（左右轴合并总产能，不乘单轴系数）、M1、M2。"""
     total_cycles = len(cycles_df)
     total_sec = cycles_df['CycleSeconds'].sum() if total_cycles else 0.0
     normal = cycles_df.loc[cycles_df['Class'] == '正常周期', 'CycleSeconds'] if total_cycles else pd.Series(dtype=float)
     avg_normal = normal.mean() if len(normal) else None
-    pure = round(3600.0 * units_per_cycle / ideal_ct * pure_uph_factor, 2) if ideal_ct else (
-        round(3600.0 * units_per_cycle / avg_normal * pure_uph_factor, 2) if avg_normal else ''
+    pure = round(3600.0 * units_per_cycle / ideal_ct, 2) if ideal_ct else (
+        round(3600.0 * units_per_cycle / avg_normal, 2) if avg_normal else ''
     )
     valid = cycles_df['CycleSeconds'] if total_cycles else pd.Series(dtype=float)
     if ideal_ct:
