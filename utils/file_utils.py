@@ -39,19 +39,26 @@ def read_file_with_fallback(file_path):
 # ---------- 批量读取目录中的所有日志文件（返回列表字典） ----------
 def read_files(source_dir, progress_callback=None):
     """
-    读取 source_dir 下所有 .log 和 .txt 文件，返回列表，每个元素为 {'FileName': 文件名, 'Content': 清理后的行内容}
+    递归读取 source_dir 下所有 .log 和 .txt 文件，返回列表，每个元素为 {'FileName': 相对路径, 'Content': 清理后的行内容}
     progress_callback: 可选回调，每读完一个文件调用一次，参数为 (已读文件数 / 总文件数)
     """
     all_rows = []
-    files = sorted(f for f in os.listdir(source_dir) if f.lower().endswith(('.log', '.txt')))
+    files = []
+    for dirpath, _, filenames in os.walk(source_dir):
+        for fname in sorted(filenames):
+            if fname.lower().endswith(('.log', '.txt')):
+                files.append(os.path.join(dirpath, fname))
+    files.sort()
+    if not files:
+        raise ValueError(f"未找到日志文件：{source_dir} 及其子目录下没有 .log / .txt 文件")
     total = len(files)
-    for idx, fname in enumerate(files):
-        fpath = os.path.join(source_dir, fname)
+    for idx, fpath in enumerate(files):
+        rel_name = os.path.relpath(fpath, source_dir).replace(os.sep, '/')
         lines, _ = read_file_with_fallback(fpath)
         for line in lines:
             if line.strip() == '':
                 continue
-            all_rows.append({'FileName': fname, 'Content': clean_for_excel(line)})
+            all_rows.append({'FileName': rel_name, 'Content': clean_for_excel(line)})
         if progress_callback and total > 0:
             progress_callback((idx + 1) / total)
     return all_rows

@@ -25,7 +25,7 @@ class LogModel:
 
         all_data = read_files(source_dir, progress_callback=on_read_progress)
         if not all_data:
-            raise ValueError("未找到有效日志文件")
+            raise ValueError("日志文件内容均为空，无法解析")
         return all_data
 
     @staticmethod

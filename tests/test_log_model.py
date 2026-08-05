@@ -44,6 +44,20 @@ class LogModelTest(unittest.TestCase):
         self._parse(keywords="ERROR", progress_callback=seen.append)
         self.assertEqual(seen[-1], 100)
 
+    def test_read_files_recursive(self):
+        from utils.file_utils import read_files
+        src = tempfile.mkdtemp()
+        sub = os.path.join(src, "day1", "station1")
+        os.makedirs(sub)
+        with open(os.path.join(sub, "a.log"), "w", encoding="utf-8") as f:
+            f.write("2026-07-08 00:00:01.000 [status:RUN]\n")
+        with open(os.path.join(src, "b.txt"), "w", encoding="utf-8") as f:
+            f.write("hello\n")
+        rows = read_files(src)
+        names = {r["FileName"] for r in rows}
+        self.assertIn("day1/station1/a.log", names)
+        self.assertIn("b.txt", names)
+
 
 if __name__ == "__main__":
     unittest.main()
