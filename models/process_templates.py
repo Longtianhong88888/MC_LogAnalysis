@@ -67,17 +67,18 @@ PROCESS_TEMPLATES = {
         },
     },
     "FR 机台": {
-        "description": "FR 机台：RAYPRUS 协议日志（方括号时间戳），状态/EM 产量按协议解析，无单件完成标记，UPH 以 EM 口径为准",
+        "description": "FR 点胶机：轴点胶完成/有漏点产品为单件完成标记（漏点件以有漏点产品代替点胶完成），左轴/右轴分模组",
         "file_filters": None,
         "UPH分析": {
-            "trigger_keywords": "",
+            "trigger_keywords": "轴点胶完成,有漏点产品",
+            "module_pattern": "(左轴|右轴)",
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
         },
         "EFF分析": {},
         "报警分析": {
-            "alarm_keywords": "报警,ALARM,ERROR,NG,失败,异常,不达标",
+            "alarm_keywords": "报警,ALARM,ERROR,NG,失败,异常,不达标,有漏点产品",
         },
         "机台状态分析": {},
     },

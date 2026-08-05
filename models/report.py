@@ -48,9 +48,27 @@ def _to_float(value):
     try:
         if value is None or (isinstance(value, str) and value.strip() == ''):
             return None
-        return float(value)
+        f = float(value)
+        if f != f or f in (float('inf'), float('-inf')):
+            return None
+        return f
     except (TypeError, ValueError):
         return None
+
+
+def _chart_values(values):
+    """图表数值清洗：NaN/Inf/空串统一转 0，避免 python-pptx 写入报错。"""
+    out = []
+    for value in values:
+        try:
+            f = float(value)
+        except (TypeError, ValueError):
+            f = None
+        if f is None or f != f or f in (float('inf'), float('-inf')):
+            out.append(0)
+        else:
+            out.append(f)
+    return out
 
 
 def _set_text_preserving(tf, text):
@@ -151,7 +169,7 @@ def _add_chart(slide, chart_type, title, categories, values,
                left=CHART_LEFT, top=CHART_TOP, width=CHART_W, height=CHART_H, legend=False):
     chart_data = CategoryChartData()
     chart_data.categories = list(categories)
-    chart_data.add_series("数值", [0 if v is None else v for v in values])
+    chart_data.add_series("数值", _chart_values(values))
     chart = slide.shapes.add_chart(
         chart_type, Inches(left), Inches(top), Inches(width), Inches(height), chart_data
     ).chart
@@ -256,7 +274,7 @@ def _replace_chart(slide, chart_type, chart_title, categories, values, legend=Fa
         shape._element.getparent().remove(shape._element)
         chart_data = CategoryChartData()
         chart_data.categories = list(categories)
-        chart_data.add_series("数值", [0 if v is None else v for v in values])
+        chart_data.add_series("数值", _chart_values(values))
         chart = slide.shapes.add_chart(chart_type, left, top, width, height, chart_data).chart
         chart.has_legend = legend
         chart.has_title = True

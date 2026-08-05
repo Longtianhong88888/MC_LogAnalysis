@@ -167,13 +167,15 @@ class LogModel:
     # ---------- 功能二：UPH 分析 ----------
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,
                     normal_threshold=10.0, planned_threshold=900.0,
-                    ideal_ct=None, max_ct=None, file_filters=None, progress_callback=None):
+                    ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
+                    progress_callback=None):
         if progress_callback:
             progress_callback(5)
         rows = self._read_all(source_dir, progress_callback, file_filters=file_filters)
         if progress_callback:
             progress_callback(40)
-        cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold)
+        cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold,
+                                 module_pattern=module_pattern)
         summary = summarize_uph(cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct)
         em = parse_em_production(rows)
         status_summary, _, _ = analyze_status(rows)

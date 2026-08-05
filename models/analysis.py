@@ -81,10 +81,12 @@ def keyword_pattern(kws, allow_trailing_digit=True):
     return '|'.join(parts)
 
 
-def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_threshold=900.0):
+def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_threshold=900.0,
+                    module_pattern=None):
     """
     按“完成动作”为周期起点构建周期明细。
     rows: [{'FileName', 'Content'}]；返回 DataFrame: FileName/Module/TriggerTime/CycleSeconds/Class/TriggerContent
+    module_pattern: 可选正则，从日志行中提取模组名（如 FR 的左轴/右轴），未提供时用 模块名称: 字段
     """
     kws = split_keywords(trigger_keywords)
     per_module = {}
@@ -96,8 +98,12 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
         # 关键词匹配整行内容（兼容“动作名称:xxx”和普通消息两种日志格式）
         if not kws or not re.search(keyword_pattern(kws, allow_trailing_digit=False), content, re.IGNORECASE):
             continue
-        module, _ = parse_fields(content)
-        module = _module_label(module)
+        if module_pattern:
+            m = re.search(module_pattern, content)
+            module = _module_label(m.group(1) if m else '')
+        else:
+            module, _ = parse_fields(content)
+            module = _module_label(module)
         per_module.setdefault(module, []).append({
             'ts': ts,
             'file': row.get('FileName', ''),

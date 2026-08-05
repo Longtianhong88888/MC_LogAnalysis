@@ -250,7 +250,28 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(caw["UPH分析"]["trigger_keywords"], "放熟料完成,放生料完成")
         self.assertEqual(caw["EFF分析"]["file_filters"], ["RAYPRUS交互记录"])
         self.assertIn("FR 机台", PROCESS_TEMPLATES)
-        self.assertIn("不达标", PROCESS_TEMPLATES["FR 机台"]["报警分析"]["alarm_keywords"])
+        fr = PROCESS_TEMPLATES["FR 机台"]
+        self.assertIn("不达标", fr["报警分析"]["alarm_keywords"])
+        self.assertIn("有漏点产品", fr["报警分析"]["alarm_keywords"])
+        self.assertEqual(fr["UPH分析"]["trigger_keywords"], "轴点胶完成,有漏点产品")
+        self.assertEqual(fr["UPH分析"]["module_pattern"], "(左轴|右轴)")
+
+    def test_module_pattern_with_defect_completion(self):
+        # 漏点件以"有漏点产品"代替"点胶完成"，周期序列应连续且分左/右轴
+        rows = [
+            {"FileName": "a.log", "Content": "[00:00:00] 左轴点胶完成"},
+            {"FileName": "a.log", "Content": "[00:00:06] 右轴点胶完成"},
+            {"FileName": "a.log", "Content": "[00:00:07] 左轴有漏点产品，请处理！"},
+            {"FileName": "a.log", "Content": "[00:00:14] 右轴有漏点产品，请处理！"},
+            {"FileName": "a.log", "Content": "[00:00:15] 左轴点胶完成"},
+        ]
+        df = build_cycles_df(rows, "轴点胶完成,有漏点产品",
+                             module_pattern=r"(左轴|右轴)")
+        self.assertEqual(set(df["Module"]), {"左轴", "右轴"})
+        left = df[df["Module"] == "左轴"]
+        right = df[df["Module"] == "右轴"]
+        self.assertEqual(list(left["CycleSeconds"]), [7.0, 8.0])   # 漏点件计入周期
+        self.assertEqual(list(right["CycleSeconds"]), [8.0])
 
     def test_ppt_report(self):
         from models.report import build_ppt_report
@@ -291,6 +312,24 @@ class AnalysisTest(unittest.TestCase):
             sh.text_frame.text for sh in prs.slides[1].shapes if sh.has_text_frame
         )
         self.assertIn("2/7", uph_page)  # 内容页页码同步（与模板样式一致）
+
+    def test_ppt_report_nan_values(self):
+        # 回归：AMESummary 存在 NaN（如 FR 无周期时 Pure/M2 为空）不应导致图表写入报错
+        from models.report import build_ppt_report
+        from pptx import Presentation
+        out = tempfile.mkdtemp()
+        LogModel._write_sheets(os.path.join(out, "UPH_Analysis.xlsx"), {
+            "AMESummary": pd.DataFrame({
+                "Pure UPH(个/小时)": [float("nan")],
+                "Derated UPH M1(个/小时)": [2892.32],
+                "Derated UPH M2(个/小时)": [float("nan")],
+            })
+        })
+        ppt = build_ppt_report(out, process_name="FR 机台")
+        self.assertTrue(os.path.exists(ppt))
+        prs = Presentation(ppt)
+        self.assertGreaterEqual(len(prs.slides), 2)  # 封面 + UPH 页（其余 Excel 缺失被移除）
+        self.assertTrue(any(shape.has_chart for s in prs.slides for shape in s.shapes))
 
     def test_status_time_only_multi_file(self):
         # FR 风格：纯时间戳 + 按日分文件，跨日 23:59:58 -> 00:00:01 应为 3 秒

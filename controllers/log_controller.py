@@ -74,7 +74,7 @@ class LogController:
                     for sub_feature in ONE_CLICK_FEATURES:
                         method_name = FEATURE_METHODS[sub_feature]
                         params = self._collect_params(sub_feature)
-                        params.update(self._template_filters(template, sub_feature))
+                        params.update(self._template_settings(template, sub_feature))
                         result = getattr(model, method_name)(
                             source_dir=self.source_dir,
                             output_dir=self.output_dir,
@@ -97,7 +97,7 @@ class LogController:
                 else:
                     method_name = FEATURE_METHODS.get(feature, "process")
                     params = self._collect_params(feature)
-                    params.update(self._template_filters(template, feature))
+                    params.update(self._template_settings(template, feature))
                     result = getattr(model, method_name)(
                         source_dir=self.source_dir,
                         output_dir=self.output_dir,
@@ -140,14 +140,20 @@ class LogController:
         separator = view.separator_edit.text().strip() if hasattr(view, 'separator_edit') else None
         return {"keywords": keywords or None, "separator": separator or None}
 
-    def _template_filters(self, template, feature):
-        """取当前模板下某功能的日志文件筛选；自定义模板优先使用界面输入的筛选关键词。"""
+    def _template_settings(self, template, feature):
+        """取当前模板下某功能的非界面参数（文件筛选、模组提取等）；自定义模板优先使用界面输入的筛选关键词。"""
         if hasattr(self.view, 'template_combo') and self.view.template_combo.currentText() == CUSTOM_TEMPLATE_NAME:
             text = self.view.custom_filter_edit.text().strip()
             filters = [k for k in re.split(r'[,，、;；\s]+', text) if k] if text else None
         else:
             filters = template_file_filters(template, feature)
-        return {"file_filters": filters} if filters else {}
+        settings = {}
+        if filters:
+            settings["file_filters"] = filters
+        feature_tpl = template.get(feature) or {}
+        if feature_tpl.get("module_pattern"):
+            settings["module_pattern"] = feature_tpl["module_pattern"]
+        return settings
 
     def save_custom_template(self):
         text = self.view.custom_filter_edit.text().strip()
@@ -184,15 +190,14 @@ class LogController:
                     if hasattr(self.view, 'hide_progress'):
                         self.view.hide_progress()
                     if error is not None:
-                        QMessageBox.critical(self.view, "错误", f"处理失败：{error}")
+                        if hasattr(self.view, 'update_result'):
+                            self.view.update_result(f"处理失败：{error}")
                     else:
                         if isinstance(result, list):
                             detail = "\n".join(result)
-                            QMessageBox.information(self.view, "完成", f"全部解析完成：\n{detail}")
                             if hasattr(self.view, 'update_result'):
                                 self.view.update_result(f"成功导出：\n{detail}")
                         else:
-                            QMessageBox.information(self.view, "完成", f"解析完成！\n结果保存在：{result}")
                             if hasattr(self.view, 'update_result'):
                                 self.view.update_result(f"成功导出：{result}")
                     return
