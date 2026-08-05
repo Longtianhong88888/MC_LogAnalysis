@@ -37,17 +37,21 @@ def read_file_with_fallback(file_path):
     return cleaned_lines, 'utf-8 (with replacement)'
 
 # ---------- 批量读取目录中的所有日志文件（返回列表字典） ----------
-def read_files(source_dir):
+def read_files(source_dir, progress_callback=None):
     """
     读取 source_dir 下所有 .log 和 .txt 文件，返回列表，每个元素为 {'FileName': 文件名, 'Content': 清理后的行内容}
+    progress_callback: 可选回调，每读完一个文件调用一次，参数为 (已读文件数 / 总文件数)
     """
     all_rows = []
-    files = [f for f in os.listdir(source_dir) if f.lower().endswith(('.log', '.txt'))]
-    for fname in files:
+    files = sorted(f for f in os.listdir(source_dir) if f.lower().endswith(('.log', '.txt')))
+    total = len(files)
+    for idx, fname in enumerate(files):
         fpath = os.path.join(source_dir, fname)
         lines, _ = read_file_with_fallback(fpath)
         for line in lines:
             if line.strip() == '':
                 continue
             all_rows.append({'FileName': fname, 'Content': clean_for_excel(line)})
+        if progress_callback and total > 0:
+            progress_callback((idx + 1) / total)
     return all_rows

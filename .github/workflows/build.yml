@@ -21,11 +21,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pandas openpyxl chardet pyinstaller
+        pip install -r requirements.txt
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller --onefile --windowed --hidden-import tkinter --name MC_LogAnalysis main.py
+        pyinstaller --onefile --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --name MC_LogAnalysis main.py
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:

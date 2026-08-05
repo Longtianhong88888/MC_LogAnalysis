@@ -6,3 +6,11 @@ build/
 *.spec
 .DS_Store
 .vscode/
+
+# 大型机台日志数据（不入库）
+CAW log/
+LM log/
+
+# 客户保密文档（不入库）
+自定义协议.pdf
+CoreTech Optical AME Key Metrics Definition v0.8.pdf
