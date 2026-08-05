@@ -141,8 +141,11 @@ class MainWindow(QMainWindow):
         start_btn.clicked.connect(self.controller.run_parse)
         clear_btn = QPushButton("清空结果")
         clear_btn.clicked.connect(self.controller.clear_results)
+        self.skip_btn = QPushButton("跳转至下一步")
+        self.skip_btn.clicked.connect(self.controller.request_skip)
         btn_row.addWidget(start_btn)
         btn_row.addWidget(clear_btn)
+        btn_row.addWidget(self.skip_btn)
         btn_row.addStretch(1)
         root.addLayout(btn_row)
 

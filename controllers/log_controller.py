@@ -6,6 +6,7 @@ import traceback
 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
+from models.exceptions import OperationCancelled
 from models.log_model import LogModel
 from models.process_templates import get_template, save_custom_template
 from views.main_window import ONE_CLICK_FEATURE
@@ -31,6 +32,7 @@ class LogController:
         self._current_step = None
         self._step_started = 0.0
         self._last_notify = 0.0
+        self._skip_event = threading.Event()
 
     def select_source_folder(self):
         dir_ = QFileDialog.getExistingDirectory(self.view, "选择源文件夹")
@@ -69,24 +71,36 @@ class LogController:
         )
 
         self._progress_queue = queue.Queue()
+        self._skip_event = threading.Event()
 
         def worker():
             try:
                 model = LogModel()
                 if feature == ONE_CLICK_FEATURE:
                     results = []
+                    succeeded_any = False
                     model = LogModel()
                     # 一次读取日志，供所有分析共享，避免重复加载大文件
                     self._progress_queue.put(('step', '读取日志文件'))
                     self._progress_queue.put(('partial', "正在读取日志文件 ..."))
                     first_params = self._collect_params(ONE_CLICK_FEATURES[0])
                     first_params.update(self._template_settings(template, ONE_CLICK_FEATURES[0]))
-                    rows = model.load_rows(
-                        self.source_dir,
-                        file_filters=first_params.get('file_filters'),
-                        progress_callback=lambda value: self._progress_queue.put(('progress', value)),
-                    )
+                    try:
+                        rows = model.load_rows(
+                            self.source_dir,
+                            file_filters=first_params.get('file_filters'),
+                            progress_callback=lambda value: self._progress_queue.put(('progress', value)),
+                            cancel_event=self._skip_event,
+                        )
+                    except OperationCancelled:
+                        self._progress_queue.put(('done', None, None))
+                        return
                     for sub_feature in ONE_CLICK_FEATURES:
+                        if self._skip_event.is_set():
+                            self._skip_event.clear()
+                            results.append(f"{sub_feature}：已跳过（用户操作）")
+                            self._progress_queue.put(('partial', f"{sub_feature}已跳过（用户操作）"))
+                            continue
                         self._progress_queue.put(('step', sub_feature))
                         self._progress_queue.put(('partial', f"正在处理：{sub_feature} ..."))
                         try:
@@ -94,6 +108,7 @@ class LogController:
                             params = self._collect_params(sub_feature)
                             params.update(self._template_settings(template, sub_feature))
                             params['rows'] = rows
+                            params['cancel_event'] = self._skip_event
                             params.pop('file_filters', None)
                             result = getattr(model, method_name)(
                                 source_dir=self.source_dir,
@@ -101,28 +116,37 @@ class LogController:
                                 progress_callback=lambda value: self._progress_queue.put(('progress', value)),
                                 **params,
                             )
+                            succeeded_any = True
                             results.append(f"{sub_feature}：{result}")
                             self._progress_queue.put(('partial', f"{sub_feature}：{result}"))
+                        except OperationCancelled:
+                            self._skip_event.clear()
+                            results.append(f"{sub_feature}：已跳过（用户操作）")
+                            self._progress_queue.put(('partial', f"{sub_feature}已跳过（用户操作）"))
                         except Exception as exc:
                             traceback.print_exc()
                             results.append(f"{sub_feature}失败：{exc}")
                             self._progress_queue.put(('partial', f"{sub_feature}失败：{exc}"))
                     del rows
-                    try:
-                        self._progress_queue.put(('step', 'PPT 报告'))
-                        self._progress_queue.put(('partial', "正在生成 PPT 报告 ..."))
-                        from models.report import build_ppt_report
-                        process_name = (
-                            self.view.template_combo.currentText()
-                            if hasattr(self.view, 'template_combo') else None
-                        )
-                        ppt_path = build_ppt_report(self.output_dir, process_name=process_name)
-                        results.append(f"PPT报告：{ppt_path}")
-                        self._progress_queue.put(('partial', f"PPT报告：{ppt_path}"))
-                    except Exception as exc:
-                        traceback.print_exc()
-                        results.append(f"PPT报告生成失败：{exc}")
-                        self._progress_queue.put(('partial', f"PPT报告生成失败：{exc}"))
+                    if succeeded_any:
+                        try:
+                            self._progress_queue.put(('step', 'PPT 报告'))
+                            self._progress_queue.put(('partial', "正在生成 PPT 报告 ..."))
+                            from models.report import build_ppt_report
+                            process_name = (
+                                self.view.template_combo.currentText()
+                                if hasattr(self.view, 'template_combo') else None
+                            )
+                            ppt_path = build_ppt_report(self.output_dir, process_name=process_name)
+                            results.append(f"PPT报告：{ppt_path}")
+                            self._progress_queue.put(('partial', f"PPT报告：{ppt_path}"))
+                        except Exception as exc:
+                            traceback.print_exc()
+                            results.append(f"PPT报告生成失败：{exc}")
+                            self._progress_queue.put(('partial', f"PPT报告生成失败：{exc}"))
+                    else:
+                        results.append("PPT报告：已跳过（无分析结果）")
+                        self._progress_queue.put(('partial', "PPT报告已跳过（无分析结果）"))
                     result = results
                 else:
                     method_name = FEATURE_METHODS.get(feature, "process")
@@ -136,6 +160,8 @@ class LogController:
                         **params,
                     )
                 self._progress_queue.put(('done', result, None))
+            except OperationCancelled:
+                self._progress_queue.put(('done', None, None))
             except Exception as exc:
                 traceback.print_exc()
                 self._progress_queue.put(('done', None, exc))
@@ -236,6 +262,9 @@ class LogController:
                     if error is not None:
                         if hasattr(self.view, 'update_result'):
                             self.view.update_result(f"处理失败：{error}")
+                    elif result is None:
+                        if hasattr(self.view, 'update_result'):
+                            self.view.update_result("已取消：日志读取被跳过")
                     else:
                         if isinstance(result, list):
                             detail = "\n".join(result)
@@ -266,6 +295,18 @@ class LogController:
                     )
         if hasattr(self.view, 'after'):
             self.view.after(3000, self._watchdog)
+
+    def request_skip(self):
+        """用户点击“跳转至下一步”：中断当前步骤，继续后续分析。"""
+        if self.worker is None or not self.worker.is_alive():
+            if hasattr(self.view, 'update_status'):
+                self.view.update_status("当前没有运行中的分析")
+            return
+        self._skip_event.set()
+        if hasattr(self.view, 'update_status'):
+            self.view.update_status("已请求跳过当前步骤，正在中断...")
+        if hasattr(self.view, 'update_result'):
+            self.view.update_result("已请求跳过当前步骤 ...")
 
     def clear_results(self):
         if hasattr(self.view, 'result_text'):

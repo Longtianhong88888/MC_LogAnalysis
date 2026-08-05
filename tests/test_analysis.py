@@ -278,6 +278,26 @@ class AnalysisTest(unittest.TestCase):
         path = LogModel().analyze_uph("不存在的目录", out, trigger_keywords="放生料完成", rows=rows)
         self.assertEqual(pd.ExcelFile(path).parse("Summary").iloc[0]['周期总数'], 3)
 
+    def test_cancel_event_skips_cycle_build(self):
+        import threading
+        from models.exceptions import OperationCancelled
+        cancel = threading.Event()
+        cancel.set()
+        with self.assertRaises(OperationCancelled):
+            build_cycles_df(CYCLE_ROWS, "放生料完成", cancel_event=cancel)
+
+    def test_cancel_event_skips_read_files(self):
+        import threading
+        from models.exceptions import OperationCancelled
+        from utils.file_utils import read_files
+        src = tempfile.mkdtemp()
+        with open(os.path.join(src, "a.log"), "w", encoding="utf-8") as f:
+            f.write("x\n")
+        cancel = threading.Event()
+        cancel.set()
+        with self.assertRaises(OperationCancelled):
+            read_files(src, cancel_event=cancel)
+
     def test_module_pattern_with_defect_completion(self):
         # 漏点件以"有漏点产品"代替"点胶完成"，周期序列应连续且分左/右轴
         rows = [

@@ -21,31 +21,39 @@ from utils.file_utils import read_files, clean_for_excel
 
 class LogModel:
     # ---------- 通用：读取 / 导出 ----------
-    def _read_all(self, source_dir, progress_callback=None, file_filters=None):
+    def _read_all(self, source_dir, progress_callback=None, file_filters=None, cancel_event=None):
         def on_read_progress(frac):
             if progress_callback:
                 progress_callback(10 + int(19 * frac))
 
-        all_data = read_files(source_dir, progress_callback=on_read_progress, file_filters=file_filters)
+        all_data = read_files(source_dir, progress_callback=on_read_progress, file_filters=file_filters,
+                              cancel_event=cancel_event)
         if not all_data:
             raise ValueError("日志文件内容均为空，无法解析")
         return all_data
 
-    def load_rows(self, source_dir, file_filters=None, progress_callback=None):
+    def load_rows(self, source_dir, file_filters=None, progress_callback=None, cancel_event=None):
         """读取日志行（供一键分析共享，避免每项重复读取大文件）。"""
-        return self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        return self._read_all(source_dir, progress_callback, file_filters=file_filters,
+                              cancel_event=cancel_event)
 
     @staticmethod
-    def _write_sheets(out_path, sheets):
+    def _write_sheets(out_path, sheets, cancel_event=None):
         max_rows = 1048575  # Excel 单表最大行数（含表头行）
         with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
             for sheet_name, df in sheets.items():
+                if cancel_event is not None and cancel_event.is_set():
+                    from models.exceptions import OperationCancelled
+                    raise OperationCancelled()
                 if len(df) <= max_rows:
                     df.to_excel(writer, sheet_name=sheet_name, index=False)
                 else:
                     # 超限自动拆分：AllLogs → AllLogs_1, AllLogs_2 ...
                     n = (len(df) + max_rows - 1) // max_rows
                     for i in range(n):
+                        if cancel_event is not None and cancel_event.is_set():
+                            from models.exceptions import OperationCancelled
+                            raise OperationCancelled()
                         chunk = df.iloc[i * max_rows:(i + 1) * max_rows]
                         name = f"{sheet_name}_{i + 1}"[:31]
                         chunk.to_excel(writer, sheet_name=name, index=False)
@@ -98,10 +106,11 @@ class LogModel:
 
     # ---------- 功能一：文档合并与内容拆分 ----------
     def process(self, source_dir, output_dir, keywords=None, separator=None,
-                file_filters=None, rows=None, progress_callback=None):
+                file_filters=None, rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        all_data = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        all_data = rows if rows is not None else self._read_all(
+            source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         df_all = pd.DataFrame(all_data)
 
         if progress_callback:
@@ -137,6 +146,9 @@ class LogModel:
                 split_rows = []
                 max_parts = 0
                 for _, row in filtered_df.iterrows():
+                    if cancel_event is not None and cancel_event.is_set():
+                        from models.exceptions import OperationCancelled
+                        raise OperationCancelled()
                     parts = row['Content'].split(sep)
                     parts = [clean_for_excel(p) for p in parts]
                     max_parts = max(max_parts, len(parts))
@@ -162,7 +174,7 @@ class LogModel:
         if generate_filtered and filtered_df is not None and not filtered_df.empty:
             sheets['Filtered'] = filtered_df
         out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
-        self._write_sheets(out_path, sheets)
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
 
         if progress_callback:
             progress_callback(100)
@@ -172,18 +184,19 @@ class LogModel:
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,
                     normal_threshold=10.0, planned_threshold=900.0,
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
-                    pure_uph_factor=1.0, rows=None, progress_callback=None):
+                    pure_uph_factor=1.0, rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(
+            source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(40)
         cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold,
-                                 module_pattern=module_pattern)
+                                 module_pattern=module_pattern, cancel_event=cancel_event)
         summary = summarize_uph(cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct,
                                 pure_uph_factor=pure_uph_factor)
-        em = parse_em_production(rows)
-        status_summary, _, _ = analyze_status(rows)
+        em = parse_em_production(rows, cancel_event=cancel_event)
+        status_summary, _, _ = analyze_status(rows, cancel_event=cancel_event)
         run_seconds = None
         if not status_summary.empty:
             run_rows = status_summary.loc[status_summary['状态'] == 'RUN', '总时长(秒)']
@@ -200,21 +213,23 @@ class LogModel:
         if not em.empty:
             sheets['EMProduction'] = em
         out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
-        self._write_sheets(out_path, sheets)
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(100)
         return out_path
 
     # ---------- 功能三：EFF 分析 ----------
     def analyze_eff(self, source_dir, output_dir, planned_hours=None,
-                    pdt_reason_ids=None, file_filters=None, rows=None, progress_callback=None):
+                    pdt_reason_ids=None, file_filters=None, rows=None, cancel_event=None,
+                    progress_callback=None):
         """CoreTech AME 效率：EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态。"""
         if progress_callback:
             progress_callback(5)
-        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(
+            source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(50)
-        status_summary, hourly, detail = analyze_status(rows)
+        status_summary, hourly, detail = analyze_status(rows, cancel_event=cancel_event)
         summary = summarize_eff_coretech(
             status_summary, detail, planned_hours=planned_hours, pdt_reason_ids=pdt_reason_ids,
         )
@@ -229,20 +244,21 @@ class LogModel:
         if not detail.empty:
             sheets['Detail'] = detail
         out_path = os.path.join(output_dir, 'EFF_Analysis.xlsx')
-        self._write_sheets(out_path, sheets)
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(100)
         return out_path
 
     # ---------- 功能四：报警分析 ----------
     def analyze_alarms(self, source_dir, output_dir, alarm_keywords="报警,ALARM,ERROR,NG,失败,异常,停止信号",
-                       file_filters=None, rows=None, progress_callback=None):
+                       file_filters=None, rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(
+            source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(50)
-        summary, by_keyword, detail = summarize_alarms(rows, alarm_keywords)
+        summary, by_keyword, detail = summarize_alarms(rows, alarm_keywords, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(70)
         sheets = {'Summary': summary}
@@ -251,19 +267,21 @@ class LogModel:
         if not detail.empty:
             sheets['Detail'] = detail
         out_path = os.path.join(output_dir, 'Alarm_Analysis.xlsx')
-        self._write_sheets(out_path, sheets)
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(100)
         return out_path
 
     # ---------- 功能五：机台状态分析 ----------
-    def analyze_status(self, source_dir, output_dir, file_filters=None, rows=None, progress_callback=None):
+    def analyze_status(self, source_dir, output_dir, file_filters=None, rows=None, cancel_event=None,
+                       progress_callback=None):
         if progress_callback:
             progress_callback(5)
-        rows = rows if rows is not None else self._read_all(source_dir, progress_callback, file_filters=file_filters)
+        rows = rows if rows is not None else self._read_all(
+            source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(50)
-        summary, hourly, detail = analyze_status(rows)
+        summary, hourly, detail = analyze_status(rows, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(70)
         sheets = {'Summary': summary}
@@ -272,7 +290,7 @@ class LogModel:
         if not detail.empty:
             sheets['Detail'] = detail
         out_path = os.path.join(output_dir, 'Status_Analysis.xlsx')
-        self._write_sheets(out_path, sheets)
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(100)
         return out_path

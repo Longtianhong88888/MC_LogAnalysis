@@ -52,7 +52,7 @@ def read_file_with_fallback(file_path):
     # 兜底
 
 # ---------- 批量读取目录中的所有日志文件（返回列表字典） ----------
-def read_files(source_dir, progress_callback=None, file_filters=None):
+def read_files(source_dir, progress_callback=None, file_filters=None, cancel_event=None):
     """
     递归读取 source_dir 下所有 .log 和 .txt 文件，返回列表，每个元素为 {'FileName': 相对路径, 'Content': 清理后的行内容}
     progress_callback: 可选回调，每读完一个文件调用一次，参数为 (已读文件数 / 总文件数)
@@ -73,8 +73,14 @@ def read_files(source_dir, progress_callback=None, file_filters=None):
         raise ValueError(f"未找到日志文件：{source_dir} 及其子目录下没有 .log / .txt 文件")
     total = len(files)
     for idx, (fpath, rel_name) in enumerate(files):
+        if cancel_event is not None and cancel_event.is_set():
+            from models.exceptions import OperationCancelled
+            raise OperationCancelled()
         lines, _ = read_file_with_fallback(fpath)
-        for line in lines:
+        for ln_idx, line in enumerate(lines):
+            if ln_idx % 50000 == 0 and cancel_event is not None and cancel_event.is_set():
+                from models.exceptions import OperationCancelled
+                raise OperationCancelled()
             if line.strip() == '':
                 continue
             all_rows.append({'FileName': rel_name, 'Content': clean_for_excel(line)})

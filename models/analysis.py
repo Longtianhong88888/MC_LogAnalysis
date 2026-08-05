@@ -4,6 +4,8 @@ from datetime import datetime
 
 import pandas as pd
 
+from models.exceptions import OperationCancelled
+
 _TIME_RE = re.compile(
     r'^(?:\[(?P<brackettime>\d{2}:\d{2}:\d{2}(?:\.\d+)?)\]|'
     r'(?:(?P<date>\d{4}-\d{2}-\d{2})[ T])?(?P<time>\d{2}:\d{2}:\d{2}(?:\.\d+)?))'
@@ -82,7 +84,7 @@ def keyword_pattern(kws, allow_trailing_digit=True):
 
 
 def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_threshold=900.0,
-                    module_pattern=None):
+                    module_pattern=None, cancel_event=None):
     """
     按“完成动作”为周期起点构建周期明细。
     rows: [{'FileName', 'Content'}]；返回 DataFrame: FileName/Module/TriggerTime/CycleSeconds/Class/TriggerContent
@@ -91,6 +93,8 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
     kws = split_keywords(trigger_keywords)
     per_module = {}
     for row in rows:
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
         content = str(row.get('Content', ''))
         ts = parse_ts(content)
         if ts is None:
@@ -273,12 +277,14 @@ def down_pareto(status_detail):
     return g
 
 
-def summarize_alarms(rows, alarm_keywords):
+def summarize_alarms(rows, alarm_keywords, cancel_event=None):
     """报警统计：汇总（按模块）、按关键词计数、明细。"""
     kws = split_keywords(alarm_keywords)
     pattern = keyword_pattern(kws) if kws else ''
     detail = []
     for row in rows:
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
         content = str(row.get('Content', ''))
         if not pattern:
             continue
@@ -323,13 +329,15 @@ def _normalize_status(raw):
     return 'RUN' if s.startswith('RU') else s
 
 
-def analyze_status(rows):
+def analyze_status(rows, cancel_event=None):
     """
     机台状态分析：识别 status:RUN/IDLE/DOWN 状态行，计算各状态时长与占比、按小时分布。
     返回 (汇总, 按小时, 明细)。
     """
     events = []
     for row in rows:
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
         content = str(row.get('Content', ''))
         m = _STATUS_RE.search(content)
         if not m:
@@ -431,13 +439,15 @@ def parse_compact_dt(value):
     return None
 
 
-def parse_em_production(rows):
+def parse_em_production(rows, cancel_event=None):
     """
     解析协议 EM（設備產量數據上傳）消息：
     [EM][lotno:...,inputqty:...,goodqty:...,ngqty:...,head:...,startdatetime:...,enddatetime:...,datetime:...]
     """
     records = []
     for row in rows:
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
         content = str(row.get('Content', ''))
         if '[EM]' not in content:
             continue
