@@ -1,7 +1,7 @@
 import sys
 import time
 
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import QEasingCurve, QPropertyAnimation, Qt, QTimer
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QSplashScreen
 
@@ -10,6 +10,8 @@ from utils.resource_utils import resource_path
 from views.main_window import WINDOW_DEFAULT_SIZE
 
 SPLASH_MIN_MS = 500  # 启动画面最短展示时间
+FADE_MS = 300        # 淡入淡出过渡时长
+_ANIMS = set()       # 持有运行中的动画引用，防止被提前回收
 
 
 def create_splash():
@@ -26,6 +28,24 @@ def create_splash():
     y = max(0, (sh - h) // 2)
     img = img.copy(x, y, w, h)
     return QSplashScreen(QPixmap.fromImage(img))
+
+
+def _crossfade(splash, window, duration=FADE_MS):
+    """启动画面平滑淡出，露出下方已就绪的主窗口，避免生硬切换。"""
+    fade_out = QPropertyAnimation(splash, b"windowOpacity")
+    fade_out.setDuration(duration)
+    fade_out.setStartValue(1.0)
+    fade_out.setEndValue(0.0)
+    fade_out.setEasingCurve(QEasingCurve.InOutQuad)
+    _ANIMS.add(fade_out)
+
+    def _finish():
+        splash.hide()
+        splash.finish(window)
+        _ANIMS.discard(fade_out)
+
+    fade_out.finished.connect(_finish)
+    fade_out.start()
 
 
 def main():
@@ -53,12 +73,8 @@ def main():
 
     if splash is not None:
         elapsed_ms = int((time.monotonic() - splash_start) * 1000)
-        remaining_ms = SPLASH_MIN_MS - elapsed_ms
-        if remaining_ms > 0:
-            # 让事件循环继续运行，到点后再关闭启动画面
-            QTimer.singleShot(remaining_ms, lambda: splash.finish(window))
-        else:
-            splash.finish(window)
+        remaining_ms = max(0, SPLASH_MIN_MS - elapsed_ms)
+        QTimer.singleShot(remaining_ms, lambda: _crossfade(splash, window))
 
     sys.exit(app.exec_())
 
