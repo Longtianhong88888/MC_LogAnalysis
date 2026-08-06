@@ -105,10 +105,6 @@ PROCESS_TEMPLATES = {
                 "reference_station": "点胶",
             },
         },
-        "EFF分析": {
-            "activity_keywords": "UDP Module - Good",
-            "stop_reason_keywords": "AutoRun Stop - ErrorName",
-        },
         "报警分析": {
             "alarm_keywords": "Error,NG,Fail,报警,失败,异常,Warning",
         },
@@ -118,27 +114,45 @@ PROCESS_TEMPLATES = {
         },
     },
     "ACF 三機": {
-        "description": "ACF 由上料機/主機/下料機三部分（分文件夹）构成，按部分分开统计；上料完成=放料成功，主机=Cavity cnt，下料完成=UnloadDuts Finish",
+        "description": "ACF 由上料機/主機/下料機三部分（分文件夹）构成，按部分分开统计；每盘颗数按 Tray ID 动态统计（上料机 carrierId=8颗/盘、下料机 CubeTrayId=24颗/盘），换盘时间按 SA 式卸载→装载间隔（上料机 请求出托盘→等待Carrier Ready，下料机 清除2号托盘→轨道2进板成功）；主机一批=一个 carrier=8颗（Cavity cnt:1）",
         "reason_list": "ACF",
         "file_filters": [".txt"],
         "UPH分析": {
             "parts": [
-                {"name": "上料機", "trigger": "放料成功", "units_per_cycle": 1},
-                {"name": "主機", "trigger": "Cavity cnt:", "units_per_cycle": 1},
-                {"name": "下料機", "trigger": "UnloadDuts Finish", "units_per_cycle": 1,
-                 "tray_seconds": 9.2, "units_per_tray": 51},
+                {"name": "上料機", "trigger": "更新Carrier盘", "units_per_cycle": 8,
+                 "normal_threshold": 35.0,
+                 "tray_detect": {
+                     "segments": "line",
+                     "tray_id": r"更新Carrier盘:.*?carrierId:([A-Z0-9\-]+)",
+                     "unit": r"SiteId",
+                 },
+                 "tray_change": {"unload": "请求出托盘", "load": "等待Carrier Ready"}},
+                {"name": "主機", "trigger": "Cavity cnt:1", "units_per_cycle": 8,
+                 "normal_threshold": 35.0},
+                {"name": "下料機", "trigger": "UnloadDuts Finish",
+                 "units_per_cycle": 3, "normal_threshold": 15.0,
+                 "tray_detect": {
+                     "tray_id": r"CubeTrayId:([A-Z0-9\-]+)",
+                 },
+                 "tray_change": {"unload": "清除2号托盘所有格子状态", "load": "轨道2进板成功"}},
             ],
             "module_from_path": True,
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
         },
-        "EFF分析": {},
+        "EFF分析": {
+            "activity_keywords": "更新Carrier盘,Cavity cnt:1,UnloadDuts Finish",
+            "stop_reason_keywords": "ErrOn,生产流程出现异常,当前设备状态Maunal",
+        },
         "报警分析": {
-            "alarm_keywords": "NG,Fail,换盘提示,报警操作",
+            "alarm_keywords": "ErrOn,Err=,机械手不安全,生产流程出现异常,已添加了具有相同键的项,索引超出了数组界限,换盘提示,报警操作",
             "module_from_path": True,
         },
-        "机台状态分析": {},
+        "机台状态分析": {
+            "activity_keywords": "更新Carrier盘,Cavity cnt:1,UnloadDuts Finish",
+            "stop_reason_keywords": "ErrOn,生产流程出现异常,当前设备状态Maunal",
+        },
     },
 }
 

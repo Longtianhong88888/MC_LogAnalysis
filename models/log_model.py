@@ -16,7 +16,9 @@ from models.analysis import (
     analyze_status,
     analyze_status_derived,
     build_cycles_df,
+    detect_tray_stats,
     down_pareto,
+    measure_tray_change,
     parse_em_production,
     summarize_alarms,
     summarize_eff_coretech,
@@ -311,14 +313,18 @@ class LogModel:
                 name = part.get('name', '')
                 trigger = part.get('trigger', '')
                 units = int(part.get('units_per_cycle', units_per_cycle or 1))
+                part_normal = float(part.get('normal_threshold', normal_threshold))
+                part_planned = float(part.get('planned_threshold', planned_threshold))
                 p_rows = [r for r in rows if str(r.get('FileName', '')).split('/')[0] == name]
-                cycles = build_cycles_df(p_rows, trigger, normal_threshold, planned_threshold,
+                cycles = build_cycles_df(p_rows, trigger, part_normal, part_planned,
                                          module_from_path=module_from_path, cancel_event=cancel_event)
                 if cycles.empty:
                     row = {'模块': name, '周期总数': 0, '产出数(个)': 0, '统计时长(秒)': 0,
                            'UPH(个/小时)': '', 'Pure UPH(个/小时)': '', 'Derated UPH M2(个/小时)': ''}
-                    if part.get('tray_seconds'):
-                        row.update({'每颗换盘开销(秒)': '', '有效周期(秒)': '', '有效UPH(个/小时)': ''})
+                    if part.get('tray_seconds') or part.get('tray_detect'):
+                        row.update({'每盘颗数(统计)': '', '换盘次数': '',
+                                    '单次换盘时间(秒)': '', '每颗换盘开销(秒)': '',
+                                    '有效周期(秒)': '', '有效UPH(个/小时)': ''})
                     part_summaries.append(pd.DataFrame([row]))
                     ame_rows.append({'模块': name, 'Pure UPH(个/小时)': '', 'UPH(个/小时)': '', '产出数(个)': 0})
                     continue
@@ -326,6 +332,36 @@ class LogModel:
                                   pure_uph_factor=pure_uph_factor)
                 tray_s = part.get('tray_seconds')
                 units_per_tray = part.get('units_per_tray') or part.get('rows_per_tray')
+                tray_stats = None
+                if part.get('tray_detect'):
+                    try:
+                        tray_stats = detect_tray_stats(
+                            p_rows,
+                            part['tray_detect']['tray_id'],
+                            part['tray_detect'].get('unit'),
+                            segments=part['tray_detect'].get('segments', 'id'),
+                            run_gap=float(part['tray_detect'].get('run_gap', 300.0)),
+                            cancel_event=cancel_event,
+                        )
+                    except Exception:
+                        tray_stats = None
+                if tray_stats:
+                    units_per_tray = tray_stats['units_per_tray']
+                    s['每盘颗数(统计)'] = tray_stats['units_per_tray']
+                    s['换盘次数'] = tray_stats['tray_count']
+                    s['单次换盘时间(秒)'] = tray_stats['tray_seconds']
+                if part.get('tray_change'):
+                    # SA 式：换盘时间 = 同工位 卸载 -> 下一次装载 的间隔
+                    tc = measure_tray_change(
+                        p_rows,
+                        part['tray_change'].get('unload', ''),
+                        part['tray_change'].get('load', ''),
+                        cancel_event=cancel_event,
+                    )
+                    if tc:
+                        tray_s = tc['tray_seconds']
+                        s['换盘次数'] = tc['tray_count']
+                        s['单次换盘时间(秒)'] = tc['tray_seconds']
                 if tray_s and units_per_tray:
                     try:
                         pure_f = float(s.iloc[0].get('Pure UPH(个/小时)'))
@@ -339,17 +375,31 @@ class LogModel:
                         pass
                 part_summaries.append(s)
                 r0 = s.iloc[0]
+                p_em = parse_em_production(p_rows, cancel_event=cancel_event)
+                em_input = int(p_em['InputQty'].sum()) if not p_em.empty else ''
+                em_good = int(p_em['GoodQty'].sum()) if not p_em.empty else ''
                 ame_rows.append({
                     '模块': name,
                     'Pure UPH(个/小时)': r0.get('Pure UPH(个/小时)'),
+                    'Derated UPH M1(个/小时)': '',
+                    'Derated UPH M2(个/小时)': r0.get('Derated UPH M2(个/小时)'),
                     'UPH(个/小时)': r0.get('UPH(个/小时)'),
                     '产出数(个)': r0.get('产出数(个)'),
+                    'EM投入数(个)': em_input,
+                    'EM良品数(个)': em_good,
+                    '运行时间RUN(秒)': '',
+                    '周期总数': r0.get('周期总数'),
+                    '统计时长(秒)': r0.get('统计时长(秒)'),
+                    '平均正常周期(秒)': r0.get('平均正常周期(秒)'),
                 })
             summary = pd.concat(part_summaries, ignore_index=True)
             ame_summary = pd.DataFrame(ame_rows)
+            em_all = parse_em_production(rows, cancel_event=cancel_event)
             if progress_callback:
                 progress_callback(70)
             sheets = {'Summary': summary, 'AMESummary': ame_summary}
+            if not em_all.empty:
+                sheets['EMProduction'] = em_all
             out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
             if progress_callback:

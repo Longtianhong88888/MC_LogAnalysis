@@ -8,7 +8,9 @@ from models.analysis import (
     analyze_status,
     analyze_status_derived,
     build_cycles_df,
+    detect_tray_stats,
     down_pareto,
+    measure_tray_change,
     parse_em_production,
     summarize_alarms,
     summarize_eff_coretech,
@@ -31,6 +33,113 @@ CYCLE_ROWS = [
 
 
 class AnalysisTest(unittest.TestCase):
+    def test_detect_tray_stats_line_mode(self):
+        # 上料机：每条 carrier 消息 = 一盘，每盘 8 颗（SiteId 数量）
+        rows = []
+        t = 0.0
+        for i in range(5):
+            sites = "".join('"SiteId":%d,' % j for j in range(1, 9))
+            rows.append(row(
+                "%02d:%02d:%02d.%03d   Info <MES> 更新Carrier盘:carrierId:TACA%08d,Data:[%s]" % (
+                    int(t // 3600), int(t % 3600 // 60), int(t % 60), int(t % 1 * 1000), i, sites),
+                "上料機/Logger.txt",
+            ))
+            t += 26.0
+        stats = detect_tray_stats(rows, r"更新Carrier盘:.*?carrierId:([A-Z0-9\-]+)",
+                                  r"SiteId", segments="line")
+        self.assertIsNotNone(stats)
+        self.assertEqual(stats["units_per_tray"], 8)
+        self.assertEqual(stats["tray_count"], 4)
+        self.assertAlmostEqual(stats["tray_seconds"], 26.0, delta=0.1)
+
+    def test_detect_tray_stats_id_mode_and_run_split(self):
+        # 下料机：CubeTrayId 每盘 24 颗；同一 ID 跨小时复用要按 run_gap 切段
+        rows = []
+        for hour in range(2):
+            base = hour * 3600
+            for tray in ("TCP-A", "TCP-B"):
+                for k in range(24):
+                    rows.append(row(
+                        "%02d:%02d:%02d.%03d   Info <StepPrTrayCell> 获取格子上料机;===>CubeTrayId:%s,CubeTrayCell:%d" % (
+                            base // 3600, (base + k * 3) % 3600 // 60, (base + k * 3) % 60,
+                            (base + k * 3) % 1 * 1000, tray, k + 1),
+                        "下料機/Logger.txt",
+                    ))
+        stats = detect_tray_stats(rows, r"CubeTrayId:([A-Z0-9\-]+)", segments="id", run_gap=300.0)
+        self.assertIsNotNone(stats)
+        self.assertEqual(stats["units_per_tray"], 24)
+        # TCP-A 在两个小时内各出现一次 -> 2 段；共 4 段，换盘 3 次
+        self.assertEqual(stats["segments"], 4)
+        self.assertEqual(stats["tray_count"], 3)
+
+    def test_measure_tray_change(self):
+        # SA 式换盘：卸载 -> 下一次装载 的间隔中位数
+        rows = []
+        for i in range(4):
+            unload = 10.0 + i * 100.0
+            load = unload + 12.0
+            rows.append(row("%02d:%02d:%02d.%03d  Info 清除2号托盘所有格子状态" % (
+                int(unload // 3600), int(unload % 3600 // 60), int(unload % 60),
+                int(unload % 1 * 1000)), "下料機/Logger.txt"))
+            rows.append(row("%02d:%02d:%02d.%03d  Error 轨道2进板成功" % (
+                int(load // 3600), int(load % 3600 // 60), int(load % 60),
+                int(load % 1 * 1000)), "下料機/Logger.txt"))
+        stats = measure_tray_change(rows, "清除2号托盘所有格子状态", "轨道2进板成功")
+        self.assertIsNotNone(stats)
+        self.assertEqual(stats["tray_count"], 4)
+        self.assertAlmostEqual(stats["tray_seconds"], 12.0, delta=0.1)
+
+    def test_iter_monotonic_time_only_wrap(self):
+        from models.analysis import _iter_monotonic
+        # 纯时间日志跨零点：00:00 之后自动累加一天，保证时间单调
+        rows = [
+            row("23:59:50.000  A"),
+            row("23:59:55.000  B"),
+            row("00:00:05.000  C"),
+            row("00:00:10.000  D"),
+            row("无时间戳的行"),
+        ]
+        out = list(_iter_monotonic(rows))
+        self.assertEqual(len(out), 4)
+        self.assertAlmostEqual(out[0][0], 86390.0)
+        self.assertAlmostEqual(out[1][0], 86395.0)
+        self.assertAlmostEqual(out[2][0], 86405.0)  # 5 + 86400
+        self.assertAlmostEqual(out[3][0], 86410.0)
+        self.assertEqual(out[2][1], "00:00:05.000  C")
+
+    def test_iter_monotonic_dated_rows(self):
+        from models.analysis import _iter_monotonic
+        rows = [
+            row("2026-08-05 00:00:00.000  A"),
+            row("2026-08-05 00:00:10.000  B"),
+            row("2026-08-05 00:00:25.000  C"),
+        ]
+        out = list(_iter_monotonic(rows))
+        self.assertEqual(len(out), 3)
+        self.assertAlmostEqual(out[1][0] - out[0][0], 10.0)
+        self.assertAlmostEqual(out[2][0] - out[1][0], 15.0)
+
+    def test_row_date_from_filename(self):
+        from models.analysis import _row_date
+        self.assertIsNotNone(_row_date("上料機/Logger 2026_08_05_00.txt"))
+        self.assertIsNotNone(_row_date("主機/OHLog20260805000147.txt"))
+        self.assertIsNone(_row_date("LM log/plain.txt"))
+
+    def test_status_derived_acf_stops(self):
+        # ACF 主機 Err=NNNN / 下料機 生产流程出现异常 都应归类为 DOWN
+        from models.analysis import analyze_status_derived
+        rows = [
+            row("00:00:00.000  Info <StepPrTrayCell> UnloadDuts Finish", "下料機/Logger 2026_08_05_00.txt"),
+            row("00:00:10.000  Info 生产流程出现异常：正在中止线程", "下料機/Logger 2026_08_05_00.txt"),
+            row("2026-08-05 00:00:20.000  ErrJob,ErrOn,Err=3539:Process Data Sending Error", "主機/OHLog20260805000001.txt"),
+            row("00:00:30.000  Info UnloadDuts Finish", "下料機/Logger 2026_08_05_00.txt"),
+        ]
+        summary, _, detail = analyze_status_derived(
+            rows, "UnloadDuts Finish", "ErrOn,生产流程出现异常,当前设备状态Maunal")
+        states = set(detail["Status"])
+        self.assertIn("DOWN", states)
+        self.assertEqual(summary.set_index("状态").loc["DOWN", "总时长(秒)"] > 0, True)
+
     def test_parse_ts(self):
         from models.analysis import parse_ts
         ts = parse_ts("2026-07-08 02:30:29.020   动作时间...")

@@ -1,5 +1,6 @@
 import re
 import os
+import bisect
 import statistics
 from datetime import datetime
 from collections import Counter
@@ -185,6 +186,150 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
         records,
         columns=['FileName', 'Module', 'TriggerTime', 'CycleSeconds', 'Class', 'TriggerContent'],
     )
+
+
+def detect_tray_stats(rows, tray_id_pattern, unit_pattern=None, segments='id',
+                      run_gap=300.0, cancel_event=None):
+    """
+    按 Tray ID 把日志行分段，统计：
+    - units_per_tray：每盘颗数 = 完整段单位数的众数（去掉首尾可能不完整的段）
+    - tray_seconds：单次换盘时间 = 旧盘最后一条 -> 新盘第一条 的间隔中位数
+    - tray_count：换盘次数（段数-1）
+
+    tray_id_pattern：从日志行中提取 Tray ID 的正则（须含一个捕获组）。
+    unit_pattern：可选；提供时每条日志的单位数 = 该行匹配次数（如 carrier 消息里的 SiteId 数量），
+                  否则每条日志按 1 颗计。
+    segments：分段方式
+      - 'id'（默认）：每个不同的 Tray ID 视为一盘（适合下料机 CubeTrayId，交叉出现也算同一盘），
+        同一 Tray ID 两次出现间隔超过 run_gap 秒视为换了一盘（防止跨小时复用同号托盘被合并）；
+        每盘颗数 = 每段出现条数之和的众数；
+      - 'line'：每条匹配日志视为一盘（适合上料机 carrier 消息，一条消息=一次装盘），
+        每盘颗数 = 每条日志单位数的众数。
+    run_gap：仅 'id' 模式有效；同一 Tray ID 相邻两次出现超过该秒数时切为新的一段。
+    无法识别时返回 None。
+    """
+    tray_re = re.compile(tray_id_pattern)
+    unit_re = re.compile(unit_pattern) if unit_pattern else None
+    segs = []  # (tray_id, first_ts, last_ts, units)
+    if segments == 'line':
+        # 每条匹配日志 = 一盘；同毫秒重复消息去重
+        seen_keys = set()
+        for mono, content in _iter_monotonic(rows, cancel_event):
+            m = tray_re.search(content)
+            if not m:
+                continue
+            units = len(unit_re.findall(content)) if unit_re else 1
+            if unit_re and units == 0:
+                continue  # 非装盘消息（如 DataReceived 重复行），不参与分段
+            key = (round(mono, 1), m.group(1))
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            segs.append((m.group(1), mono, mono, units))
+    else:
+        # 按 Tray ID 聚合：同一 ID 的所有日志行合并为一盘
+        # 同一 Tray ID 相邻出现间隔超过 run_gap 视为新的一段（防止跨小时复用同号托盘合并）
+        last_seen = {}
+        run_idx = {}
+        runs = {}
+        order = []
+        for mono, content in _iter_monotonic(rows, cancel_event):
+            m = tray_re.search(content)
+            if not m:
+                continue
+            tid = m.group(1)
+            if tid in last_seen and mono - last_seen[tid] > run_gap:
+                run_idx[tid] += 1
+            elif tid not in run_idx:
+                run_idx[tid] = 0
+            key = (tid, run_idx[tid])
+            if key not in runs:
+                runs[key] = [mono, mono, 0]
+                order.append(key)
+            last_seen[tid] = mono
+            rec = runs[key]
+            rec[1] = mono
+            rec[2] += len(unit_re.findall(content)) if unit_re else 1
+        for key in order:
+            first, last, units = runs[key]
+            segs.append((key[0], first, last, units))
+
+    if len(segs) < 2:
+        return None
+    counts = [s[3] for s in segs[1:-1]] or [s[3] for s in segs]
+    if not counts:
+        return None
+    units_per_tray = Counter(counts).most_common(1)[0][0]
+    gaps = sorted(b[1] - a[2] for a, b in zip(segs, segs[1:]) if b[1] - a[2] >= 0)
+    if not gaps:
+        return None
+    tray_seconds = round(gaps[len(gaps) // 2], 3)
+    return {
+        'units_per_tray': int(units_per_tray),
+        'tray_seconds': tray_seconds,
+        'tray_count': len(segs) - 1,
+        'segments': len(segs),
+    }
+
+
+def _iter_monotonic(rows, cancel_event=None):
+    """按行序生成 (单调秒, 行内容)：纯时间日志（无日期）跨零点时自动累加一天，
+    保证跨文件/跨日的时间比较与间隔计算正确；带日期的日志直接用真实时间戳。"""
+    prev_sec = None
+    offset = 0.0
+    for row in rows:
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
+        content = str(row.get('Content', ''))
+        t = parse_ts(content)
+        if t is None:
+            continue
+        if t.year == 1900:
+            sec = t.hour * 3600 + t.minute * 60 + t.second + t.microsecond / 1e6
+            if prev_sec is not None and sec < prev_sec:
+                offset += 86400.0
+            prev_sec = sec
+            mono = sec + offset
+        else:
+            mono = t.timestamp()
+        yield mono, content
+
+
+def measure_tray_change(rows, unload_keywords, load_keywords, max_gap=600.0, cancel_event=None):
+    """
+    SA 式换盘时间：同工位「卸载 -> 下一次装载」的间隔中位数。
+    unload_keywords：卸载动作关键词（如“请求出托盘”“清除N号托盘所有格子状态”）；
+    load_keywords：装载动作关键词（如“等待Carrier Ready”“轨道N进板成功”）。
+    返回 {'tray_seconds': 中位间隔, 'tray_count': 配对数}；无法匹配时返回 None。
+    """
+    unload_kws = split_phrases(unload_keywords)
+    load_kws = split_phrases(load_keywords)
+    unloads = []
+    loads = []
+    for mono, content in _iter_monotonic(rows, cancel_event):
+        if unload_kws and any(kw in content for kw in unload_kws):
+            unloads.append(mono)
+        if load_kws and any(kw in content for kw in load_kws):
+            loads.append(mono)
+    unloads.sort()
+    loads.sort()
+    if not unloads or not loads:
+        return None
+    # 每个卸载找其后最近的装载：二分查找，O(n log n)，避免双重循环
+    durations = []
+    for ut in unloads:
+        i = bisect.bisect_right(loads, ut)
+        if i < len(loads):
+            d = loads[i] - ut
+            if 0 < d < max_gap:
+                durations.append(d)
+    if not durations:
+        return None
+    durations.sort()
+    return {
+        'tray_seconds': round(durations[len(durations) // 2], 3),
+        'tray_count': len(durations),
+    }
 
 
 def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0):
@@ -403,6 +548,19 @@ def summarize_alarms(rows, alarm_keywords, cancel_event=None, reason_map=None, m
 
 _STATUS_RE = re.compile(r'status:(RU[A-F0-9]{3}|RUN|IDLE|DOWN|WARN)', re.IGNORECASE)
 _REASON_RE = re.compile(r'ReasonID:([0-9A-Fa-f]+)')
+_FNAME_DATE_RE = re.compile(r'(20\d{2})[-_]?(\d{2})[-_]?(\d{2})')
+
+
+def _row_date(file_name):
+    """从文件名提取日期（如 Logger 2026_08_05_00.txt / OHLog20260805000001.txt），
+    用于给纯时间日志补日期，避免与带日期日志混排时时长失真。"""
+    m = _FNAME_DATE_RE.search(str(file_name))
+    if m:
+        try:
+            return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3))).date()
+        except ValueError:
+            return None
+    return None
 
 
 def _normalize_status(raw):
@@ -480,6 +638,9 @@ def analyze_status(rows, cancel_event=None):
         ts = parse_ts(content)
         if ts is None:
             continue
+        fdate = _row_date(file_names[idx])
+        if ts.year == 1900 and fdate is not None:
+            ts = ts.replace(year=fdate.year, month=fdate.month, day=fdate.day)
         reason_m = _REASON_RE.search(content)
         events.append({
             'ts': ts,
@@ -511,18 +672,25 @@ def analyze_status(rows, cancel_event=None):
     return _finalize_status(records)
 
 
-_STOP_REASON_RE = re.compile(r'ErrorName = \[(.*?)\]')
+_STOP_REASON_RE = re.compile(r'ErrorName = \[(.*?)\]|Err=(\d+):?([^,\n]*)')
 
 
-def _classify_stop(reason, reason_map):
-    """按 EReason 清单匹配 AutoRun Stop 原因 → 状态（Error 码→DOWN/IDLE/RUN，操作员停止→IDLE）。"""
+def _classify_stop(reason, reason_map, reason_id=None):
+    """按 EReason 清单匹配停机原因 → 状态（Error/Err 码→清单或 DOWN，异常中止→DOWN，操作员停止→IDLE）。"""
+    code = None
     m = re.search(r'Error (\d+)', reason)
     if m:
-        info = reason_info(reason_map, m.group(1)) if reason_map else None
+        code = m.group(1)
+    elif reason_id and str(reason_id).isdigit():
+        code = str(reason_id)
+    if code:
+        info = reason_info(reason_map, code) if reason_map else None
         if info and info.get('state'):
             return info['state']
         return 'DOWN'
-    if '정지' in reason or 'stop' in reason.lower() or 'Stop' in reason:
+    if '异常' in reason or '中止' in reason:
+        return 'DOWN'
+    if '정지' in reason or 'stop' in reason.lower():
         return 'IDLE'
     return 'IDLE'
 
@@ -547,14 +715,24 @@ def analyze_status_derived(rows, activity_keywords, stop_reason_keywords, reason
         ts = parse_ts(content)
         if ts is None:
             continue
+        fdate = _row_date(row.get('FileName', ''))
+        if ts.year == 1900 and fdate is not None:
+            ts = ts.replace(year=fdate.year, month=fdate.month, day=fdate.day)
         if is_stop:
             m = _STOP_REASON_RE.search(content)
-            reason = m.group(1) if m else ''
-            code_m = re.search(r'Error (\d+)', reason)
-            reason_id = code_m.group(1) if code_m else reason
+            reason = ''
+            reason_id = ''
+            if m:
+                if m.group(1):  # ErrorName = [Error NNN] ... 格式
+                    reason = m.group(1)
+                    code_m = re.search(r'Error (\d+)', reason)
+                    reason_id = code_m.group(1) if code_m else reason
+                elif m.group(2):  # Err=NNNN:Text 格式（ACF 主機）
+                    reason_id = m.group(2)
+                    reason = m.group(3) or reason_id
             events.append({
                 'ts': ts, 'file': row.get('FileName', ''), 'kind': 'stop',
-                'state': _classify_stop(reason, reason_map),
+                'state': _classify_stop(reason or content, reason_map, reason_id),
                 'reason_id': reason_id, 'content': content,
             })
         else:

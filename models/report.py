@@ -27,6 +27,8 @@ _TITLE_PREFIX = {
     "LM 激光打标": "LM",
     "CAW 组装": "CAW",
     "FR 机台": "FR",
+    "SA 机台": "SA",
+    "ACF 三機": "ACF",
 }
 _TEMPLATE_CANDIDATES = ["Analysis_Report.pptx", "PPT模板.pptx"]
 SECTION_TITLES = ["UPH 分析", "EFF 分析", "停机 Pareto", "报警分析", "机台状态汇总", "机台状态趋势"]
