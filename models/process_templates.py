@@ -81,6 +81,7 @@ PROCESS_TEMPLATES = {
     },
     "SA 机台": {
         "description": "SA 点胶组装机：LogData_*.txt 序列日志，UDP Module - Good 为单件完成标记（.log 为序列化转储，仅取 .txt）",
+        "reason_list": "SA",
         "file_filters": [".txt"],
         "UPH分析": {
             "trigger_keywords": "UDP Module - Good",

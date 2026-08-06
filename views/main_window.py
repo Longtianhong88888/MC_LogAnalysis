@@ -91,6 +91,17 @@ class MainWindow(QMainWindow):
         filter_row.addWidget(self.custom_filter_edit, 1)
         root.addLayout(filter_row)
 
+        # 原因清单（机台级，EFF/报警分析共用）
+        reason_row = QHBoxLayout()
+        reason_row.addWidget(QLabel("原因清单（按文件名匹配）："))
+        self.reason_combo = QComboBox()
+        self.reason_combo.addItem("（无）")
+        for device in available_reason_lists():
+            self.reason_combo.addItem(device)
+        reason_row.addWidget(self.reason_combo)
+        reason_row.addStretch(1)
+        root.addLayout(reason_row)
+
         # 功能选择
         feature_row = QHBoxLayout()
         feature_row.addWidget(QLabel("功能选择："))
@@ -215,17 +226,12 @@ class MainWindow(QMainWindow):
         self.eff_planned_hours_edit.setPlaceholderText("留空则取日志总时长")
         self.eff_pdt_reason_edit = QLineEdit()
         self.eff_pdt_reason_edit.setPlaceholderText("如 0000000411,0000000412，留空则全部计入可用性损失")
-        self.eff_reason_combo = QComboBox()
-        self.eff_reason_combo.addItem("（无）")
-        for device in available_reason_lists():
-            self.eff_reason_combo.addItem(device)
         note = QLabel("按 CoreTech AME 定义：EFF(效率) = 操作时间(运行+待机) / 计划生产时间，\n"
                       "基于日志中的 RUN / IDLE / DOWN 状态统计，停机可依 ReasonID 拆分为计划停机 pDT 与非计划停机 uDT。")
         note.setWordWrap(True)
         form.addRow(note)
         form.addRow("计划生产时间(小时)：", self.eff_planned_hours_edit)
         form.addRow("计划停机ReasonID：", self.eff_pdt_reason_edit)
-        form.addRow("原因清单（按文件名匹配）：", self.eff_reason_combo)
 
     def _build_alarm_page(self):
         form = self._new_param_page()
@@ -266,12 +272,12 @@ class MainWindow(QMainWindow):
             self.eff_planned_hours_edit.setText("" if not eff.get("planned_hours") else str(eff["planned_hours"]))
             self.eff_pdt_reason_edit.setText(str(eff.get("pdt_reason_ids") or ""))
             self.alarm_keywords_edit.setText(str(alarm.get("alarm_keywords") or DEFAULT_ALARM_KEYWORDS))
-            if hasattr(self, 'eff_reason_combo'):
+            if hasattr(self, 'reason_combo'):
                 reason_device = str(tpl.get("reason_list") or "")
-                if reason_device and self.eff_reason_combo.findText(reason_device) >= 0:
-                    self.eff_reason_combo.setCurrentText(reason_device)
+                if reason_device and self.reason_combo.findText(reason_device) >= 0:
+                    self.reason_combo.setCurrentText(reason_device)
                 else:
-                    self.eff_reason_combo.setCurrentIndex(0)
+                    self.reason_combo.setCurrentIndex(0)
             filters = tpl.get("file_filters")
             self.custom_filter_edit.setText(", ".join(filters) if filters else "")
 

@@ -5,6 +5,7 @@ from datetime import datetime
 import pandas as pd
 
 from models.exceptions import OperationCancelled
+from models.reason_codes import reason_info
 
 _TIME_RE = re.compile(
     r'^(?:\[(?P<brackettime>\d{2}:\d{2}:\d{2}(?:\.\d+)?)\]|'
@@ -332,7 +333,7 @@ def down_pareto(status_detail, reason_map=None):
     return g
 
 
-def summarize_alarms(rows, alarm_keywords, cancel_event=None):
+def summarize_alarms(rows, alarm_keywords, cancel_event=None, reason_map=None):
     """报警统计：汇总（按模块）、按关键词计数、明细。"""
     kws = split_keywords(alarm_keywords)
     pattern = keyword_pattern(kws) if kws else None
@@ -345,6 +346,12 @@ def summarize_alarms(rows, alarm_keywords, cancel_event=None):
         m = re.search(pattern, content, re.IGNORECASE)
         if m:
             module, _ = parse_fields(content)
+            reason_name = ''
+            if reason_map:
+                em = re.search(r'\[Error (\d+)\]', content)
+                if em:
+                    info = reason_info(reason_map, em.group(1))
+                    reason_name = info['name'] if info else ''
             detail.append({
                 'FileName': file_names[idx],
                 'Timestamp': format_ts(parse_ts(content)),
@@ -352,12 +359,13 @@ def summarize_alarms(rows, alarm_keywords, cancel_event=None):
                 '命中关键词': m.group(0),
                 'Message': content.split(' ', 2)[-1] if ' ' in content else content,
                 'Content': content,
+                '原因名称': reason_name,
             })
     if not detail:
         return (
             pd.DataFrame(columns=['模块', '报警次数', '不同报警消息数']),
             pd.DataFrame(columns=['关键词', '报警次数']),
-            pd.DataFrame(columns=['FileName', 'Timestamp', 'Module', '命中关键词', 'Message', 'Content']),
+            pd.DataFrame(columns=['FileName', 'Timestamp', 'Module', '命中关键词', 'Message', 'Content', '原因名称']),
         )
     detail_df = pd.DataFrame(detail)
     summary = (

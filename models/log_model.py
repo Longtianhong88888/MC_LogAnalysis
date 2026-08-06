@@ -364,14 +364,21 @@ class LogModel:
 
     # ---------- 功能四：报警分析 ----------
     def analyze_alarms(self, source_dir, output_dir, alarm_keywords="报警,ALARM,ERROR,NG,失败,异常,停止信号",
-                       file_filters=None, rows=None, cancel_event=None, progress_callback=None):
+                       file_filters=None, rows=None, cancel_event=None, reason_device=None,
+                       progress_callback=None):
+        reason_map = None
+        if reason_device:
+            from models.reason_codes import load_reason_codes
+            reason_map = load_reason_codes(reason_device)
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(
             source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(50)
-        summary, by_keyword, detail = summarize_alarms(rows, alarm_keywords, cancel_event=cancel_event)
+        summary, by_keyword, detail = summarize_alarms(
+            rows, alarm_keywords, cancel_event=cancel_event, reason_map=reason_map,
+        )
         if progress_callback:
             progress_callback(70)
         sheets = {'Summary': summary}

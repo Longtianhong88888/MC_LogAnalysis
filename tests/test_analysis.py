@@ -206,6 +206,17 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(len(detail), 4)  # 编码中的 ng 不命中
         self.assertEqual(len(by_kw), 3)   # ALARM x2, 报警 x1, NG x1
 
+    def test_alarm_reason_name(self):
+        reason_map = {"305": {"name": "吸取钢片真空報警", "category": "Unplanned Downtime", "state": "DOWN"}}
+        rows = [
+            row("2026-07-08 03:00:00.000 [Error 305] Picker真空报警"),
+            row("2026-07-08 03:00:01.000 无料NG"),
+        ]
+        summary, by_kw, detail = summarize_alarms(rows, "Error,NG", reason_map=reason_map)
+        self.assertIn("原因名称", detail.columns)
+        self.assertEqual(detail.iloc[0]["原因名称"], "吸取钢片真空報警")
+        self.assertEqual(detail.iloc[1]["原因名称"], "")
+
     def test_status_analysis(self):
         rows = [
             row("2026-07-08 00:00:00.000 Net(2) Send [PS][status:RUN,Datetime:...,ReasonID:None]"),
