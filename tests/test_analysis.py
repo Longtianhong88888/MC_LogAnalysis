@@ -356,6 +356,7 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "Heater 0 :Heating Complete")
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["units_per_cycle"], 2)
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["normal_threshold"], 15.0)
+        self.assertIn("JigLoadingCycle", PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["tray_change"]["pattern"])
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["file_filters"], [".txt"])
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["机台状态分析"]["activity_keywords"], "UDP Module - Good")
         self.assertIn("不达标", fr["报警分析"]["alarm_keywords"])
@@ -571,10 +572,38 @@ class AnalysisTest(unittest.TestCase):
             {"name": "热压", "function": "sa_heatpress"},
             {"name": "检测", "function": "sa_inspect"},
         ]
-        df, b_time, b_name = analyze_bottleneck(rows, stations, units_per_row=2)
-        self.assertEqual(b_name, "热压")
-        self.assertAlmostEqual(b_time, 10.0)
+        df, result = analyze_bottleneck(rows, stations, units_per_row=2)
+        self.assertEqual(result["瓶颈工位"], "热压")
+        self.assertAlmostEqual(result["瓶颈周期(秒)"], 10.0)
         self.assertEqual(df.set_index("工位").loc["热压", "瓶颈"], "★")
+
+    def test_analyze_bottleneck_tray_amortize(self):
+        import datetime as _dt
+        from models.analysis import analyze_bottleneck
+
+        def line(msg, t):
+            s = t.strftime('%Y%m%d-%H-%M-%S-') + f"{t.microsecond // 1000:03d}"
+            return {"FileName": "a.txt", "Content": f"[0] X, {s}, X, 0, {msg}"}
+
+        t0 = _dt.datetime(2026, 8, 3, 9, 0, 0)
+        rows = []
+        for t in (0, 20, 25):   # 热压：间隔 20s（含换盘）与 5s
+            rows.append(line("Heater 0 :Heating Complete", t0 + _dt.timedelta(seconds=t)))
+        rows.append(line("JigLoadingCycle", t0 + _dt.timedelta(seconds=10)))  # 换盘事件
+        for t in (0, 10, 15):   # 点胶
+            rows.append(line("DispOneChipProfileWorkCycle", t0 + _dt.timedelta(seconds=t)))
+
+        stations = [
+            {"name": "点胶", "function": "sa_dispense"},
+            {"name": "热压", "function": "sa_heatpress"},
+        ]
+        df, result = analyze_bottleneck(rows, stations, units_per_row=2,
+                                        tray_change={"pattern": "JigLoadingCycle"})
+        self.assertEqual(result["瓶颈工位"], "热压")
+        self.assertEqual(result["换盘次数"], 1)
+        self.assertAlmostEqual(result["瓶颈周期(秒)"], 12.5)      # median(20, 5)
+        self.assertAlmostEqual(result["每排换盘开销(秒)"], 5.0)   # (20-5)/3排
+        self.assertAlmostEqual(result["有效周期(秒)"], 17.5)      # 12.5 + 5
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import re
 import os
 import statistics
 from datetime import datetime
+from collections import Counter
 
 import pandas as pd
 
@@ -646,7 +647,7 @@ def parse_em_production(rows, cancel_event=None):
 
 def _station_cycle(rows, pattern, events_per_row, cancel_event=None):
     """通用工位周期：收集完成事件时间戳，按每排事件数折算每排周期中位秒。
-    返回 (事件数, 每排事件数, 每排周期中位秒)。events_per_row='auto' 时按参考排数自动估算。"""
+    返回 (事件数, 每排事件数, 每排周期中位秒, 事件时间戳列表)。"""
     tlist = []
     for row in rows:
         if cancel_event is not None and cancel_event.is_set():
@@ -660,15 +661,15 @@ def _station_cycle(rows, pattern, events_per_row, cancel_event=None):
     tlist.sort()
     k = events_per_row
     if not tlist:
-        return 0, k, None
+        return 0, k, None, tlist
     if k == 'auto':
-        return len(tlist), k, None  # auto 由调用方传入参考排数后再算
+        return len(tlist), k, None, tlist
     intervals = [
         (tlist[i + k] - tlist[i]).total_seconds()
         for i in range(len(tlist) - k)
         if 0 < (tlist[i + k] - tlist[i]).total_seconds() < 3600
     ]
-    return len(tlist), k, (statistics.median(intervals) if intervals else None)
+    return len(tlist), k, (statistics.median(intervals) if intervals else None), tlist
 
 
 def _station_dispense(rows, cancel_event=None):
@@ -688,16 +689,17 @@ def _station_heatpress(rows, cancel_event=None):
 
 def _station_inspect(rows, ref_rows, cancel_event=None):
     """SA 检测工位：UDP Module - Good 每排 k 次（k = round(事件数/参考排数) 自动估算）。"""
-    count, _, _ = _station_cycle(rows, "UDP Module - Good", 1, cancel_event)
+    count, _, _, tlist = _station_cycle(rows, "UDP Module - Good", 1, cancel_event)
     k = max(1, round(count / ref_rows)) if ref_rows else 1
-    _, _, med = _station_cycle(rows, "UDP Module - Good", k, cancel_event)
-    return count, k, med
+    _, _, med, _ = _station_cycle(rows, "UDP Module - Good", k, cancel_event)
+    return count, k, med, tlist
 
 
-def analyze_bottleneck(rows, stations, units_per_row, cancel_event=None):
+def analyze_bottleneck(rows, stations, units_per_row, tray_change=None, cancel_event=None):
     """
     自动判定瓶颈工位：每个工位按各自逻辑计算每排周期，取最长工位为瓶颈。
-    返回 (工位明细DataFrame, 瓶颈周期秒, 瓶颈工位名)。
+    tray_change: 可选 {'pattern': '...'}，将换 Tray 时间平摊到每排周期（进而平摊到单颗 CT）。
+    返回 (工位明细DataFrame, 瓶颈信息dict)。
     stations: [{'name','function'|'pattern','events_per_row'}]，function 走专属工位逻辑。
     """
     collected = {}
@@ -711,9 +713,8 @@ def analyze_bottleneck(rows, stations, units_per_row, cancel_event=None):
         elif fn == 'sa_heatpress':
             collected[name] = _station_heatpress(rows, cancel_event)
         elif fn == 'sa_inspect':
-            # 参考排数：固定工位中折算排数最大值
             ref_rows = max(
-                (c // k for c, k, _ in collected.values() if isinstance(k, int) and k >= 1),
+                (c // k for c, k, _, _ in collected.values() if isinstance(k, int) and k >= 1),
                 default=0,
             )
             collected[name] = _station_inspect(rows, ref_rows, cancel_event)
@@ -722,21 +723,88 @@ def analyze_bottleneck(rows, stations, units_per_row, cancel_event=None):
                                              cancel_event)
 
     ref_rows = max(
-        (c // k for c, k, _ in collected.values() if isinstance(k, int) and k >= 1),
+        (c // k for c, k, _, _ in collected.values() if isinstance(k, int) and k >= 1),
         default=0,
     )
+    # 换 Tray 开销：在瓶颈工位事件流中，含换盘事件的间隔中位 - 正常间隔中位，再平摊到每排
+    tray_info = {'次数': 0, '单次净时间(秒)': 0.0, '每盘排数': '', '每排开销(秒)': 0.0}
+    if tray_change and collected:
+        bottleneck_name_ = max(collected, key=lambda n: collected[n][2] or 0)
+        # 换盘测量参考工位：优先取配置（如装盘/点胶工位），否则用瓶颈工位流
+        ref_name = tray_change.get('reference_station') or bottleneck_name_
+        ref_ts = collected.get(ref_name, (0, 0, None, []))[3]
+        b_ts = ref_ts
+        if b_ts:
+            tray_events = []  # (ts, 工位)
+            tray_kws = split_phrases(tray_change.get('pattern', ''))
+            for row in rows:
+                if cancel_event is not None and cancel_event.is_set():
+                    raise OperationCancelled()
+                content = str(row.get('Content', ''))
+                if not tray_kws or not any(kw in content for kw in tray_kws):
+                    continue
+                t = parse_ts(content)
+                if t is not None:
+                    pos = re.search(r'SeqCycle(\d+)_', content)
+                    tray_events.append((t, pos.group(1) if pos else ''))
+            tray_events.sort()
+            tray_ts = [t for t, _ in tray_events]
+
+            # 每盘排数：同工位相邻装盘之间的排数众数（一盘有几排，自动抓取）
+            rows_per_tray = None
+            if tray_events:
+                by_pos = {}
+                for t, pos in tray_events:
+                    by_pos.setdefault(pos, []).append(t)
+                row_counts = []
+                for ts_list in by_pos.values():
+                    for a, b in zip(ts_list, ts_list[1:]):
+                        row_counts.append(sum(1 for x in b_ts if a <= x < b))
+                # 检测工位按排装盘会产生大量 0 排间隔，取非零间隔的众数作为每盘排数
+                positive = [c for c in row_counts if c > 0]
+                if positive:
+                    rows_per_tray = Counter(positive).most_common(1)[0][0]
+
+            with_g, without_g = [], []
+            for a, b in zip(b_ts, b_ts[1:]):
+                d = (b - a).total_seconds()
+                if not (0 < d < 3600):
+                    continue
+                if any(a < t < b for t in tray_ts):
+                    with_g.append(d)
+                else:
+                    without_g.append(d)
+            if with_g and without_g:
+                net = max(statistics.median(with_g) - statistics.median(without_g), 0.0)
+                single = tray_change.get('single_tray_seconds')
+                if single:
+                    net = float(single)
+                rows_per_tray = tray_change.get('rows_per_tray') or rows_per_tray
+                if not rows_per_tray:
+                    rows_per_tray = round(len(b_ts) / len(with_g))
+                rows_per_tray = int(rows_per_tray)
+                tray_info = {
+                    '次数': len(with_g),
+                    '单次净时间(秒)': round(net, 3),
+                    '每盘排数': rows_per_tray,
+                    '每排开销(秒)': round(net / rows_per_tray, 4),
+                }
+
     rows_list = []
     bottleneck_time = 0.0
     bottleneck_name = ''
-    for name, (count, k, med) in collected.items():
+    for name, (count, k, med, _tlist) in collected.items():
         if not count:
-            rows_list.append({'工位': name, '事件数': 0, '每排事件数': k, '每排周期(秒)': '', '极限UPH(个/小时)': '', '瓶颈': ''})
+            rows_list.append({
+                '工位': name, '事件数': 0, '每排事件数': k, '每排周期(秒)': '',
+                '每排换盘开销(秒)': tray_info['每排开销(秒)'] or '', '有效周期(秒)': '',
+                '极限UPH(个/小时)': '', '有效UPH(个/小时)': '', '瓶颈': '',
+            })
             continue
         if k == 'auto':
             k = max(1, round(count / ref_rows)) if ref_rows else 1
-            pattern = next((st.get('pattern') for st in stations if st.get('name') == name), '')
-            _, _, med = _station_cycle(rows, pattern, k, cancel_event)
-        uph = round(units_per_row * 3600.0 / med, 2) if med else ''
+        eff_med = (med + tray_info['每排开销(秒)']) if med else None
+        uph = round(units_per_row * 3600.0 / eff_med, 2) if eff_med else ''
         if med is not None and med > bottleneck_time:
             bottleneck_time = med
             bottleneck_name = name
@@ -745,7 +813,10 @@ def analyze_bottleneck(rows, stations, units_per_row, cancel_event=None):
             '事件数': count,
             '每排事件数': k,
             '每排周期(秒)': round(med, 3) if med else '',
+            '每排换盘开销(秒)': round(tray_info['每排开销(秒)'], 3) if tray_info['每排开销(秒)'] else '',
+            '有效周期(秒)': round(eff_med, 3) if eff_med else '',
             '极限UPH(个/小时)': uph,
+            '有效UPH(个/小时)': uph if tray_info['每排开销(秒)'] else '',
             '瓶颈': '',
         })
 
@@ -754,4 +825,13 @@ def analyze_bottleneck(rows, stations, units_per_row, cancel_event=None):
         df['瓶颈'] = df['每排周期(秒)'].apply(
             lambda v: '★' if isinstance(v, (int, float)) and abs(v - bottleneck_time) < 0.001 else ''
         )
-    return df, round(bottleneck_time, 3) if bottleneck_time else None, bottleneck_name
+    result = {
+        '瓶颈工位': bottleneck_name,
+        '瓶颈周期(秒)': round(bottleneck_time, 3) if bottleneck_time else None,
+        '换盘次数': tray_info['次数'],
+        '单次换盘净时间(秒)': tray_info['单次净时间(秒)'],
+        '每盘排数': tray_info['每盘排数'],
+        '每排换盘开销(秒)': tray_info['每排开销(秒)'],
+        '有效周期(秒)': round(bottleneck_time + tray_info['每排开销(秒)'], 3) if bottleneck_time else None,
+    }
+    return df, result

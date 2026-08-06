@@ -219,6 +219,8 @@ class LogController:
                 settings["bottleneck_stations"] = feature_tpl["bottleneck_stations"]
             if feature_tpl.get("bottleneck_units_per_row") is not None:
                 settings["bottleneck_units_per_row"] = int(feature_tpl["bottleneck_units_per_row"])
+            if feature_tpl.get("tray_change"):
+                settings["tray_change"] = feature_tpl["tray_change"]
         if feature in ("EFF分析", "报警分析", "机台状态分析"):
             combo = getattr(self.view, 'reason_combo', None)
             if combo is not None:

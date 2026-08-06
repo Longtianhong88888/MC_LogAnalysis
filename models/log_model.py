@@ -294,7 +294,7 @@ class LogModel:
                     normal_threshold=10.0, planned_threshold=900.0,
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
                     pure_uph_factor=1.0, bottleneck_stations=None, bottleneck_units_per_row=None,
-                    rows=None, cancel_event=None, progress_callback=None):
+                    tray_change=None, rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(
@@ -306,14 +306,23 @@ class LogModel:
             # 多工位机：自动判定瓶颈工位，UPH = 每排产品数 × 3600 / 瓶颈工位每排周期
             from models.analysis import analyze_bottleneck
             units = bottleneck_units_per_row or units_per_cycle
-            stations_df, b_time, b_name = analyze_bottleneck(
-                rows, bottleneck_stations, units, cancel_event=cancel_event,
+            stations_df, bn = analyze_bottleneck(
+                rows, bottleneck_stations, units, tray_change=tray_change,
+                cancel_event=cancel_event,
             )
-            pure = round(units * 3600.0 / b_time, 2) if b_time else ''
+            b_name = bn.get('瓶颈工位') or ''
+            eff_cycle = bn.get('有效周期(秒)')
+            pure = round(units * 3600.0 / eff_cycle, 2) if eff_cycle else ''
             em = parse_em_production(rows, cancel_event=cancel_event)
             ame = pd.DataFrame([{
                 '瓶颈工位': b_name,
-                '瓶颈周期(秒)': b_time if b_time else '',
+                '瓶颈周期(秒)': bn.get('瓶颈周期(秒)') or '',
+                '换盘次数': bn.get('换盘次数') or '',
+                '单次换盘净时间(秒)': bn.get('单次换盘净时间(秒)') or '',
+                '每盘排数': bn.get('每盘排数') or '',
+                '每排换盘开销(秒)': bn.get('每排换盘开销(秒)') or '',
+                '有效周期(秒)': eff_cycle if eff_cycle else '',
+                '单颗CT(秒)': round(eff_cycle / units, 3) if eff_cycle else '',
                 '每排产品数(个)': units,
                 'Pure UPH(个/小时)': pure,
                 'Derated UPH M1(个/小时)': '',

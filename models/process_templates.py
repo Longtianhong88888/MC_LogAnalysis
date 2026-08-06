@@ -99,6 +99,10 @@ PROCESS_TEMPLATES = {
                 {"name": "检测", "function": "sa_inspect"},
             ],
             "bottleneck_units_per_row": 2,
+            "tray_change": {
+                "pattern": "JigLoadingCycle",
+                "reference_station": "点胶",
+            },
         },
         "EFF分析": {
             "activity_keywords": "UDP Module - Good",
