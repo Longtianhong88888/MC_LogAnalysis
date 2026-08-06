@@ -1,5 +1,6 @@
 import re
 import os
+import statistics
 from datetime import datetime
 
 import pandas as pd
@@ -641,3 +642,116 @@ def parse_em_production(rows, cancel_event=None):
         columns=['FileName', 'Timestamp', 'LotNo', 'InputQty', 'GoodQty', 'NgQty',
                  'Head', 'StartTime', 'EndTime', 'DurationHours', 'UPH(个/小时)', 'NG率(%)'],
     )
+
+
+def _station_cycle(rows, pattern, events_per_row, cancel_event=None):
+    """通用工位周期：收集完成事件时间戳，按每排事件数折算每排周期中位秒。
+    返回 (事件数, 每排事件数, 每排周期中位秒)。events_per_row='auto' 时按参考排数自动估算。"""
+    tlist = []
+    for row in rows:
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
+        content = str(row.get('Content', ''))
+        if not pattern or pattern not in content:
+            continue
+        t = parse_ts(content)
+        if t is not None:
+            tlist.append(t)
+    tlist.sort()
+    k = events_per_row
+    if not tlist:
+        return 0, k, None
+    if k == 'auto':
+        return len(tlist), k, None  # auto 由调用方传入参考排数后再算
+    intervals = [
+        (tlist[i + k] - tlist[i]).total_seconds()
+        for i in range(len(tlist) - k)
+        if 0 < (tlist[i + k] - tlist[i]).total_seconds() < 3600
+    ]
+    return len(tlist), k, (statistics.median(intervals) if intervals else None)
+
+
+def _station_dispense(rows, cancel_event=None):
+    """SA 点胶工位：DispOneChipProfileWorkCycle 每次点胶一排，每排 1 次。"""
+    return _station_cycle(rows, "DispOneChipProfileWorkCycle", 1, cancel_event)
+
+
+def _station_attach(rows, cancel_event=None):
+    """SA 贴附工位：AfterPickUp StopCondition 每排 2 次（两个取料头各一次）。"""
+    return _station_cycle(rows, "AfterPickUp StopCondition", 2, cancel_event)
+
+
+def _station_heatpress(rows, cancel_event=None):
+    """SA 热压工位：两个加热头并行加热同一排，Heater 0 完成事件每排 1 次。"""
+    return _station_cycle(rows, "Heater 0 :Heating Complete", 1, cancel_event)
+
+
+def _station_inspect(rows, ref_rows, cancel_event=None):
+    """SA 检测工位：UDP Module - Good 每排 k 次（k = round(事件数/参考排数) 自动估算）。"""
+    count, _, _ = _station_cycle(rows, "UDP Module - Good", 1, cancel_event)
+    k = max(1, round(count / ref_rows)) if ref_rows else 1
+    _, _, med = _station_cycle(rows, "UDP Module - Good", k, cancel_event)
+    return count, k, med
+
+
+def analyze_bottleneck(rows, stations, units_per_row, cancel_event=None):
+    """
+    自动判定瓶颈工位：每个工位按各自逻辑计算每排周期，取最长工位为瓶颈。
+    返回 (工位明细DataFrame, 瓶颈周期秒, 瓶颈工位名)。
+    stations: [{'name','function'|'pattern','events_per_row'}]，function 走专属工位逻辑。
+    """
+    collected = {}
+    for st in stations:
+        fn = st.get('function')
+        name = st.get('name')
+        if fn == 'sa_dispense':
+            collected[name] = _station_dispense(rows, cancel_event)
+        elif fn == 'sa_attach':
+            collected[name] = _station_attach(rows, cancel_event)
+        elif fn == 'sa_heatpress':
+            collected[name] = _station_heatpress(rows, cancel_event)
+        elif fn == 'sa_inspect':
+            # 参考排数：固定工位中折算排数最大值
+            ref_rows = max(
+                (c // k for c, k, _ in collected.values() if isinstance(k, int) and k >= 1),
+                default=0,
+            )
+            collected[name] = _station_inspect(rows, ref_rows, cancel_event)
+        else:
+            collected[name] = _station_cycle(rows, st.get('pattern', ''), st.get('events_per_row', 1),
+                                             cancel_event)
+
+    ref_rows = max(
+        (c // k for c, k, _ in collected.values() if isinstance(k, int) and k >= 1),
+        default=0,
+    )
+    rows_list = []
+    bottleneck_time = 0.0
+    bottleneck_name = ''
+    for name, (count, k, med) in collected.items():
+        if not count:
+            rows_list.append({'工位': name, '事件数': 0, '每排事件数': k, '每排周期(秒)': '', '极限UPH(个/小时)': '', '瓶颈': ''})
+            continue
+        if k == 'auto':
+            k = max(1, round(count / ref_rows)) if ref_rows else 1
+            pattern = next((st.get('pattern') for st in stations if st.get('name') == name), '')
+            _, _, med = _station_cycle(rows, pattern, k, cancel_event)
+        uph = round(units_per_row * 3600.0 / med, 2) if med else ''
+        if med is not None and med > bottleneck_time:
+            bottleneck_time = med
+            bottleneck_name = name
+        rows_list.append({
+            '工位': name,
+            '事件数': count,
+            '每排事件数': k,
+            '每排周期(秒)': round(med, 3) if med else '',
+            '极限UPH(个/小时)': uph,
+            '瓶颈': '',
+        })
+
+    df = pd.DataFrame(rows_list)
+    if bottleneck_time:
+        df['瓶颈'] = df['每排周期(秒)'].apply(
+            lambda v: '★' if isinstance(v, (int, float)) and abs(v - bottleneck_time) < 0.001 else ''
+        )
+    return df, round(bottleneck_time, 3) if bottleneck_time else None, bottleneck_name

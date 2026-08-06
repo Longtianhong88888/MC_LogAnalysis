@@ -354,7 +354,7 @@ class AnalysisTest(unittest.TestCase):
         fr = PROCESS_TEMPLATES["FR 机台"]
         self.assertIn("SA 机台", PROCESS_TEMPLATES)
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "Heater 0 :Heating Complete")
-        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["units_per_cycle"], 4)
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["units_per_cycle"], 2)
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["normal_threshold"], 15.0)
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["file_filters"], [".txt"])
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["机台状态分析"]["activity_keywords"], "UDP Module - Good")
@@ -512,6 +512,36 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(s.loc['IDLE', '总时长(秒)'], 5.0)         # 操作员停止 → IDLE
         down = detail[detail['Status'] == 'DOWN'].iloc[0]
         self.assertEqual(down['ReasonID'], '305')
+
+    def test_analyze_bottleneck(self):
+        import datetime as _dt
+        from models.analysis import analyze_bottleneck
+
+        def line(msg, t):
+            s = t.strftime('%Y%m%d-%H-%M-%S-') + f"{t.microsecond // 1000:03d}"
+            return {"FileName": "a.txt", "Content": f"[0] X, {s}, X, 0, {msg}"}
+
+        t0 = _dt.datetime(2026, 8, 3, 9, 0, 0)
+        rows = []
+        for i in range(3):   # 点胶：每排 5s
+            rows.append(line("DispOneChipProfileWorkCycle", t0 + _dt.timedelta(seconds=i * 5)))
+        for i in range(6):   # 贴附：每排 2 次，每排 5s
+            rows.append(line("AfterPickUp StopCondition", t0 + _dt.timedelta(seconds=i * 2.5)))
+        for i in range(3):   # 热压：每排 10s（瓶颈）
+            rows.append(line("Heater 0 :Heating Complete", t0 + _dt.timedelta(seconds=i * 10)))
+        for i in range(6):   # 检测：每排 2 次，每排 2s
+            rows.append(line("UDP Module - Good", t0 + _dt.timedelta(seconds=i * 1)))
+
+        stations = [
+            {"name": "点胶", "function": "sa_dispense"},
+            {"name": "贴附", "function": "sa_attach"},
+            {"name": "热压", "function": "sa_heatpress"},
+            {"name": "检测", "function": "sa_inspect"},
+        ]
+        df, b_time, b_name = analyze_bottleneck(rows, stations, units_per_row=2)
+        self.assertEqual(b_name, "热压")
+        self.assertAlmostEqual(b_time, 10.0)
+        self.assertEqual(df.set_index("工位").loc["热压", "瓶颈"], "★")
 
 
 if __name__ == "__main__":

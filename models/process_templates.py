@@ -80,14 +80,21 @@ PROCESS_TEMPLATES = {
         "机台状态分析": {},
     },
     "SA 机台": {
-        "description": "SA 四工位机（点胶/贴附/热压/检测，Y0-3 一排 4 个产品）：瓶颈为热压工位（Heater 0 :Heating Complete 每排一次，约 11 秒），UPH 按瓶颈工位计算",
+        "description": "SA 四工位机（点胶/贴附/热压/检测）：自动判定各工位每排周期，取最长工位为瓶颈计算 UPH；每排产品数可调（当前 2）",
         "reason_list": "SA",
         "file_filters": [".txt"],
         "UPH分析": {
             "trigger_keywords": "Heater 0 :Heating Complete",
-            "units_per_cycle": 4,
+            "units_per_cycle": 2,
             "normal_threshold": 15.0,
             "planned_threshold": 900.0,
+            "bottleneck_stations": [
+                {"name": "点胶", "function": "sa_dispense"},
+                {"name": "贴附", "function": "sa_attach"},
+                {"name": "热压", "function": "sa_heatpress"},
+                {"name": "检测", "function": "sa_inspect"},
+            ],
+            "bottleneck_units_per_row": 2,
         },
         "EFF分析": {},
         "报警分析": {

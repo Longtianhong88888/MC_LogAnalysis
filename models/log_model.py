@@ -293,13 +293,44 @@ class LogModel:
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,
                     normal_threshold=10.0, planned_threshold=900.0,
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
-                    pure_uph_factor=1.0, rows=None, cancel_event=None, progress_callback=None):
+                    pure_uph_factor=1.0, bottleneck_stations=None, bottleneck_units_per_row=None,
+                    rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(
             source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(40)
+
+        if bottleneck_stations:
+            # 多工位机：自动判定瓶颈工位，UPH = 每排产品数 × 3600 / 瓶颈工位每排周期
+            from models.analysis import analyze_bottleneck
+            units = bottleneck_units_per_row or units_per_cycle
+            stations_df, b_time, b_name = analyze_bottleneck(
+                rows, bottleneck_stations, units, cancel_event=cancel_event,
+            )
+            pure = round(units * 3600.0 / b_time, 2) if b_time else ''
+            em = parse_em_production(rows, cancel_event=cancel_event)
+            ame = pd.DataFrame([{
+                '瓶颈工位': b_name,
+                '瓶颈周期(秒)': b_time if b_time else '',
+                '每排产品数(个)': units,
+                'Pure UPH(个/小时)': pure,
+                'Derated UPH M1(个/小时)': '',
+                'Derated UPH M2(个/小时)': pure if pure != '' else '',
+                'EM投入数(个)': int(em['InputQty'].sum()) if not em.empty else '',
+            }])
+            if progress_callback:
+                progress_callback(70)
+            sheets = {'Summary': stations_df, 'AMESummary': ame}
+            if not em.empty:
+                sheets['EMProduction'] = em
+            out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
+            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+            if progress_callback:
+                progress_callback(100)
+            return out_path
+
         cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold,
                                  module_pattern=module_pattern, cancel_event=cancel_event)
         summary = summarize_uph(cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct,

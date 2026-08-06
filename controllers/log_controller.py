@@ -214,6 +214,11 @@ class LogController:
             settings["module_pattern"] = feature_tpl["module_pattern"]
         if feature_tpl.get("pure_uph_factor") is not None:
             settings["pure_uph_factor"] = float(feature_tpl["pure_uph_factor"])
+        if feature == "UPH分析":
+            if feature_tpl.get("bottleneck_stations"):
+                settings["bottleneck_stations"] = feature_tpl["bottleneck_stations"]
+            if feature_tpl.get("bottleneck_units_per_row") is not None:
+                settings["bottleneck_units_per_row"] = int(feature_tpl["bottleneck_units_per_row"])
         if feature in ("EFF分析", "报警分析", "机台状态分析"):
             combo = getattr(self.view, 'reason_combo', None)
             if combo is not None:
