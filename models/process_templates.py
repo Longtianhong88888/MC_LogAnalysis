@@ -101,6 +101,7 @@ PROCESS_TEMPLATES = {
             "bottleneck_units_per_row": 2,
             "tray_change": {
                 "pattern": "JigLoadingCycle",
+                "unload_pattern": "JigUnloadingCycle",
                 "reference_station": "点胶",
             },
         },

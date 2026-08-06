@@ -587,22 +587,28 @@ class AnalysisTest(unittest.TestCase):
 
         t0 = _dt.datetime(2026, 8, 3, 9, 0, 0)
         rows = []
-        for t in (0, 20, 25):   # 热压：间隔 20s（含换盘）与 5s
+        for t in (0, 20, 25):   # 热压
             rows.append(line("Heater 0 :Heating Complete", t0 + _dt.timedelta(seconds=t)))
-        rows.append(line("JigLoadingCycle", t0 + _dt.timedelta(seconds=10)))  # 换盘事件
         for t in (0, 10, 15):   # 点胶
             rows.append(line("DispOneChipProfileWorkCycle", t0 + _dt.timedelta(seconds=t)))
+        rows.append(line("JigUnloadingCycle", t0 + _dt.timedelta(seconds=5)))   # 卸盘
+        rows.append(line("JigLoadingCycle", t0 + _dt.timedelta(seconds=8)))     # 装盘
 
         stations = [
             {"name": "点胶", "function": "sa_dispense"},
             {"name": "热压", "function": "sa_heatpress"},
         ]
         df, result = analyze_bottleneck(rows, stations, units_per_row=2,
-                                        tray_change={"pattern": "JigLoadingCycle"})
+                                        tray_change={
+                                            "pattern": "JigLoadingCycle",
+                                            "unload_pattern": "JigUnloadingCycle",
+                                            "rows_per_tray": 2,
+                                            "single_tray_seconds": 10,
+                                        })
         self.assertEqual(result["瓶颈工位"], "热压")
-        self.assertEqual(result["换盘次数"], 1)
         self.assertAlmostEqual(result["瓶颈周期(秒)"], 12.5)      # median(20, 5)
-        self.assertAlmostEqual(result["每排换盘开销(秒)"], 5.0)   # (20-5)/3排
+        self.assertAlmostEqual(result["单次换盘时间(秒)"], 10.0)   # 配置覆盖
+        self.assertAlmostEqual(result["每排换盘开销(秒)"], 5.0)   # 10s / 2排
         self.assertAlmostEqual(result["有效周期(秒)"], 17.5)      # 12.5 + 5
 
 

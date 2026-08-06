@@ -726,66 +726,71 @@ def analyze_bottleneck(rows, stations, units_per_row, tray_change=None, cancel_e
         (c // k for c, k, _, _ in collected.values() if isinstance(k, int) and k >= 1),
         default=0,
     )
-    # 换 Tray 开销：在瓶颈工位事件流中，含换盘事件的间隔中位 - 正常间隔中位，再平摊到每排
-    tray_info = {'次数': 0, '单次净时间(秒)': 0.0, '每盘排数': '', '每排开销(秒)': 0.0}
+    # 换 Tray 开销：换盘时间 = 同工位 unloading → loading 之间的时长，再平摊到整盘排数
+    tray_info = {'次数': 0, '单次换盘时间(秒)': 0.0, '每盘排数': '', '每排开销(秒)': 0.0}
     if tray_change and collected:
         bottleneck_name_ = max(collected, key=lambda n: collected[n][2] or 0)
         # 换盘测量参考工位：优先取配置（如装盘/点胶工位），否则用瓶颈工位流
         ref_name = tray_change.get('reference_station') or bottleneck_name_
         ref_ts = collected.get(ref_name, (0, 0, None, []))[3]
-        b_ts = ref_ts
-        if b_ts:
-            tray_events = []  # (ts, 工位)
-            tray_kws = split_phrases(tray_change.get('pattern', ''))
+        if ref_ts:
+            load_events = []    # (ts, 工位)
+            unload_events = []  # (ts, 工位)
+            load_kws = split_phrases(tray_change.get('pattern', ''))
+            unload_kws = split_phrases(tray_change.get('unload_pattern', ''))
             for row in rows:
                 if cancel_event is not None and cancel_event.is_set():
                     raise OperationCancelled()
                 content = str(row.get('Content', ''))
-                if not tray_kws or not any(kw in content for kw in tray_kws):
-                    continue
                 t = parse_ts(content)
-                if t is not None:
-                    pos = re.search(r'SeqCycle(\d+)_', content)
-                    tray_events.append((t, pos.group(1) if pos else ''))
-            tray_events.sort()
-            tray_ts = [t for t, _ in tray_events]
+                if t is None:
+                    continue
+                pos_m = re.search(r'SeqCycle(\d+)_', content)
+                pos = pos_m.group(1) if pos_m else ''
+                if load_kws and any(kw in content for kw in load_kws):
+                    load_events.append((t, pos))
+                if unload_kws and any(kw in content for kw in unload_kws):
+                    unload_events.append((t, pos))
+            load_events.sort()
+            unload_events.sort()
 
             # 每盘排数：同工位相邻装盘之间的排数众数（一盘有几排，自动抓取）
             rows_per_tray = None
-            if tray_events:
+            if load_events:
                 by_pos = {}
-                for t, pos in tray_events:
+                for t, pos in load_events:
                     by_pos.setdefault(pos, []).append(t)
                 row_counts = []
                 for ts_list in by_pos.values():
                     for a, b in zip(ts_list, ts_list[1:]):
-                        row_counts.append(sum(1 for x in b_ts if a <= x < b))
+                        row_counts.append(sum(1 for x in ref_ts if a <= x < b))
                 # 检测工位按排装盘会产生大量 0 排间隔，取非零间隔的众数作为每盘排数
                 positive = [c for c in row_counts if c > 0]
                 if positive:
                     rows_per_tray = Counter(positive).most_common(1)[0][0]
 
-            with_g, without_g = [], []
-            for a, b in zip(b_ts, b_ts[1:]):
-                d = (b - a).total_seconds()
-                if not (0 < d < 3600):
-                    continue
-                if any(a < t < b for t in tray_ts):
-                    with_g.append(d)
-                else:
-                    without_g.append(d)
-            if with_g and without_g:
-                net = max(statistics.median(with_g) - statistics.median(without_g), 0.0)
+            # 换盘时间：同工位 unloading → 下一个 loading 的时长
+            durations = []
+            if unload_events and load_events:
+                for ut, upos in unload_events:
+                    for lt, lpos in load_events:
+                        if lt > ut and lpos == upos:
+                            d = (lt - ut).total_seconds()
+                            if 0 < d < 600:
+                                durations.append(d)
+                            break
+            if durations:
+                net = statistics.median(durations)
                 single = tray_change.get('single_tray_seconds')
                 if single:
                     net = float(single)
                 rows_per_tray = tray_change.get('rows_per_tray') or rows_per_tray
                 if not rows_per_tray:
-                    rows_per_tray = round(len(b_ts) / len(with_g))
+                    rows_per_tray = 16
                 rows_per_tray = int(rows_per_tray)
                 tray_info = {
-                    '次数': len(with_g),
-                    '单次净时间(秒)': round(net, 3),
+                    '次数': len(durations),
+                    '单次换盘时间(秒)': round(net, 3),
                     '每盘排数': rows_per_tray,
                     '每排开销(秒)': round(net / rows_per_tray, 4),
                 }
@@ -829,7 +834,7 @@ def analyze_bottleneck(rows, stations, units_per_row, tray_change=None, cancel_e
         '瓶颈工位': bottleneck_name,
         '瓶颈周期(秒)': round(bottleneck_time, 3) if bottleneck_time else None,
         '换盘次数': tray_info['次数'],
-        '单次换盘净时间(秒)': tray_info['单次净时间(秒)'],
+        '单次换盘时间(秒)': tray_info['单次换盘时间(秒)'],
         '每盘排数': tray_info['每盘排数'],
         '每排换盘开销(秒)': tray_info['每排开销(秒)'],
         '有效周期(秒)': round(bottleneck_time + tray_info['每排开销(秒)'], 3) if bottleneck_time else None,
