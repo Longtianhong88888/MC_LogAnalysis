@@ -281,14 +281,15 @@ def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pd
     planned = planned_hours * 3600.0 if planned_hours else total
 
     down_rows = status_detail.loc[status_detail['Status'] == 'DOWN'] if not status_detail.empty else status_detail
+    # pDT 判定：EReason 清单匹配优先（Planned/Routine Downtime），手动计划停机码补充
+    planned_mask = pd.Series(False, index=down_rows.index)
     if reason_map:
-        # 原因清单优先：按 Planned/Routine Downtime 分类
         from models.reason_codes import is_planned
-        planned_mask = down_rows['ReasonID'].apply(lambda rid: is_planned(reason_map, rid))
-        pdt = float(down_rows.loc[planned_mask, 'DurationSeconds'].sum())
-    else:
-        pdt_set = set(split_keywords(pdt_reason_ids)) if pdt_reason_ids else set()
-        pdt = float(down_rows.loc[down_rows['ReasonID'].isin(pdt_set), 'DurationSeconds'].sum()) if pdt_set else 0.0
+        planned_mask |= down_rows['ReasonID'].apply(lambda rid: is_planned(reason_map, rid))
+    if pdt_reason_ids:
+        manual_set = set(split_keywords(pdt_reason_ids))
+        planned_mask |= down_rows['ReasonID'].isin(manual_set)
+    pdt = float(down_rows.loc[planned_mask, 'DurationSeconds'].sum())
     udt = down - pdt
     operating = run + idle
     eff = round(operating / planned * 100, 2) if planned > 0 else ''

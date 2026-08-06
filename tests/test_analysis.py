@@ -181,6 +181,20 @@ class AnalysisTest(unittest.TestCase):
         self.assertIn('停机类型', p.columns)
         self.assertEqual(set(p['停机类型']), {'pDT', 'uDT'})
 
+    def test_eff_pdt_map_plus_manual(self):
+        # 有原因清单时，手动计划停机码仍可补充（清单未覆盖的码）
+        reason_map = {"1110000000": {"name": "真空報警", "category": "Unplanned Downtime", "state": "DOWN"}}
+        rows = [
+            row("2026-07-08 00:00:00.000 [PS][status:RUN,ReasonID:None]"),
+            row("2026-07-08 00:00:10.000 [PS][status:DOWN,ReasonID:1110000000]"),
+            row("2026-07-08 00:00:20.000 [PS][status:DOWN,ReasonID:999]"),
+            row("2026-07-08 00:00:30.000 [PS][status:RUN,ReasonID:None]"),
+        ]
+        status_summary, _, detail = analyze_status(rows)
+        eff = summarize_eff_coretech(status_summary, detail, pdt_reason_ids="999", reason_map=reason_map)
+        self.assertEqual(eff.iloc[0]['非计划停机uDT(秒)'], 10.0)   # 清单匹配 → uDT
+        self.assertEqual(eff.iloc[0]['计划停机pDT(秒)'], 10.0)     # 手动补充 → pDT
+
     def test_end_to_end_eff(self):
         src = tempfile.mkdtemp()
         out = tempfile.mkdtemp()
