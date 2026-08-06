@@ -39,8 +39,10 @@ python main.py
 ## 打包 Windows exe
 
 ```bash
-pyinstaller --onefile --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --name MC_LogAnalysis main.py
+pyinstaller --onedir --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --name MC_LogAnalysis main.py
 ```
+
+> 使用 `--onedir`（文件夹模式）而非 `--onefile`：onefile 每次启动都要先解压整个包到临时目录，51MB 的包启动明显变慢；onedir 直接运行目录内的 exe，秒开。
 
 也可以推送 `main` / `master` 分支，由 GitHub Actions 自动构建（见 `.github/workflows/build.yml`）。
 
