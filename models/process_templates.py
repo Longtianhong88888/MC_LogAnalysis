@@ -79,6 +79,21 @@ PROCESS_TEMPLATES = {
         },
         "机台状态分析": {},
     },
+    "SA 机台": {
+        "description": "SA 点胶组装机：LogData_*.txt 序列日志，UDP Module - Good 为单件完成标记（.log 为序列化转储，仅取 .txt）",
+        "file_filters": [".txt"],
+        "UPH分析": {
+            "trigger_keywords": "UDP Module - Good",
+            "units_per_cycle": 1,
+            "normal_threshold": 10.0,
+            "planned_threshold": 900.0,
+        },
+        "EFF分析": {},
+        "报警分析": {
+            "alarm_keywords": "Error,NG,Fail,报警,失败,异常,Warning",
+        },
+        "机台状态分析": {},
+    },
 }
 
 

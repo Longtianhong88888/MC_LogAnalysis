@@ -21,17 +21,24 @@ def _module_label(module):
 def parse_ts(content):
     """解析日志行开头的时间，支持 'YYYY-MM-DD HH:MM:SS(.mmm)'、'HH:MM:SS(.mmm)' 与 '[HH:MM:SS(.mmm)]'。"""
     m = _TIME_RE.match(content)
-    if not m:
-        return None
-    time_str = m.group('brackettime') or m.group('time')
-    if not time_str:
-        return None
-    base = (m.group('date') + ' ' + time_str) if m.group('date') else time_str
-    for fmt in ('%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%H:%M:%S.%f', '%H:%M:%S'):
+    if m:
+        time_str = m.group('brackettime') or m.group('time')
+        if time_str:
+            base = (m.group('date') + ' ' + time_str) if m.group('date') else time_str
+            for fmt in ('%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%H:%M:%S.%f', '%H:%M:%S'):
+                try:
+                    return datetime.strptime(base, fmt)
+                except ValueError:
+                    continue
+    # SA 日志：行中字段 yyyyMMdd-HH-mm-ss-fff
+    m2 = re.search(r'(\d{4})(\d{2})(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{3})', content)
+    if m2:
         try:
-            return datetime.strptime(base, fmt)
+            return datetime(int(m2.group(1)), int(m2.group(2)), int(m2.group(3)),
+                            int(m2.group(4)), int(m2.group(5)), int(m2.group(6)),
+                            int(m2.group(7)) * 1000)
         except ValueError:
-            continue
+            return None
     return None
 
 
@@ -62,6 +69,13 @@ def split_keywords(text):
     if not text:
         return []
     return [k for k in re.split(r'[,，、;；\s]+', str(text).strip()) if k]
+
+
+def split_phrases(text):
+    """按逗号、顿号、分号拆分短语（保留空格，用于含空格的完成动作如 'UDP Module - Good'）。"""
+    if not text:
+        return []
+    return [p.strip() for p in re.split(r'[,，、;；]+', str(text).strip()) if p.strip()]
 
 
 def keyword_pattern(kws, allow_trailing_digit=True):
@@ -101,7 +115,7 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
     rows: [{'FileName', 'Content'}]；返回 DataFrame: FileName/Module/TriggerTime/CycleSeconds/Class/TriggerContent
     module_pattern: 可选正则，从日志行中提取模组名（如 FR 的左轴/右轴），未提供时用 模块名称: 字段
     """
-    kws = split_keywords(trigger_keywords)
+    kws = split_phrases(trigger_keywords)
     pattern = keyword_pattern(kws, allow_trailing_digit=False) if kws else None
     contents, file_names, matched = _prefilter(rows, pattern)
     per_module = {}

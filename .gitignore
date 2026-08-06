@@ -11,6 +11,7 @@ build/
 CAW log/
 LM log/
 FR log/
+SA log/
 
 # 客户保密文档（不入库）
 自定义协议.pdf

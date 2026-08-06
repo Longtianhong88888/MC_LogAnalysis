@@ -39,6 +39,10 @@ class AnalysisTest(unittest.TestCase):
         bracket = parse_ts("[00:00:05] 左 图像数据获取完成")
         self.assertIsNotNone(bracket)
         self.assertEqual((bracket.hour, bracket.minute, bracket.second), (0, 0, 5))
+        sa = parse_ts("[001] Sequence, VisionAlign, 20260803-09-55-26-191, DispProbeCheck, 13, Head No = 0")
+        self.assertIsNotNone(sa)
+        self.assertEqual((sa.year, sa.month, sa.day, sa.hour, sa.minute, sa.second, sa.microsecond),
+                         (2026, 8, 3, 9, 55, 26, 191000))
 
     def test_trigger_boundary(self):
         # MarkEnd1 不应匹配 MarkEnd1_0
@@ -50,6 +54,17 @@ class AnalysisTest(unittest.TestCase):
         df = build_cycles_df(rows, "MarkEnd1")
         self.assertEqual(len(df), 1)
         self.assertEqual(df.iloc[0]['CycleSeconds'], 3.0)
+
+    def test_phrase_trigger_with_spaces(self):
+        # SA：含空格的完成动作短语整体匹配
+        rows = [
+            {"FileName": "a.txt", "Content": "[324] Sequence, VisionAlign, 20260803-09-59-09-943, X, 0, UDP Module - Good, 0"},
+            {"FileName": "a.txt", "Content": "[325] Sequence, VisionAlign, 20260803-09-59-11-394, X, 0, UDP Module - Good, 0"},
+            {"FileName": "a.txt", "Content": "[326] Sequence, X, 20260803-09-59-13-000, X, 0, UDP Recv [Good]"},
+        ]
+        df = build_cycles_df(rows, "UDP Module - Good")
+        self.assertEqual(len(df), 1)  # 只匹配完整短语
+        self.assertEqual(df.iloc[0]['CycleSeconds'], 1.451)
 
     def test_cycle_classification(self):
         df = build_cycles_df(CYCLE_ROWS, "放生料完成,放熟料完成")
@@ -311,6 +326,9 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(caw["file_filters"], ["记录PLC", "RAYPRUS", "Debug", "设备状态"])
         self.assertIn("FR 机台", PROCESS_TEMPLATES)
         fr = PROCESS_TEMPLATES["FR 机台"]
+        self.assertIn("SA 机台", PROCESS_TEMPLATES)
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "UDP Module - Good")
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["file_filters"], [".txt"])
         self.assertIn("不达标", fr["报警分析"]["alarm_keywords"])
         self.assertIn("有漏点产品", fr["报警分析"]["alarm_keywords"])
         self.assertEqual(fr["UPH分析"]["trigger_keywords"], "轴点胶完成,有漏点产品")
