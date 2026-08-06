@@ -46,6 +46,8 @@ pyinstaller --onefile --windowed --icon log.ico --add-data "Machine.png;." --add
 
 > PPT 报告模板（`Analysis_Report.pptx`）包含内部数据，**不随 exe 打包**。打包后的用户将模板放到 exe 同目录即可生效；开发模式下放到项目根目录。未放置模板时自动使用内置的简洁版式。
 
+> 状态变更原因清单：把 `{制程}_EReasonList.xlsx`（如 `FR_EReasonList.xlsx`）放入根目录（打包后为 exe 同目录）的 `EReasonList/` 文件夹，EFF 分析页选择对应"原因清单"即可按文件名匹配，自动输出停机原因名称并拆分 pDT/uDT。该文件夹含内部数据，不随包/仓库分发。
+
 ## 项目结构
 
 ```

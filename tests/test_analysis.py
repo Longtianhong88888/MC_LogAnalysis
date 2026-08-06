@@ -127,6 +127,12 @@ class AnalysisTest(unittest.TestCase):
         fake = {"999": {"name": "例行保养", "category": "Routine Downtime", "state": "DOWN"}}
         self.assertTrue(is_planned(fake, "999"))
 
+    def test_available_reason_lists(self):
+        from models.reason_codes import available_reason_lists
+        lists = available_reason_lists()
+        self.assertIn("LM", lists)
+        self.assertIn("FR", lists)
+
     def test_eff_coretech_with_reason_map(self):
         reason_map = {
             "1110000000": {"name": "真空報警", "category": "Unplanned Downtime", "state": "DOWN"},

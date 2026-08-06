@@ -13,6 +13,21 @@ from utils.resource_utils import find_external_resource
 _CACHE = {}
 
 
+def available_reason_lists():
+    """扫描外部 EReasonList 目录，按文件名 *_EReasonList.xlsx 返回机台名列表（供界面选择）。"""
+    folder = find_external_resource('EReasonList')
+    if not folder or not os.path.isdir(folder):
+        return []
+    try:
+        return sorted(
+            f[:-len('_EReasonList.xlsx')]
+            for f in os.listdir(folder)
+            if f.endswith('_EReasonList.xlsx')
+        )
+    except OSError:
+        return []
+
+
 def load_reason_codes(device):
     """
     读取 {device}_EReasonList.xlsx，返回 {去零原因码: {'name','category','state'}}。
