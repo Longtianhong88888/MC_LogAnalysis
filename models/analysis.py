@@ -205,21 +205,37 @@ def summarize_uph_ame(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None,
     """CoreTech AME 整机 UPH 指标：Pure UPH（左右轴合并总产能，不乘单轴系数）、M1、M2。"""
     total_cycles = len(cycles_df)
     total_sec = cycles_df['CycleSeconds'].sum() if total_cycles else 0.0
+    module_count = cycles_df['Module'].nunique() if total_cycles else 0
     normal = cycles_df.loc[cycles_df['Class'] == '正常周期', 'CycleSeconds'] if total_cycles else pd.Series(dtype=float)
     avg_normal = normal.mean() if len(normal) else None
     pure = round(3600.0 * units_per_cycle / ideal_ct, 2) if ideal_ct else (
         round(3600.0 * units_per_cycle / avg_normal, 2) if avg_normal else ''
     )
-    valid = cycles_df['CycleSeconds'] if total_cycles else pd.Series(dtype=float)
-    if ideal_ct:
-        valid = valid[valid >= 0.9 * ideal_ct]
-    if max_ct:
-        valid = valid[valid <= 1.1 * max_ct]
-    avg_valid = valid.mean() if len(valid) else None
-    derated_m2 = round(3600.0 * units_per_cycle / avg_valid, 2) if avg_valid else ''
+    # Derated UPH M2：整机 = 各模组 M2 之和（FR 为左轴+右轴，并行工位不按合并周期平均）
+    m2_total = 0.0
+    if total_cycles:
+        for _, g in cycles_df.groupby('Module', sort=False):
+            valid = g['CycleSeconds']
+            if ideal_ct:
+                valid = valid[valid >= 0.9 * ideal_ct]
+            if max_ct:
+                valid = valid[valid <= 1.1 * max_ct]
+            if len(valid):
+                m2_total += 3600.0 * units_per_cycle / valid.mean()
+    derated_m2 = round(m2_total, 2) if m2_total else ''
     em_input = int(em_df['InputQty'].sum()) if em_df is not None and not em_df.empty else None
     em_good = int(em_df['GoodQty'].sum()) if em_df is not None and not em_df.empty else None
-    derated_m1 = round(em_input / (run_seconds / 3600.0), 2) if em_input and run_seconds else ''
+    if module_count > 1:
+        # 并行多模组机台（如 FR 左轴+右轴）：整机 M1 = 各模组 M1 之和
+        m1_total = 0.0
+        for _, g in cycles_df.groupby('Module', sort=False):
+            secs = g['CycleSeconds'].sum()
+            if secs > 0:
+                m1_total += len(g) * units_per_cycle / (secs / 3600.0)
+        derated_m1 = round(m1_total, 2) if m1_total else ''
+    else:
+        # 单模组机台：CoreTech Method 1 = EM 投入 / RUN 时长
+        derated_m1 = round(em_input / (run_seconds / 3600.0), 2) if em_input and run_seconds else ''
     return pd.DataFrame([{
         'Pure UPH(个/小时)': pure,
         'Derated UPH M1(个/小时)': derated_m1,

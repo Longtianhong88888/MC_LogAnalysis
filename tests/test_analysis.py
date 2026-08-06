@@ -92,6 +92,18 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(normal.iloc[0]['Derated UPH M2(个/小时)'], normal.iloc[0]['UPH(个/小时)'])
         self.assertEqual(ame.iloc[0]['Pure UPH(个/小时)'], 360.0)      # 整机不乘系数
 
+    def test_ame_m2_is_sum_of_modules(self):
+        # 整机 Derated UPH M2 = 各模组之和（FR 左轴+右轴）
+        df = pd.DataFrame({
+            "Module": ["左轴", "左轴", "右轴"],
+            "Class": ["正常周期"] * 3,
+            "CycleSeconds": [3.0, 3.0, 6.0],
+            "FileName": ["a.log"] * 3,
+        })
+        ame = summarize_uph_ame(df, 1)
+        self.assertEqual(ame.iloc[0]['Derated UPH M2(个/小时)'], 1200.0 + 600.0)
+        self.assertEqual(ame.iloc[0]['Derated UPH M1(个/小时)'], 1200.0 + 600.0)  # 多模组 M1 同样求和
+
     def test_eff_coretech(self):
         rows = [
             row("2026-07-08 00:00:00.000 [PS][status:RUN,Datetime:...,ReasonID:None]"),

@@ -409,9 +409,18 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
             to_remove.append("停机 Pareto")
         else:
             top = pareto.head(10)
-            _build_section(prs, "停机 Pareto", "按 ReasonID 统计停机时长 Top10",
+            if '原因名称' in top.columns and top['原因名称'].notna().any():
+                # 有原因清单：以中文原因名称展示
+                labels = top['原因名称'].fillna('')
+                table_df = top[['原因名称', '次数', '总时长(秒)', '占比(%)']].copy()
+                subtitle = "按停机原因统计时长 Top10"
+            else:
+                labels = top['ReasonID']
+                table_df = top[['ReasonID', '次数', '总时长(秒)', '占比(%)']]
+                subtitle = "按 ReasonID 统计停机时长 Top10"
+            _build_section(prs, "停机 Pareto", subtitle,
                            XL_CHART_TYPE.BAR_CLUSTERED, "停机时长（秒）",
-                           top["ReasonID"], top["总时长(秒)"], top)
+                           labels, top["总时长(秒)"], table_df)
 
     # ---------- 报警分析 ----------
     by_kw = _read_sheet(os.path.join(output_dir, "Alarm_Analysis.xlsx"), "ByKeyword")
