@@ -4,6 +4,7 @@ pandas>=2.0
 openpyxl>=3.1
 chardet>=5.2
 python-pptx>=1.0
+xlsxwriter>=3.0
 
 # 打包依赖
 pyinstaller>=6.0

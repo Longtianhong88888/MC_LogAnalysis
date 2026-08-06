@@ -6,6 +6,12 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+try:
+    import xlsxwriter  # noqa: F401  提速 Excel 写入
+    _HAS_XLSXWRITER = True
+except ImportError:
+    _HAS_XLSXWRITER = False
+
 from models.analysis import (
     analyze_status,
     build_cycles_df,
@@ -44,7 +50,13 @@ class LogModel:
     def _write_sheets(out_path, sheets, cancel_event=None):
         max_rows = 1048575  # Excel 单表最大行数（含表头行）
         heavy = False  # 是否包含超大表（>20万行）：跳过整体格式化，避免重新加载保存拖慢导出
-        with pd.ExcelWriter(out_path, engine='openpyxl') as writer:
+        writer_kwargs = {}
+        if _HAS_XLSXWRITER:
+            writer_kwargs = {
+                'engine': 'xlsxwriter',
+                'engine_kwargs': {'options': {'nan_inf_to_errors': True}},
+            }
+        with pd.ExcelWriter(out_path, **writer_kwargs) as writer:
             for sheet_name, df in sheets.items():
                 if cancel_event is not None and cancel_event.is_set():
                     from models.exceptions import OperationCancelled
@@ -124,12 +136,13 @@ class LogModel:
         if progress_callback:
             progress_callback(30)
 
-        if len(df_all) > self.MERGE_MAX_TOTAL_ROWS:
+        if len(all_data) > self.MERGE_MAX_TOTAL_ROWS:
             # 原始日志过大：放弃合并，按日志文件逐个导出 Excel
             return self._process_per_file(
-                df_all, output_dir, keywords, separator, cancel_event, progress_callback,
+                all_data, output_dir, keywords, separator, cancel_event, progress_callback,
             )
 
+        df_all = pd.DataFrame(all_data)
         sheets = self._build_merge_sheets(df_all, keywords, separator, cancel_event)
 
         if progress_callback:
@@ -199,18 +212,27 @@ class LogModel:
             sheets['Filtered'] = filtered_df
         return sheets
 
-    def _process_per_file(self, df_all, output_dir, keywords, separator, cancel_event=None,
+    def _process_per_file(self, all_data, output_dir, keywords, separator, cancel_event=None,
                           progress_callback=None):
         """日志过大：新建子文件夹，按日志文件逐个导出 Excel（文件名 = 日志文件名去掉扩展名）。"""
         sub_dir = os.path.join(output_dir, 'LogAnalysis_Files')
         os.makedirs(sub_dir, exist_ok=True)
-        file_names = sorted(df_all['FileName'].unique())
+        has_keywords = bool(keywords and str(keywords).strip())
+        has_separator = separator is not None and separator != ''
+        if not has_keywords and not has_separator:
+            # 无筛选：直接流式写入，避免构建大 DataFrame（最快、内存最低）
+            n = self._stream_per_file(sub_dir, all_data, cancel_event)
+            if progress_callback:
+                progress_callback(100)
+            return f"{sub_dir}（日志过大，已按文件分别导出 {n} 个 Excel）"
+
+        file_names = sorted({r.get('FileName', '') for r in all_data})
         n = len(file_names)
         for idx, fname in enumerate(file_names):
             if cancel_event is not None and cancel_event.is_set():
                 from models.exceptions import OperationCancelled
                 raise OperationCancelled()
-            sub = df_all[df_all['FileName'] == fname].copy()
+            sub = pd.DataFrame([r for r in all_data if r.get('FileName') == fname])
             sheets = self._build_merge_sheets(sub, keywords, separator, cancel_event)
             stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
             out_path = os.path.join(sub_dir, f'{stem}.xlsx')
@@ -220,6 +242,51 @@ class LogModel:
         if progress_callback:
             progress_callback(100)
         return f"{sub_dir}（日志过大，已按文件分别导出 {n} 个 Excel）"
+
+    @staticmethod
+    def _stream_per_file(sub_dir, all_data, cancel_event=None):
+        """无筛选时按日志文件流式写入 Excel（xlsxwriter 常量内存模式）。返回文件数。"""
+        import xlsxwriter
+        max_rows = 1048575
+        file_names = sorted({r.get('FileName', '') for r in all_data})
+        wbs = {}
+        sheets = {}
+        rows_written = {}
+        sheet_no = {}
+        try:
+            for fname in file_names:
+                stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
+                wb = xlsxwriter.Workbook(
+                    os.path.join(sub_dir, f'{stem}.xlsx'),
+                    {'nan_inf_to_errors': True, 'constant_memory': True},
+                )
+                ws = wb.add_worksheet('AllLogs')
+                ws.write_string(0, 0, 'FileName')
+                ws.write_string(0, 1, 'Content')
+                wbs[fname] = wb
+                sheets[fname] = ws
+                rows_written[fname] = 1
+                sheet_no[fname] = 1
+            for row in all_data:
+                if cancel_event is not None and cancel_event.is_set():
+                    raise OperationCancelled()
+                fname = row.get('FileName', '')
+                ws = sheets[fname]
+                r = rows_written[fname]
+                if r > max_rows:
+                    sheet_no[fname] += 1
+                    ws = wbs[fname].add_worksheet(f'AllLogs_{sheet_no[fname]}'[:31])
+                    ws.write_string(0, 0, 'FileName')
+                    ws.write_string(0, 1, 'Content')
+                    sheets[fname] = ws
+                    r = 1
+                ws.write_string(r, 0, str(fname))
+                ws.write_string(r, 1, str(row.get('Content', '')))
+                rows_written[fname] = r + 1
+        finally:
+            for wb in wbs.values():
+                wb.close()
+        return len(file_names)
 
     # ---------- 功能二：UPH 分析 ----------
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,

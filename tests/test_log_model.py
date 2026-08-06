@@ -101,6 +101,9 @@ class LogModelTest(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(sub, "a.xlsx")))
         self.assertTrue(os.path.exists(os.path.join(sub, "b.xlsx")))
         self.assertFalse(os.path.exists(os.path.join(out, "LogAnalysis.xlsx")))
+        xl = pd.ExcelFile(os.path.join(sub, "a.xlsx"))
+        self.assertEqual(xl.sheet_names, ["AllLogs"])
+        self.assertEqual(len(xl.parse("AllLogs")), 4)
 
     def test_process_merged_when_small(self):
         rows = [{"FileName": "a.log", "Content": "2026-07-08 00:00:00 x"}]
