@@ -57,7 +57,7 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(df.iloc[0]['CycleSeconds'], 3.0)
 
     def test_phrase_trigger_with_spaces(self):
-        # SA：含空格的完成动作短语整体匹配
+        # 含空格的完成动作短语应整体匹配（如早期 SA 的 UDP Module - Good）
         rows = [
             {"FileName": "a.txt", "Content": "[324] Sequence, VisionAlign, 20260803-09-59-09-943, X, 0, UDP Module - Good, 0"},
             {"FileName": "a.txt", "Content": "[325] Sequence, VisionAlign, 20260803-09-59-11-394, X, 0, UDP Module - Good, 0"},
@@ -353,7 +353,8 @@ class AnalysisTest(unittest.TestCase):
         self.assertIn("FR 机台", PROCESS_TEMPLATES)
         fr = PROCESS_TEMPLATES["FR 机台"]
         self.assertIn("SA 机台", PROCESS_TEMPLATES)
-        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "UDP Module - Good")
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "DispOneChipProfileWorkCycle")
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["units_per_cycle"], 4)
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["file_filters"], [".txt"])
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["机台状态分析"]["activity_keywords"], "UDP Module - Good")
         self.assertIn("不达标", fr["报警分析"]["alarm_keywords"])

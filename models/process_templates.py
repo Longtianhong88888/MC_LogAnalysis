@@ -80,12 +80,12 @@ PROCESS_TEMPLATES = {
         "机台状态分析": {},
     },
     "SA 机台": {
-        "description": "SA 点胶组装机：LogData_*.txt 序列日志，UDP Module - Good 为单件完成标记（.log 为序列化转储，仅取 .txt）",
+        "description": "SA 点胶组装机：LogData_*.txt 序列日志，DispOneChipProfileWorkCycle 为一次点胶周期（Y0-3 一排 4 个产品；左右工位交替非并行；.log 为序列化转储，仅取 .txt）",
         "reason_list": "SA",
         "file_filters": [".txt"],
         "UPH分析": {
-            "trigger_keywords": "UDP Module - Good",
-            "units_per_cycle": 1,
+            "trigger_keywords": "DispOneChipProfileWorkCycle",
+            "units_per_cycle": 4,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
         },
