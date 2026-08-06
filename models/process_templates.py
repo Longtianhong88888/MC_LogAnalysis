@@ -80,13 +80,13 @@ PROCESS_TEMPLATES = {
         "机台状态分析": {},
     },
     "SA 机台": {
-        "description": "SA 点胶组装机：LogData_*.txt 序列日志，DispOneChipProfileWorkCycle 为一次点胶周期（Y0-3 一排 4 个产品；左右工位交替非并行；.log 为序列化转储，仅取 .txt）",
+        "description": "SA 四工位机（点胶/贴附/热压/检测，Y0-3 一排 4 个产品）：瓶颈为热压工位（Heater 0 :Heating Complete 每排一次，约 11 秒），UPH 按瓶颈工位计算",
         "reason_list": "SA",
         "file_filters": [".txt"],
         "UPH分析": {
-            "trigger_keywords": "DispOneChipProfileWorkCycle",
+            "trigger_keywords": "Heater 0 :Heating Complete",
             "units_per_cycle": 4,
-            "normal_threshold": 10.0,
+            "normal_threshold": 15.0,
             "planned_threshold": 900.0,
         },
         "EFF分析": {},

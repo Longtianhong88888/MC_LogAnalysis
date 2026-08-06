@@ -353,8 +353,9 @@ class AnalysisTest(unittest.TestCase):
         self.assertIn("FR 机台", PROCESS_TEMPLATES)
         fr = PROCESS_TEMPLATES["FR 机台"]
         self.assertIn("SA 机台", PROCESS_TEMPLATES)
-        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "DispOneChipProfileWorkCycle")
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "Heater 0 :Heating Complete")
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["units_per_cycle"], 4)
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["normal_threshold"], 15.0)
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["file_filters"], [".txt"])
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["机台状态分析"]["activity_keywords"], "UDP Module - Good")
         self.assertIn("不达标", fr["报警分析"]["alarm_keywords"])
