@@ -480,6 +480,39 @@ class AnalysisTest(unittest.TestCase):
         self.assertGreaterEqual(len(prs.slides), 2)  # 封面 + UPH 页（其余 Excel 缺失被移除）
         self.assertTrue(any(shape.has_chart for s in prs.slides for shape in s.shapes))
 
+    def test_ppt_report_bottleneck_mode(self):
+        from models.report import build_ppt_report
+        from pptx import Presentation
+        out = tempfile.mkdtemp()
+        LogModel._write_sheets(os.path.join(out, "UPH_Analysis.xlsx"), {
+            "Summary": pd.DataFrame({
+                "工位": ["点胶", "贴附", "热压", "检测"],
+                "事件数": [1456, 2825, 1414, 11061],
+                "每排事件数": [1, 2, 1, 8],
+                "每排周期(秒)": [9.964, 9.899, 11.061, 9.961],
+                "极限UPH(个/小时)": [722.6, 727.35, 650.94, 722.82],
+                "瓶颈": ["", "", "★", ""],
+            }),
+            "AMESummary": pd.DataFrame({
+                "瓶颈工位": ["热压"],
+                "瓶颈周期(秒)": [11.061],
+                "每排产品数(个)": [2],
+                "Pure UPH(个/小时)": [650.94],
+            }),
+        })
+        ppt = build_ppt_report(out, process_name="SA 机台")
+        prs = Presentation(ppt)
+        uph_slide = next(
+            s for s in prs.slides
+            if s.shapes.title is not None and s.shapes.title.text == "UPH 分析"
+        )
+        texts = "\n".join(sh.text_frame.text for sh in uph_slide.shapes if sh.has_text_frame)
+        self.assertIn("瓶颈工位：热压", texts)
+        self.assertIn("650.94", texts)
+        # PPT 只放最终结果：不展示工位明细表
+        self.assertFalse(any(sh.has_table for sh in uph_slide.shapes))
+        self.assertTrue(any(sh.has_chart for sh in uph_slide.shapes))
+
     def test_status_time_only_multi_file(self):
         # FR 风格：纯时间戳 + 按日分文件，跨日 23:59:58 -> 00:00:01 应为 3 秒
         rows = [

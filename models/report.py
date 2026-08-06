@@ -282,6 +282,13 @@ def _replace_chart(slide, chart_type, chart_title, categories, values, legend=Fa
     return None
 
 
+def _remove_table(slide):
+    """删除页面上的表格（瓶颈模式 PPT 只放最终结果，不展示工位明细）。"""
+    for shape in list(slide.shapes):
+        if shape.has_table:
+            shape._element.getparent().remove(shape._element)
+
+
 def _update_table(slide, df, max_rows=12):
     data = df.head(max_rows)
     rows, cols = data.shape
@@ -292,6 +299,18 @@ def _update_table(slide, df, max_rows=12):
             continue
         table = shape.table
         t_el = table._tbl
+        # 列数不足时扩展（模板表可能只有 2 列，而工位明细有多列）
+        need_cols = min(cols, 12)
+        grid = t_el.find(qn('a:tblGrid'))
+        grid_cols = grid.findall(qn('a:gridCol')) if grid is not None else []
+        if len(grid_cols) < need_cols:
+            for _ in range(need_cols - len(grid_cols)):
+                grid.append(copy.deepcopy(grid_cols[-1]))
+            for tr in t_el.findall(qn('a:tr')):
+                tcs = tr.findall(qn('a:tc'))
+                if tcs:
+                    for _ in range(need_cols - len(tcs)):
+                        tr.append(copy.deepcopy(tcs[-1]))
         trs = t_el.findall(qn('a:tr'))
         need = rows + 1
         if len(trs) < need:
@@ -389,10 +408,30 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
     if ame.empty:
         to_remove.append("UPH 分析")
     else:
-        labels = ["Pure UPH(个/小时)", "Derated UPH M1(个/小时)", "Derated UPH M2(个/小时)"]
-        vals = [_to_float(ame.iloc[0].get(c)) for c in labels]
-        _build_section(prs, "UPH 分析", "CoreTech AME：Pure UPH / Derated UPH M1 / M2",
-                       XL_CHART_TYPE.COLUMN_CLUSTERED, "UPH 对比", labels, vals, _metrics_table(ame))
+        uph_summary = _read_sheet(os.path.join(output_dir, "UPH_Analysis.xlsx"), "Summary")
+        bottleneck_mode = not uph_summary.empty and "工位" in uph_summary.columns
+        if bottleneck_mode:
+            # 多工位机：PPT 只放最终结果——瓶颈工位与 UPH，各工位周期用图展示
+            b_name = str(ame.iloc[0].get("瓶颈工位") or "")
+            b_time = str(ame.iloc[0].get("瓶颈周期(秒)") or "")
+            pure = str(ame.iloc[0].get("Pure UPH(个/小时)") or "")
+            subtitle = f"瓶颈工位：{b_name}（{b_time}s/排）→ UPH ≈ {pure}/h"
+            slide = _section_slide(prs, "UPH 分析")
+            if slide is None:
+                slide = _add_slide(prs, "UPH 分析", subtitle)
+            else:
+                _set_subtitle(slide, subtitle)
+            station_table = uph_summary.copy()
+            if "瓶颈" in station_table.columns:
+                station_table["瓶颈"] = station_table["瓶颈"].fillna("")
+            _remove_table(slide)
+            _replace_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "各工位每排周期（秒）",
+                           station_table["工位"], station_table["每排周期(秒)"])
+        else:
+            labels = ["Pure UPH(个/小时)", "Derated UPH M1(个/小时)", "Derated UPH M2(个/小时)"]
+            vals = [_to_float(ame.iloc[0].get(c)) for c in labels]
+            _build_section(prs, "UPH 分析", "CoreTech AME：Pure UPH / Derated UPH M1 / M2",
+                           XL_CHART_TYPE.COLUMN_CLUSTERED, "UPH 对比", labels, vals, _metrics_table(ame))
 
     # ---------- EFF 分析 ----------
     eff = _read_sheet(os.path.join(output_dir, "EFF_Analysis.xlsx"), "Summary")

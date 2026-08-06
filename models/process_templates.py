@@ -83,6 +83,10 @@ PROCESS_TEMPLATES = {
         "description": "SA 四工位机（点胶/贴附/热压/检测）：自动判定各工位每排周期，取最长工位为瓶颈计算 UPH；每排产品数可调（当前 2）",
         "reason_list": "SA",
         "file_filters": [".txt"],
+        "EFF分析": {
+            "activity_keywords": "UDP Module - Good",
+            "stop_reason_keywords": "AutoRun Stop - ErrorName",
+        },
         "UPH分析": {
             "trigger_keywords": "Heater 0 :Heating Complete",
             "units_per_cycle": 2,
@@ -96,7 +100,10 @@ PROCESS_TEMPLATES = {
             ],
             "bottleneck_units_per_row": 2,
         },
-        "EFF分析": {},
+        "EFF分析": {
+            "activity_keywords": "UDP Module - Good",
+            "stop_reason_keywords": "AutoRun Stop - ErrorName",
+        },
         "报警分析": {
             "alarm_keywords": "Error,NG,Fail,报警,失败,异常,Warning",
         },
