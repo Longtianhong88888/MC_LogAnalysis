@@ -221,6 +221,12 @@ class LogController:
                 settings["bottleneck_units_per_row"] = int(feature_tpl["bottleneck_units_per_row"])
             if feature_tpl.get("tray_change"):
                 settings["tray_change"] = feature_tpl["tray_change"]
+            if feature_tpl.get("parts"):
+                settings["parts"] = feature_tpl["parts"]
+            if feature_tpl.get("module_from_path"):
+                settings["module_from_path"] = True
+        if feature == "报警分析" and feature_tpl.get("module_from_path"):
+            settings["module_from_path"] = True
         if feature in ("EFF分析", "报警分析", "机台状态分析"):
             combo = getattr(self.view, 'reason_combo', None)
             if combo is not None:

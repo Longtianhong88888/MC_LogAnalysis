@@ -117,6 +117,29 @@ PROCESS_TEMPLATES = {
             "stop_reason_keywords": "AutoRun Stop - ErrorName",
         },
     },
+    "ACF 三機": {
+        "description": "ACF 由上料機/主機/下料機三部分（分文件夹）构成，按部分分开统计；上料完成=放料成功，主机=Cavity cnt，下料完成=UnloadDuts Finish",
+        "reason_list": "ACF",
+        "file_filters": [".txt"],
+        "UPH分析": {
+            "parts": [
+                {"name": "上料機", "trigger": "放料成功", "units_per_cycle": 1},
+                {"name": "主機", "trigger": "Cavity cnt:", "units_per_cycle": 1},
+                {"name": "下料機", "trigger": "UnloadDuts Finish", "units_per_cycle": 1,
+                 "tray_seconds": 9.2, "units_per_tray": 51},
+            ],
+            "module_from_path": True,
+            "units_per_cycle": 1,
+            "normal_threshold": 10.0,
+            "planned_threshold": 900.0,
+        },
+        "EFF分析": {},
+        "报警分析": {
+            "alarm_keywords": "NG,Fail,换盘提示,报警操作",
+            "module_from_path": True,
+        },
+        "机台状态分析": {},
+    },
 }
 
 

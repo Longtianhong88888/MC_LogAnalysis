@@ -294,13 +294,67 @@ class LogModel:
                     normal_threshold=10.0, planned_threshold=900.0,
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
                     pure_uph_factor=1.0, bottleneck_stations=None, bottleneck_units_per_row=None,
-                    tray_change=None, rows=None, cancel_event=None, progress_callback=None):
+                    tray_change=None, parts=None, module_from_path=False,
+                    rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(
             source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(40)
+
+        if parts:
+            # 多部分机台（如上料机/主机/下料机）：各部分独立 UPH，换盘时间可平摊
+            part_summaries = []
+            ame_rows = []
+            for part in parts:
+                name = part.get('name', '')
+                trigger = part.get('trigger', '')
+                units = int(part.get('units_per_cycle', units_per_cycle or 1))
+                p_rows = [r for r in rows if str(r.get('FileName', '')).split('/')[0] == name]
+                cycles = build_cycles_df(p_rows, trigger, normal_threshold, planned_threshold,
+                                         module_from_path=module_from_path, cancel_event=cancel_event)
+                if cycles.empty:
+                    row = {'模块': name, '周期总数': 0, '产出数(个)': 0, '统计时长(秒)': 0,
+                           'UPH(个/小时)': '', 'Pure UPH(个/小时)': '', 'Derated UPH M2(个/小时)': ''}
+                    if part.get('tray_seconds'):
+                        row.update({'每颗换盘开销(秒)': '', '有效周期(秒)': '', '有效UPH(个/小时)': ''})
+                    part_summaries.append(pd.DataFrame([row]))
+                    ame_rows.append({'模块': name, 'Pure UPH(个/小时)': '', 'UPH(个/小时)': '', '产出数(个)': 0})
+                    continue
+                s = summarize_uph(cycles, units, ideal_ct=ideal_ct, max_ct=max_ct,
+                                  pure_uph_factor=pure_uph_factor)
+                tray_s = part.get('tray_seconds')
+                units_per_tray = part.get('units_per_tray') or part.get('rows_per_tray')
+                if tray_s and units_per_tray:
+                    try:
+                        pure_f = float(s.iloc[0].get('Pure UPH(个/小时)'))
+                        base_cycle = 3600.0 * units / pure_f
+                        overhead = float(tray_s) / float(units_per_tray)
+                        eff_cycle = base_cycle + overhead
+                        s['每颗换盘开销(秒)'] = round(overhead, 3)
+                        s['有效周期(秒)'] = round(eff_cycle, 3)
+                        s['有效UPH(个/小时)'] = round(3600.0 * units / eff_cycle, 2)
+                    except (TypeError, ValueError, ZeroDivisionError):
+                        pass
+                part_summaries.append(s)
+                r0 = s.iloc[0]
+                ame_rows.append({
+                    '模块': name,
+                    'Pure UPH(个/小时)': r0.get('Pure UPH(个/小时)'),
+                    'UPH(个/小时)': r0.get('UPH(个/小时)'),
+                    '产出数(个)': r0.get('产出数(个)'),
+                })
+            summary = pd.concat(part_summaries, ignore_index=True)
+            ame_summary = pd.DataFrame(ame_rows)
+            if progress_callback:
+                progress_callback(70)
+            sheets = {'Summary': summary, 'AMESummary': ame_summary}
+            out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
+            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+            if progress_callback:
+                progress_callback(100)
+            return out_path
 
         if bottleneck_stations:
             # 多工位机：自动判定瓶颈工位，UPH = 每排产品数 × 3600 / 瓶颈工位每排周期
@@ -413,7 +467,7 @@ class LogModel:
     # ---------- 功能四：报警分析 ----------
     def analyze_alarms(self, source_dir, output_dir, alarm_keywords="报警,ALARM,ERROR,NG,失败,异常,停止信号",
                        file_filters=None, rows=None, cancel_event=None, reason_device=None,
-                       progress_callback=None):
+                       module_from_path=False, progress_callback=None):
         reason_map = None
         if reason_device:
             from models.reason_codes import load_reason_codes
@@ -426,6 +480,7 @@ class LogModel:
             progress_callback(50)
         summary, by_keyword, detail = summarize_alarms(
             rows, alarm_keywords, cancel_event=cancel_event, reason_map=reason_map,
+            module_from_path=module_from_path,
         )
         if progress_callback:
             progress_callback(70)

@@ -10,8 +10,8 @@ from models.exceptions import OperationCancelled
 from models.reason_codes import reason_info
 
 _TIME_RE = re.compile(
-    r'^(?:\[(?P<brackettime>\d{2}:\d{2}:\d{2}(?:\.\d+)?)\]|'
-    r'(?:(?P<date>\d{4}-\d{2}-\d{2})[ T])?(?P<time>\d{2}:\d{2}:\d{2}(?:\.\d+)?))'
+    r'^(?:\[(?P<brackettime>\d{2}:\d{2}:\d{2}(?:[.]\d{1,3}|\s\d{3})?)\]|'
+    r'(?:(?P<date>\d{4}[-/]\d{2}[-/]\d{2})[ T])?(?P<time>\d{2}:\d{2}:\d{2}(?:[.]\d{1,3}|\s\d{3})?))'
 )
 
 _UNKNOWN_MODULE = '(未识别模块)'
@@ -27,8 +27,19 @@ def parse_ts(content):
     if m:
         time_str = m.group('brackettime') or m.group('time')
         if time_str:
+            if ' ' in time_str:
+                # ACF 格式：HH:MM:SS 毫秒
+                hms, ms = time_str.split(' ', 1)
+                h, mi, s = map(int, hms.split(':'))
+                t = datetime(1900, 1, 1, h, mi, s, int(ms) * 1000)
+                if m.group('date'):
+                    d = datetime.strptime(m.group('date'), '%Y-%m-%d')
+                    t = t.replace(year=d.year, month=d.month, day=d.day)
+                return t
             base = (m.group('date') + ' ' + time_str) if m.group('date') else time_str
-            for fmt in ('%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S', '%H:%M:%S.%f', '%H:%M:%S'):
+            for fmt in ('%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S',
+                        '%Y/%m/%d %H:%M:%S.%f', '%Y/%m/%d %H:%M:%S',
+                        '%H:%M:%S.%f', '%H:%M:%S'):
                 try:
                     return datetime.strptime(base, fmt)
                 except ValueError:
@@ -112,7 +123,7 @@ def _prefilter(rows, pattern, regex=True):
 
 
 def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_threshold=900.0,
-                    module_pattern=None, cancel_event=None):
+                    module_pattern=None, module_from_path=False, cancel_event=None):
     """
     按“完成动作”为周期起点构建周期明细。
     rows: [{'FileName', 'Content'}]；返回 DataFrame: FileName/Module/TriggerTime/CycleSeconds/Class/TriggerContent
@@ -129,7 +140,9 @@ def build_cycles_df(rows, trigger_keywords, normal_threshold=10.0, planned_thres
         ts = parse_ts(content)
         if ts is None:
             continue
-        if module_pattern:
+        if module_from_path:
+            module = _module_label(file_names[idx].split('/')[0])
+        elif module_pattern:
             m = re.search(module_pattern, content)
             module = _module_label(m.group(1) if m else '')
         else:
@@ -336,7 +349,7 @@ def down_pareto(status_detail, reason_map=None):
     return g
 
 
-def summarize_alarms(rows, alarm_keywords, cancel_event=None, reason_map=None):
+def summarize_alarms(rows, alarm_keywords, cancel_event=None, reason_map=None, module_from_path=False):
     """报警统计：汇总（按模块）、按关键词计数、明细。"""
     kws = split_keywords(alarm_keywords)
     pattern = keyword_pattern(kws) if kws else None
@@ -348,7 +361,10 @@ def summarize_alarms(rows, alarm_keywords, cancel_event=None, reason_map=None):
         content = contents[idx]
         m = re.search(pattern, content, re.IGNORECASE)
         if m:
-            module, _ = parse_fields(content)
+            if module_from_path:
+                module = _module_label(file_names[idx].split('/')[0])
+            else:
+                module, _ = parse_fields(content)
             reason_name = ''
             if reason_map:
                 em = re.search(r'\[Error (\d+)\]', content)
@@ -376,6 +392,7 @@ def summarize_alarms(rows, alarm_keywords, cancel_event=None, reason_map=None):
         .agg(报警次数=('Content', 'count'), 不同报警消息数=('Message', 'nunique'))
         .reset_index()
     )
+    summary = summary.rename(columns={'Module': '模块'})
     by_keyword = (
         detail_df.groupby('命中关键词', sort=False)
         .agg(报警次数=('Content', 'count'))

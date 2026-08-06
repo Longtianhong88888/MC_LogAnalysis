@@ -44,6 +44,13 @@ class AnalysisTest(unittest.TestCase):
         self.assertIsNotNone(sa)
         self.assertEqual((sa.year, sa.month, sa.day, sa.hour, sa.minute, sa.second, sa.microsecond),
                          (2026, 8, 3, 9, 55, 26, 191000))
+        acf = parse_ts("2026/07/17 18:35:49.109,127.0.0.1,H,cms2100_trace,ProcessJob,Cavity cnt:1")
+        self.assertIsNotNone(acf)
+        self.assertEqual((acf.year, acf.month, acf.day, acf.hour, acf.minute, acf.second),
+                         (2026, 7, 17, 18, 35, 49))
+        acf_ms = parse_ts("00:00:02 079    [89]    Info    <PlaceDut2Socket>    吸嘴【1】开始夹具【1】放料")
+        self.assertIsNotNone(acf_ms)
+        self.assertEqual(acf_ms.microsecond, 79000)
 
     def test_trigger_boundary(self):
         # MarkEnd1 不应匹配 MarkEnd1_0
@@ -610,6 +617,42 @@ class AnalysisTest(unittest.TestCase):
         self.assertAlmostEqual(result["单次换盘时间(秒)"], 10.0)   # 配置覆盖
         self.assertAlmostEqual(result["每排换盘开销(秒)"], 5.0)   # 10s / 2排
         self.assertAlmostEqual(result["有效周期(秒)"], 17.5)      # 12.5 + 5
+
+    def test_analyze_uph_parts(self):
+        import datetime as _dt
+
+        def line(fname, msg, t):
+            s = t.strftime('%Y%m%d-%H-%M-%S-') + f"{t.microsecond // 1000:03d}"
+            return {"FileName": fname, "Content": f"[0] X, {s}, X, 0, {msg}"}
+
+        t0 = _dt.datetime(2026, 8, 5, 0, 0, 0)
+        rows = []
+        for i in range(3):
+            rows.append(line("上料機/Logger.txt", "吸嘴放料成功", t0 + _dt.timedelta(seconds=i * 4)))
+        for i in range(3):
+            rows.append(line("主機/OHLog.txt", "ProcessJob,Cavity cnt:1,K1,OK", t0 + _dt.timedelta(seconds=i * 5)))
+        for i in range(3):
+            rows.append(line("下料機/Logger.txt", "UnloadDuts Finish", t0 + _dt.timedelta(seconds=i * 6)))
+        parts = [
+            {"name": "上料機", "trigger": "放料成功", "units_per_cycle": 1},
+            {"name": "主機", "trigger": "Cavity cnt:", "units_per_cycle": 1},
+            {"name": "下料機", "trigger": "UnloadDuts Finish", "units_per_cycle": 1},
+        ]
+        out = tempfile.mkdtemp()
+        path = LogModel().analyze_uph("不存在的目录", out, parts=parts, module_from_path=True, rows=rows)
+        df = pd.ExcelFile(path).parse("Summary")
+        self.assertEqual(set(df["模块"]), {"上料機", "主機", "下料機"})
+        self.assertEqual(df.set_index("模块").loc["上料機", "周期总数"], 2)
+        self.assertEqual(df.set_index("模块").loc["主機", "周期总数"], 2)
+        self.assertEqual(df.set_index("模块").loc["下料機", "周期总数"], 2)
+
+    def test_alarms_module_from_path(self):
+        rows = [
+            {"FileName": "上料機/a.txt", "Content": "2026-07-08 00:00:00.000 NG abc"},
+            {"FileName": "下料機/b.txt", "Content": "2026-07-08 00:00:01.000 NG xyz"},
+        ]
+        summary, by_kw, detail = summarize_alarms(rows, "NG", module_from_path=True)
+        self.assertEqual(set(summary["模块"]), {"上料機", "下料機"})
 
 
 if __name__ == "__main__":
