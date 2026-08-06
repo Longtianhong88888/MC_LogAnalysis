@@ -235,7 +235,8 @@ def summarize_uph_ame(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None,
     }])
 
 
-def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pdt_reason_ids=None):
+def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pdt_reason_ids=None,
+                           reason_map=None):
     """
     CoreTech AME EFF（基于机器状态）：
     EFF = 操作时间(运行RUN+待机IDLE) / 计划生产时间
@@ -248,12 +249,15 @@ def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pd
     total = run + idle + down
     planned = planned_hours * 3600.0 if planned_hours else total
 
-    pdt_set = set(split_keywords(pdt_reason_ids)) if pdt_reason_ids else set()
-    if pdt_set and not status_detail.empty:
-        down_rows = status_detail.loc[status_detail['Status'] == 'DOWN']
-        pdt = float(down_rows.loc[down_rows['ReasonID'].isin(pdt_set), 'DurationSeconds'].sum())
+    down_rows = status_detail.loc[status_detail['Status'] == 'DOWN'] if not status_detail.empty else status_detail
+    if reason_map:
+        # 原因清单优先：按 Planned/Routine Downtime 分类
+        from models.reason_codes import is_planned
+        planned_mask = down_rows['ReasonID'].apply(lambda rid: is_planned(reason_map, rid))
+        pdt = float(down_rows.loc[planned_mask, 'DurationSeconds'].sum())
     else:
-        pdt = 0.0
+        pdt_set = set(split_keywords(pdt_reason_ids)) if pdt_reason_ids else set()
+        pdt = float(down_rows.loc[down_rows['ReasonID'].isin(pdt_set), 'DurationSeconds'].sum()) if pdt_set else 0.0
     udt = down - pdt
     operating = run + idle
     eff = round(operating / planned * 100, 2) if planned > 0 else ''
@@ -271,11 +275,14 @@ def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pd
     }])
 
 
-def down_pareto(status_detail):
-    """停机 DOWN 的 ReasonID Pareto（次数、总时长、占比）。"""
+def down_pareto(status_detail, reason_map=None):
+    """停机 DOWN 的 ReasonID Pareto（次数、总时长、占比）；提供原因清单时附加原因名称与停机类型。"""
     down_rows = status_detail.loc[status_detail['Status'] == 'DOWN']
     if down_rows.empty:
-        return pd.DataFrame(columns=['ReasonID', '次数', '总时长(秒)', '占比(%)'])
+        cols = ['ReasonID', '次数', '总时长(秒)', '占比(%)']
+        if reason_map:
+            cols += ['原因名称', '停机类型']
+        return pd.DataFrame(columns=cols)
     g = (
         down_rows.groupby('ReasonID', sort=False)['DurationSeconds']
         .agg(['count', 'sum'])
@@ -284,6 +291,14 @@ def down_pareto(status_detail):
     g.columns = ['ReasonID', '次数', '总时长(秒)']
     g = g.sort_values('总时长(秒)', ascending=False).reset_index(drop=True)
     g['占比(%)'] = (g['总时长(秒)'] / g['总时长(秒)'].sum() * 100).round(2)
+    if reason_map:
+        from models.reason_codes import is_planned, reason_info
+        g['原因名称'] = g['ReasonID'].apply(
+            lambda rid: (reason_info(reason_map, rid) or {}).get('name', '')
+        )
+        g['停机类型'] = g['ReasonID'].apply(
+            lambda rid: 'pDT' if is_planned(reason_map, rid) else 'uDT'
+        )
     return g
 
 

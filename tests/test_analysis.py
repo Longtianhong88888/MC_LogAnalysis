@@ -114,6 +114,39 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(p.iloc[0]['ReasonID'], '0000000411')
         self.assertEqual(p.iloc[0]['总时长(秒)'], 10.0)
 
+    def test_reason_code_mapping(self):
+        from models.reason_codes import is_planned, load_reason_codes, reason_info
+        lm = load_reason_codes("LM")
+        self.assertIn("411", lm)
+        self.assertEqual(lm["411"]["name"], "打標位建真空")
+        self.assertEqual(lm["411"]["category"], "Unplanned Downtime")
+        self.assertFalse(is_planned(lm, "411"))
+        fr = load_reason_codes("FR")
+        self.assertEqual(reason_info(fr, "1110000000")["name"], "真空報警")
+        # 计划停机分类：构造 Routine 类型
+        fake = {"999": {"name": "例行保养", "category": "Routine Downtime", "state": "DOWN"}}
+        self.assertTrue(is_planned(fake, "999"))
+
+    def test_eff_coretech_with_reason_map(self):
+        reason_map = {
+            "1110000000": {"name": "真空報警", "category": "Unplanned Downtime", "state": "DOWN"},
+            "2220000000": {"name": "例行保養", "category": "Routine Downtime", "state": "DOWN"},
+        }
+        rows = [
+            row("2026-07-08 00:00:00.000 [PS][status:RUN,ReasonID:None]"),
+            row("2026-07-08 00:00:10.000 [PS][status:DOWN,ReasonID:1110000000]"),
+            row("2026-07-08 00:00:20.000 [PS][status:DOWN,ReasonID:2220000000]"),
+            row("2026-07-08 00:00:30.000 [PS][status:RUN,ReasonID:None]"),
+        ]
+        status_summary, _, detail = analyze_status(rows)
+        eff = summarize_eff_coretech(status_summary, detail, reason_map=reason_map)
+        self.assertEqual(eff.iloc[0]['非计划停机uDT(秒)'], 10.0)   # 1110000000 → uDT
+        self.assertEqual(eff.iloc[0]['计划停机pDT(秒)'], 10.0)     # 2220000000 → pDT
+        p = down_pareto(detail, reason_map=reason_map)
+        self.assertIn('原因名称', p.columns)
+        self.assertIn('停机类型', p.columns)
+        self.assertEqual(set(p['停机类型']), {'pDT', 'uDT'})
+
     def test_end_to_end_eff(self):
         src = tempfile.mkdtemp()
         out = tempfile.mkdtemp()
@@ -354,6 +387,15 @@ class AnalysisTest(unittest.TestCase):
             sh.text_frame.text for sh in prs.slides[1].shapes if sh.has_text_frame
         )
         self.assertIn("2/7", uph_page)  # 内容页页码同步（与模板样式一致）
+        # 原因码前导零在 PPT 表格中保留（0000000411）
+        table_texts = []
+        for s in prs.slides:
+            for shape in s.shapes:
+                if shape.has_table:
+                    for r in range(len(shape.table.rows)):
+                        for c in range(len(shape.table.columns)):
+                            table_texts.append(shape.table.cell(r, c).text)
+        self.assertIn("0000000411", table_texts)
 
     def test_ppt_report_nan_values(self):
         # 回归：AMESummary 存在 NaN（如 FR 无周期时 Pure/M2 为空）不应导致图表写入报错

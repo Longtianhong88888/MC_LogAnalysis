@@ -34,6 +34,7 @@ PROCESS_TEMPLATES = {
     },
     "LM 激光打标": {
         "description": "LM4405 激光打标机：MarkEnd1 完成动作，PS/EM 消息在同批当日日志中",
+        "reason_list": "LM",
         "file_filters": None,
         "UPH分析": {
             "trigger_keywords": "MarkEnd1",
@@ -62,6 +63,7 @@ PROCESS_TEMPLATES = {
     },
     "FR 机台": {
         "description": "FR 点胶机：轴点胶完成/有漏点产品为单件完成标记（漏点件以有漏点产品代替点胶完成），左轴/右轴分模组",
+        "reason_list": "FR",
         "file_filters": None,
         "UPH分析": {
             "trigger_keywords": "轴点胶完成,有漏点产品",

@@ -25,3 +25,6 @@ custom_template.json
 # PPT 报告模板（含内部数据，不随代码/包分发，用户自行放置）
 Analysis_Report.pptx
 PPT模板.pptx
+
+# 状态变更原因清单（含内部数据，不随包/仓库分发，运行时从外部目录读取）
+EReasonList/

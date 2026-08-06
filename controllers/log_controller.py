@@ -214,6 +214,8 @@ class LogController:
             settings["module_pattern"] = feature_tpl["module_pattern"]
         if feature_tpl.get("pure_uph_factor") is not None:
             settings["pure_uph_factor"] = float(feature_tpl["pure_uph_factor"])
+        if feature == "EFF分析" and template.get("reason_list"):
+            settings["reason_device"] = template["reason_list"]
         return settings
 
     def save_custom_template(self):

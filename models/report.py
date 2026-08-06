@@ -36,12 +36,10 @@ def _read_sheet(path, name):
     if not os.path.exists(path):
         return pd.DataFrame()
     try:
-        xl = pd.ExcelFile(path)
-        if name in xl.sheet_names:
-            return xl.parse(name)
+        # dtype=str：保留原因码等前导零（如 0010000000），图表取值再转数值
+        return pd.read_excel(path, sheet_name=name, dtype=str)
     except Exception:
-        pass
-    return pd.DataFrame()
+        return pd.DataFrame()
 
 
 def _to_float(value):
