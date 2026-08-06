@@ -32,6 +32,7 @@ from views.user_guide import USER_GUIDE_HTML
 
 ONE_CLICK_FEATURE = "一键分析（全部）"
 FEATURES = ["文档合并与内容拆分", "UPH分析", "EFF分析", "报警分析", "机台状态分析", ONE_CLICK_FEATURE]
+WINDOW_DEFAULT_SIZE = (980, 880)
 
 DEFAULT_TRIGGER_KEYWORDS = "MarkEnd1"
 DEFAULT_ALARM_KEYWORDS = "报警,ALARM,ERROR,NG,失败,异常,停止信号"
@@ -312,7 +313,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.controller = controller
         self.setWindowTitle("MC Log Analysis Tool")
-        self.resize(980, 880)
+        self.resize(*WINDOW_DEFAULT_SIZE)
         self.setMinimumSize(900, 700)
 
         icon = QIcon(resource_path("log.ico"))

@@ -7,17 +7,25 @@ from PyQt5.QtWidgets import QApplication, QSplashScreen
 
 from app import App
 from utils.resource_utils import resource_path
+from views.main_window import WINDOW_DEFAULT_SIZE
 
 SPLASH_MIN_MS = 500  # 启动画面最短展示时间
 
 
 def create_splash():
-    """根据 Machine.png 生成启动画面（等比缩放到 720px 宽）。"""
+    """根据 Machine.png 生成启动画面，尺寸与主窗口一致（cover 裁切填满）。"""
     pixmap = QPixmap(resource_path("Machine.png"))
     if pixmap.isNull():
         return None
-    pixmap = pixmap.scaledToWidth(1200, Qt.KeepAspectRatio | Qt.SmoothTransformation)
-    return QSplashScreen(pixmap)
+    w, h = WINDOW_DEFAULT_SIZE
+    img = pixmap.toImage()
+    scale = max(w / img.width(), h / img.height())
+    sw, sh = int(img.width() * scale), int(img.height() * scale)
+    img = img.scaled(sw, sh, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+    x = max(0, (sw - w) // 2)
+    y = max(0, (sh - h) // 2)
+    img = img.copy(x, y, w, h)
+    return QSplashScreen(QPixmap.fromImage(img))
 
 
 def main():
