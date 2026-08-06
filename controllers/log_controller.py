@@ -214,13 +214,18 @@ class LogController:
             settings["module_pattern"] = feature_tpl["module_pattern"]
         if feature_tpl.get("pure_uph_factor") is not None:
             settings["pure_uph_factor"] = float(feature_tpl["pure_uph_factor"])
-        if feature in ("EFF分析", "报警分析"):
+        if feature in ("EFF分析", "报警分析", "机台状态分析"):
             combo = getattr(self.view, 'reason_combo', None)
             if combo is not None:
                 if combo.currentText() != '（无）':
                     settings["reason_device"] = combo.currentText()
             elif template.get("reason_list"):
                 settings["reason_device"] = template["reason_list"]
+        if feature in ("EFF分析", "机台状态分析"):
+            if feature_tpl.get("activity_keywords"):
+                settings["activity_keywords"] = feature_tpl["activity_keywords"]
+            if feature_tpl.get("stop_reason_keywords"):
+                settings["stop_reason_keywords"] = feature_tpl["stop_reason_keywords"]
         return settings
 
     def save_custom_template(self):

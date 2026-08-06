@@ -93,7 +93,10 @@ PROCESS_TEMPLATES = {
         "报警分析": {
             "alarm_keywords": "Error,NG,Fail,报警,失败,异常,Warning",
         },
-        "机台状态分析": {},
+        "机台状态分析": {
+            "activity_keywords": "UDP Module - Good",
+            "stop_reason_keywords": "AutoRun Stop - ErrorName",
+        },
     },
 }
 

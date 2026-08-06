@@ -6,6 +6,7 @@ import pandas as pd
 
 from models.analysis import (
     analyze_status,
+    analyze_status_derived,
     build_cycles_df,
     down_pareto,
     parse_em_production,
@@ -340,6 +341,7 @@ class AnalysisTest(unittest.TestCase):
         self.assertIn("SA 机台", PROCESS_TEMPLATES)
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["UPH分析"]["trigger_keywords"], "UDP Module - Good")
         self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["file_filters"], [".txt"])
+        self.assertEqual(PROCESS_TEMPLATES["SA 机台"]["机台状态分析"]["activity_keywords"], "UDP Module - Good")
         self.assertIn("不达标", fr["报警分析"]["alarm_keywords"])
         self.assertIn("有漏点产品", fr["报警分析"]["alarm_keywords"])
         self.assertEqual(fr["UPH分析"]["trigger_keywords"], "轴点胶完成,有漏点产品")
@@ -474,6 +476,26 @@ class AnalysisTest(unittest.TestCase):
         s = summary.set_index('状态')
         self.assertEqual(s.loc['RUN', '总时长(秒)'], 3.0)   # 跨日 3 秒；最后一条 RUN 无后续事件不计时长
         self.assertEqual(s.loc['IDLE', '总时长(秒)'], 30.0)
+
+    def test_status_derived(self):
+        reason_map = {"305": {"name": "吸取钢片真空報警", "category": "Unplanned Downtime", "state": "DOWN"}}
+        rows = [
+            {"FileName": "a.txt", "Content": "[0] X, 20260803-09-00-00-000, X, 0, UDP Module - Good"},
+            {"FileName": "a.txt", "Content": "[1] X, 20260803-09-00-05-000, X, 0, UDP Module - Good"},
+            {"FileName": "a.txt", "Content": "[2] X, 20260803-09-00-08-000, X, 0, AutoRun Stop - ErrorName = [Error 305] Picker"},
+            {"FileName": "a.txt", "Content": "[3] X, 20260803-09-00-12-000, X, 0, UDP Module - Good"},
+            {"FileName": "a.txt", "Content": "[4] X, 20260803-09-00-15-000, X, 0, AutoRun Stop - ErrorName = [작업자 정지]"},
+            {"FileName": "a.txt", "Content": "[5] X, 20260803-09-00-20-000, X, 0, UDP Module - Good"},
+        ]
+        summary, hourly, detail = analyze_status_derived(
+            rows, "UDP Module - Good", "AutoRun Stop - ErrorName", reason_map=reason_map,
+        )
+        s = summary.set_index('状态')
+        self.assertEqual(s.loc['RUN', '总时长(秒)'], 8.0 + 3.0)   # 0→8、12→15
+        self.assertEqual(s.loc['DOWN', '总时长(秒)'], 4.0)         # Error 305 → DOWN
+        self.assertEqual(s.loc['IDLE', '总时长(秒)'], 5.0)         # 操作员停止 → IDLE
+        down = detail[detail['Status'] == 'DOWN'].iloc[0]
+        self.assertEqual(down['ReasonID'], '305')
 
 
 if __name__ == "__main__":

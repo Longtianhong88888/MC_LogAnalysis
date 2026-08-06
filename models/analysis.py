@@ -391,6 +391,58 @@ def _normalize_status(raw):
     return 'RUN' if s.startswith('RU') else s
 
 
+def _finalize_status(records):
+    """由状态记录（StartTime/Status/ReasonID/DurationSeconds/NextStatus/_ts）生成汇总/按小时/明细。"""
+    detail_cols = ['FileName', 'StartTime', 'Status', 'ReasonID', 'DurationSeconds', 'NextStatus']
+    detail_df = pd.DataFrame([{k: r[k] for k in detail_cols} for r in records], columns=detail_cols)
+    if detail_df.empty:
+        return (
+            pd.DataFrame(columns=['状态', '次数', '总时长(秒)', '占比(%)']),
+            pd.DataFrame(columns=['小时', 'RUN(秒)', 'IDLE(秒)', 'DOWN(秒)', '合计(秒)',
+                                  'RUN占比(%)', 'IDLE占比(%)', 'DOWN占比(%)', 'EFF(%)']),
+            detail_df,
+        )
+
+    total = detail_df['DurationSeconds'].sum()
+    summary = (
+        detail_df.groupby('Status', sort=False)['DurationSeconds']
+        .agg(['count', 'sum'])
+        .reset_index()
+    )
+    summary.columns = ['状态', '次数', '总时长(秒)']
+    summary['占比(%)'] = (summary['总时长(秒)'] / total * 100).round(2)
+    summary = summary.sort_values('总时长(秒)', ascending=False).reset_index(drop=True)
+
+    hour_sums = {}
+    for r in records:
+        ts = r['_ts']
+        if ts.year == 1900:
+            stem = os.path.splitext(r['FileName'])[0]
+            hour = f"{stem} {ts.strftime('%H:00')}"
+        else:
+            hour = ts.strftime('%Y-%m-%d %H:00')
+        hour_sums[(hour, r['Status'])] = hour_sums.get((hour, r['Status']), 0.0) + r['DurationSeconds']
+    hours = sorted({h for h, _ in hour_sums})
+    hourly_rows = []
+    for h in hours:
+        run = hour_sums.get((h, 'RUN'), 0.0)
+        idle = hour_sums.get((h, 'IDLE'), 0.0)
+        down = hour_sums.get((h, 'DOWN'), 0.0)
+        total_h = run + idle + down
+        hourly_rows.append({
+            '小时': h,
+            'RUN(秒)': round(run, 3),
+            'IDLE(秒)': round(idle, 3),
+            'DOWN(秒)': round(down, 3),
+            '合计(秒)': round(total_h, 3),
+            'RUN占比(%)': round(run / total_h * 100, 2) if total_h else '',
+            'IDLE占比(%)': round(idle / total_h * 100, 2) if total_h else '',
+            'DOWN占比(%)': round(down / total_h * 100, 2) if total_h else '',
+            'EFF(%)': round((run + idle) / total_h * 100, 2) if total_h else '',
+        })
+    return summary, pd.DataFrame(hourly_rows), detail_df
+
+
 def analyze_status(rows, cancel_event=None):
     """
     机台状态分析：识别 status:RUN/IDLE/DOWN 状态行，计算各状态时长与占比、按小时分布。
@@ -436,55 +488,95 @@ def analyze_status(rows, cancel_event=None):
                 '_ts': events[i]['ts'],
             })
 
-    detail_cols = ['FileName', 'StartTime', 'Status', 'ReasonID', 'DurationSeconds', 'NextStatus']
-    detail_df = pd.DataFrame([{k: r[k] for k in detail_cols} for r in records], columns=detail_cols)
-    if detail_df.empty:
-        return (
-            pd.DataFrame(columns=['状态', '次数', '总时长(秒)', '占比(%)']),
-            pd.DataFrame(columns=['小时', 'RUN(秒)', 'IDLE(秒)', 'DOWN(秒)', '合计(秒)',
-                                  'RUN占比(%)', 'IDLE占比(%)', 'DOWN占比(%)', 'EFF(%)']),
-            detail_df,
-        )
+    return _finalize_status(records)
 
-    total = detail_df['DurationSeconds'].sum()
-    summary = (
-        detail_df.groupby('Status', sort=False)['DurationSeconds']
-        .agg(['count', 'sum'])
-        .reset_index()
-    )
-    summary.columns = ['状态', '次数', '总时长(秒)']
-    summary['占比(%)'] = (summary['总时长(秒)'] / total * 100).round(2)
-    summary = summary.sort_values('总时长(秒)', ascending=False).reset_index(drop=True)
 
-    hour_sums = {}
-    for r in records:
-        ts = r['_ts']
-        if ts.year == 1900:
-            # 纯时间日志按日分文件：小时带文件名前缀，避免多日数据合并到同一小时
-            stem = os.path.splitext(r['FileName'])[0]
-            hour = f"{stem} {ts.strftime('%H:00')}"
+_STOP_REASON_RE = re.compile(r'ErrorName = \[(.*?)\]')
+
+
+def _classify_stop(reason, reason_map):
+    """按 EReason 清单匹配 AutoRun Stop 原因 → 状态（Error 码→DOWN/IDLE/RUN，操作员停止→IDLE）。"""
+    m = re.search(r'Error (\d+)', reason)
+    if m:
+        info = reason_info(reason_map, m.group(1)) if reason_map else None
+        if info and info.get('state'):
+            return info['state']
+        return 'DOWN'
+    if '정지' in reason or 'stop' in reason.lower() or 'Stop' in reason:
+        return 'IDLE'
+    return 'IDLE'
+
+
+def analyze_status_derived(rows, activity_keywords, stop_reason_keywords, reason_map=None,
+                           cancel_event=None):
+    """
+    推导式机台状态：以活动事件（如 UDP Module - Good）表示运行，AutoRun Stop 事件按 EReason 清单
+    分类为 DOWN/IDLE，构建 RUN/IDLE/DOWN 时间线并计算时长与占比。
+    """
+    activity_kws = split_phrases(activity_keywords)
+    stop_kws = split_phrases(stop_reason_keywords)
+    events = []
+    for row in rows:
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
+        content = str(row.get('Content', ''))
+        is_activity = activity_kws and any(kw in content for kw in activity_kws)
+        is_stop = any(kw in content for kw in stop_kws)
+        if not is_activity and not is_stop:
+            continue
+        ts = parse_ts(content)
+        if ts is None:
+            continue
+        if is_stop:
+            m = _STOP_REASON_RE.search(content)
+            reason = m.group(1) if m else ''
+            code_m = re.search(r'Error (\d+)', reason)
+            reason_id = code_m.group(1) if code_m else reason
+            events.append({
+                'ts': ts, 'file': row.get('FileName', ''), 'kind': 'stop',
+                'state': _classify_stop(reason, reason_map),
+                'reason_id': reason_id, 'content': content,
+            })
         else:
-            hour = ts.strftime('%Y-%m-%d %H:00')
-        hour_sums[(hour, r['Status'])] = hour_sums.get((hour, r['Status']), 0.0) + r['DurationSeconds']
-    hours = sorted({h for h, _ in hour_sums})
-    hourly_rows = []
-    for h in hours:
-        run = hour_sums.get((h, 'RUN'), 0.0)
-        idle = hour_sums.get((h, 'IDLE'), 0.0)
-        down = hour_sums.get((h, 'DOWN'), 0.0)
-        total_h = run + idle + down
-        hourly_rows.append({
-            '小时': h,
-            'RUN(秒)': round(run, 3),
-            'IDLE(秒)': round(idle, 3),
-            'DOWN(秒)': round(down, 3),
-            '合计(秒)': round(total_h, 3),
-            'RUN占比(%)': round(run / total_h * 100, 2) if total_h else '',
-            'IDLE占比(%)': round(idle / total_h * 100, 2) if total_h else '',
-            'DOWN占比(%)': round(down / total_h * 100, 2) if total_h else '',
-            'EFF(%)': round((run + idle) / total_h * 100, 2) if total_h else '',
-        })
-    return summary, pd.DataFrame(hourly_rows), detail_df
+            events.append({
+                'ts': ts, 'file': row.get('FileName', ''), 'kind': 'activity',
+                'state': 'RUN', 'reason_id': '', 'content': content,
+            })
+    if not events:
+        return _finalize_status([])
+    if events[0]['ts'].year != 1900:
+        events.sort(key=lambda e: e['ts'])
+
+    records = []
+    cur_state = None
+    last_change = None
+    for ev in events:
+        new_state = 'RUN' if ev['kind'] == 'activity' else ev['state']
+        if cur_state is None:
+            cur_state = new_state
+            last_change = ev['ts']
+            last_file = ev['file']
+            last_reason = ev['reason_id']
+            continue
+        if new_state != cur_state:
+            delta = (ev['ts'] - last_change).total_seconds()
+            if delta < 0:
+                delta += 86400.0
+            if delta >= 0:
+                records.append({
+                    'FileName': last_file,
+                    'StartTime': format_ts(last_change),
+                    'Status': cur_state,
+                    'ReasonID': last_reason,
+                    'DurationSeconds': round(delta, 3),
+                    'NextStatus': new_state,
+                    '_ts': last_change,
+                })
+            cur_state = new_state
+            last_change = ev['ts']
+            last_file = ev['file']
+            last_reason = ev['reason_id']
+    return _finalize_status(records)
 
 
 _EM_FIELD_RE = re.compile(r'(lotno|inputqty|goodqty|ngqty|head|startdatetime|enddatetime|datetime):([^,\]]*)')

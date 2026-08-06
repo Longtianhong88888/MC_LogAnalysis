@@ -14,6 +14,7 @@ except ImportError:
 
 from models.analysis import (
     analyze_status,
+    analyze_status_derived,
     build_cycles_df,
     down_pareto,
     parse_em_production,
@@ -329,7 +330,8 @@ class LogModel:
     # ---------- 功能三：EFF 分析 ----------
     def analyze_eff(self, source_dir, output_dir, planned_hours=None,
                     pdt_reason_ids=None, reason_device=None, file_filters=None, rows=None,
-                    cancel_event=None, progress_callback=None):
+                    cancel_event=None, activity_keywords=None, stop_reason_keywords=None,
+                    progress_callback=None):
         """CoreTech AME 效率：EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态。"""
         reason_map = None
         if reason_device:
@@ -341,7 +343,13 @@ class LogModel:
             source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(50)
-        status_summary, hourly, detail = analyze_status(rows, cancel_event=cancel_event)
+        if activity_keywords:
+            status_summary, hourly, detail = analyze_status_derived(
+                rows, activity_keywords, stop_reason_keywords,
+                reason_map=reason_map, cancel_event=cancel_event,
+            )
+        else:
+            status_summary, hourly, detail = analyze_status(rows, cancel_event=cancel_event)
         summary = summarize_eff_coretech(
             status_summary, detail, planned_hours=planned_hours, pdt_reason_ids=pdt_reason_ids,
             reason_map=reason_map,
@@ -394,14 +402,25 @@ class LogModel:
 
     # ---------- 功能五：机台状态分析 ----------
     def analyze_status(self, source_dir, output_dir, file_filters=None, rows=None, cancel_event=None,
+                       activity_keywords=None, stop_reason_keywords=None, reason_device=None,
                        progress_callback=None):
+        reason_map = None
+        if reason_device:
+            from models.reason_codes import load_reason_codes
+            reason_map = load_reason_codes(reason_device)
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(
             source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(50)
-        summary, hourly, detail = analyze_status(rows, cancel_event=cancel_event)
+        if activity_keywords:
+            summary, hourly, detail = analyze_status_derived(
+                rows, activity_keywords, stop_reason_keywords,
+                reason_map=reason_map, cancel_event=cancel_event,
+            )
+        else:
+            summary, hourly, detail = analyze_status(rows, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(70)
         sheets = {'Summary': summary}
