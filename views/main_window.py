@@ -3,6 +3,7 @@
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
     QDoubleSpinBox,
@@ -33,6 +34,18 @@ from views.user_guide import USER_GUIDE_HTML
 ONE_CLICK_FEATURE = "一键分析（全部）"
 FEATURES = ["文档合并与内容拆分", "UPH分析", "EFF分析", "报警分析", "机台状态分析", ONE_CLICK_FEATURE]
 WINDOW_DEFAULT_SIZE = (980, 880)
+WINDOW_SCREEN_RATIO = 0.8  # 主窗口占屏幕可用区域的百分比
+
+
+def window_target_size(ratio=WINDOW_SCREEN_RATIO):
+    """按当前屏幕可用区域计算主窗口目标尺寸（默认 80%）。"""
+    screen = QApplication.primaryScreen()
+    if screen is None:
+        return WINDOW_DEFAULT_SIZE
+    geo = screen.availableGeometry()
+    w = max(900, int(geo.width() * ratio))
+    h = max(620, int(geo.height() * ratio))
+    return w, h
 
 DEFAULT_TRIGGER_KEYWORDS = "MarkEnd1"
 DEFAULT_ALARM_KEYWORDS = "报警,ALARM,ERROR,NG,失败,异常,停止信号"
@@ -313,8 +326,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.controller = controller
         self.setWindowTitle("MC Log Analysis Tool")
-        self.resize(*WINDOW_DEFAULT_SIZE)
-        self.setMinimumSize(900, 700)
+        w, h = window_target_size()
+        self.resize(w, h)
+        self.setMinimumSize(max(840, int(w * 0.8)), max(600, int(h * 0.85)))
 
         icon = QIcon(resource_path("log.ico"))
         if not icon.isNull():

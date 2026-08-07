@@ -45,7 +45,7 @@
 ## 界面（Apple 风格，views/main_window.py）
 
 - QSS 卡片式：背景 #F5F5F7、卡片白、主色 #007AFF；间距常量 GAP_SECTION/ROW/INNER/CARD_PAD 已压缩。
-- 窗口默认 980×880（`WINDOW_DEFAULT_SIZE`），最小 900×700。
+- 窗口尺寸按屏幕可用区域 **80%** 动态计算（`window_target_size`，最小 900×620），启动画面同尺寸；main.py 在 QApplication 前启用 `AA_EnableHighDpiScaling`（Windows 高分屏字体清晰的关键）。
 - 布局要点：配置卡 2×2（制程模板+制程名称 / 功能选择+日志文件筛选）；参数卡 min-height 260（UPH 页 6 行表单完整显示）；结果卡撑满剩余空间（`_card` 内容必须 `addLayout(...,1)`）。
 - 「使用说明」按钮在右上角（views/user_guide.py 内容），版权在状态栏右下角 `Copyright©️2026 ABU NPD EOL`。
 - 启动画面（main.py）：与主窗口同尺寸（cover 裁切填满）、淡出过渡（FADE_MS=300）衔接主窗口；图片 Machine.png。

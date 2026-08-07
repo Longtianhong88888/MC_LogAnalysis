@@ -7,19 +7,19 @@ from PyQt5.QtWidgets import QApplication, QSplashScreen
 
 from app import App
 from utils.resource_utils import resource_path
-from views.main_window import WINDOW_DEFAULT_SIZE
+from views.main_window import window_target_size
 
 SPLASH_MIN_MS = 500  # 启动画面最短展示时间
 FADE_MS = 300        # 淡入淡出过渡时长
 _ANIMS = set()       # 持有运行中的动画引用，防止被提前回收
 
 
-def create_splash():
+def create_splash(target_size=None):
     """根据 Machine.png 生成启动画面，尺寸与主窗口一致（cover 裁切填满）。"""
     pixmap = QPixmap(resource_path("Machine.png"))
     if pixmap.isNull():
         return None
-    w, h = WINDOW_DEFAULT_SIZE
+    w, h = target_size or window_target_size()
     img = pixmap.toImage()
     scale = max(w / img.width(), h / img.height())
     sw, sh = int(img.width() * scale), int(img.height() * scale)
@@ -49,6 +49,9 @@ def _crossfade(splash, window, duration=FADE_MS):
 
 
 def main():
+    # 高分屏缩放必须放在 QApplication 创建之前（Windows 缩放下文字/控件才清晰）
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication(sys.argv)
     app.setApplicationName("MC Log Analysis Tool")
     icon = QIcon(resource_path("log.ico"))
