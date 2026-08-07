@@ -156,7 +156,16 @@ class LogModel:
         if len(rows) < 2:
             return
         data = [r for r in rows[1:] if r[0] is not None]
-        max_end = max((float(r[4]) for r in data if r[4] not in (None, '')), default=0.0)
+        # 按表头定位列，避免列顺序错位（开始秒/结束秒/时长秒）
+        header = list(rows[0])
+        try:
+            col_start = header.index('开始秒')
+            col_end = header.index('结束秒')
+        except ValueError:
+            return
+        col_layer = header.index('层级') if '层级' in header else 5
+        max_end = max((float(r[col_end]) for r in data
+                       if r[col_end] not in (None, '')), default=0.0)
         # 时间块分辨率：默认 0.1s，目标 60~120 列，超出则放大到 0.2/0.5/1/2/5/10...
         col_sec = 0.1
         if max_end > 0 and max_end / col_sec > 120:
@@ -183,9 +192,9 @@ class LogModel:
             cell.alignment = center
         # 数据行块填充
         for i, r in enumerate(data, start=2):
-            start_s = float(r[2] or 0.0)
-            end_s = float(r[4] or r[2] or 0.0)
-            layer = str(r[5] or '循环')
+            start_s = float(r[col_start] or 0.0)
+            end_s = float(r[col_end] or r[col_start] or 0.0)
+            layer = str(r[col_layer] or '循环')
             fill = layer_fill.get(layer, layer_fill['循环'])
             c0 = int(round(start_s / col_sec))
             c1 = max(int(round(end_s / col_sec)), c0 + 1)  # 至少 1 列，保证可见
