@@ -11,6 +11,8 @@ from models.analysis import (
     analyze_steps,
     analyze_steps_sa,
     build_cycles_df,
+    build_gantt_rows,
+    build_gantt_rows_sa,
     detect_units_per_tray,
     detect_tray_stats,
     down_pareto,
@@ -180,6 +182,38 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(fmt_duration(86396.148, with_ms=False), "23:59:56")
         self.assertEqual(fmt_duration(""), "")
 
+    def test_build_gantt_rows(self):
+        def mk(rows, ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "LM/l.txt",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+
+        rows = []
+        # 3 个周期，每周期 4s：A 步骤 [0,1]，B 步骤 [1,3]
+        for i in range(3):
+            base = i * 5.0
+            mk(rows, base, "MarkEnd1")
+            mk(rows, base + 1.0, "StepA_Done")
+            mk(rows, base + 3.0, "StepB_Done")
+        units = [{
+            "name": "整机", "cycle": "MarkEnd1",
+            "steps": [
+                {"name": "A", "end": "StepA_Done"},
+                {"name": "B", "end": "StepB_Done"},
+            ],
+        }]
+        df = build_gantt_rows(rows, units)
+        self.assertEqual(list(df["步骤"]), ["A", "B"])   # 按开始秒排序
+        a = df[df["步骤"] == "A"].iloc[0]
+        b = df[df["步骤"] == "B"].iloc[0]
+        self.assertEqual(a["开始秒"], 0.0)
+        self.assertEqual(a["结束秒"], 1.0)
+        self.assertEqual(b["开始秒"], 1.0)
+        self.assertEqual(b["结束秒"], 3.0)
+        self.assertEqual(list(df["层级"]), ["循环", "循环"])
+
     def test_analyze_steps_exclude_long_stop(self):
         def mk(rows, ts, tag):
             h = int(ts // 3600); m = int(ts % 3600 // 60)
@@ -308,6 +342,37 @@ class AnalysisTest(unittest.TestCase):
             r = df[(df["单元"] == "右头") & (df["步骤"] == phase)].iloc[0]
             self.assertEqual(r["中位时长"], expect)
             self.assertEqual(r["循环数"], 2)
+
+    def test_build_gantt_rows_sa(self):
+        def mk(ts, tag, head="SeqCycle005_RightDispenserPart.cs"):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "SA/l.txt",
+                         "Content": "[000] Sequence, , 20260803-%02d-%02d-%02d-%03d, %s, 30, %s"
+                                    % (h, m, sec, ms, head, tag)})
+
+        rows = []
+        for base in (0.0, 30.0, 60.0):
+            mk(base, "DispOneChipProfileWorkCycle()")
+            mk(base + 5.0, "DispOneChipAlignVisionCycle()")
+            mk(base + 12.0, "DispOneChipProbeAlignCycle()")
+            mk(base + 20.0, "Heater 0 :Heating Complete", "SeqCycle009_HeatIndex.cs")
+            mk(base + 20.5, "AfterPickUp StopCondition", "SeqCycle007_AttachPart.cs")
+            mk(base + 21.0, "AfterPickUp StopCondition", "SeqCycle007_AttachPart.cs")
+            mk(base + 22.0, "UDP Module - Good", "SeqCycle014_InspectionIndex.cs")
+        df = build_gantt_rows_sa(rows)
+        hp = df[(df["单元"] == "热压") & (df["步骤"] == "行周期")].iloc[0]
+        self.assertEqual(hp["结束秒"], 30.0)            # 热压行周期 0→30
+        vis = df[(df["单元"] == "右头") & (df["步骤"] == "视觉对位")].iloc[0]
+        probe = df[(df["单元"] == "右头") & (df["步骤"] == "探针对位")].iloc[0]
+        prof = df[(df["单元"] == "右头") & (df["步骤"] == "点胶轮廓")].iloc[0]
+        self.assertEqual(vis["开始秒"], 0.0)
+        self.assertEqual(vis["结束秒"], 5.0)
+        self.assertEqual(probe["开始秒"], 5.0)
+        self.assertEqual(probe["结束秒"], 12.0)
+        self.assertEqual(prof["开始秒"], 12.0)
+        self.assertEqual(prof["结束秒"], 30.0)
 
     def test_analyze_bottleneck_machines(self):
         def mk(rows, ts, tag):

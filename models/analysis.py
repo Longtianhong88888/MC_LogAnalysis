@@ -579,6 +579,230 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
     return df
 
 
+def build_gantt_rows(rows, units, max_step_seconds=None, merge_gap=0.05,
+                     cancel_event=None):
+    """
+    步骤甘特图数据：对每个单元，按周期切分，计算每步相对周期起点的中位起止偏移。
+    - B 模式（仅 end）：段长 = 本步完成事件 − 上一链事件（首步用周期起点），
+      甘特条 = [上一链事件偏移, 本步完成偏移]（反映真实先后/重叠）。
+    - A 模式（start+end）：甘特条 = [start 偏移, end 偏移]。
+    - standalone：独立计时，不参与链式切分（甘特条仍按其事件偏移绘制，
+      供批次/盘级动作与循环级步骤对照）。
+    返回 DataFrame：单元/步骤/开始秒/结束秒/时长秒/层级(循环|批次|盘)。
+    """
+    import statistics
+    rows_by_unit = {}
+    for unit in units:
+        module = unit.get('module') or {}
+        if module.get('from_path'):
+            prefix = module['from_path'].rstrip('/') + '/'
+            u_rows = [r for r in rows if str(r.get('FileName', '')).startswith(prefix)]
+        elif module.get('pattern'):
+            pat = re.compile(module['pattern'])
+            u_rows = [r for r in rows if pat.search(str(r.get('Content', '')))]
+        else:
+            u_rows = rows
+        rows_by_unit[unit.get('name', '单元')] = (unit, u_rows)
+
+    gantt_rows = []
+    for unit_name, (unit, u_rows) in rows_by_unit.items():
+        cycle_kws = split_phrases(unit.get('cycle', ''))
+        steps = unit.get('steps') or []
+        if not cycle_kws or not steps:
+            continue
+        cycle_ts = []
+        step_events = {i: [] for i in range(len(steps))}
+        step_end_events = {i: [] for i in range(len(steps))}
+        for mono, content in _iter_monotonic(u_rows, cancel_event):
+            if _match_kws(content, cycle_kws):
+                cycle_ts.append(mono)
+            for i, st in enumerate(steps):
+                if st.get('start'):
+                    if _match_kws(content, split_phrases(st['start'])):
+                        step_events[i].append((mono, content))
+                    if st.get('end') and _match_kws(content, split_phrases(st['end'])):
+                        step_end_events[i].append((mono, content))
+                elif st.get('end') and _match_kws(content, split_phrases(st['end'])):
+                    step_events[i].append((mono, content))
+        if not cycle_ts:
+            continue
+        cycle_ts.sort()
+        # 每步收集 (开始偏移, 结束偏移)
+        offsets = {i: [] for i in range(len(steps))}
+        for ci in range(len(cycle_ts)):
+            c_start = cycle_ts[ci]
+            c_end = cycle_ts[ci + 1] if ci + 1 < len(cycle_ts) else float('inf')
+            # A 模式（含 standalone）：start → end
+            for i, st in enumerate(steps):
+                if st.get('start'):
+                    for start_ts, _sc in [e for e in step_events[i] if c_start < e[0] <= c_end]:
+                        end_evs = [e for e in step_end_events[i] if e[0] >= start_ts and e[0] <= c_end]
+                        if end_evs:
+                            offsets[i].append((start_ts - c_start, end_evs[0][0] - c_start))
+            # 链式切分（非 standalone）
+            chain = []
+            for i, st in enumerate(steps):
+                if st.get('standalone'):
+                    continue
+                if st.get('start'):
+                    for t, cc in step_end_events[i]:
+                        if c_start < t <= c_end:
+                            chain.append((t, i))
+                else:
+                    for t, cc in step_events[i]:
+                        if c_start < t <= c_end:
+                            chain.append((t, i))
+            chain.sort()
+            prev = c_start
+            prev_i = None
+            for t, i in chain:
+                if steps[i].get('start'):
+                    prev = t
+                    prev_i = i
+                    continue
+                if prev_i == i and (t - prev) < merge_gap:
+                    prev = t
+                    continue
+                offsets[i].append((prev - c_start, t - c_start))
+                prev = t
+                prev_i = i
+        for i, st in enumerate(steps):
+            recs = offsets[i]
+            if max_step_seconds is not None:
+                recs = [(a, b) for a, b in recs if (b - a) <= max_step_seconds]
+            if not recs:
+                continue
+            start_med = statistics.median(a for a, _b in recs)
+            end_med = statistics.median(b for _a, b in recs)
+            if end_med <= start_med:
+                continue
+            layer = '批次' if st.get('standalone') else '循环'
+            gantt_rows.append({
+                '单元': unit_name,
+                '步骤': st.get('name', '步骤%d' % (i + 1)),
+                '开始秒': round(start_med, 3),
+                '结束秒': round(end_med, 3),
+                '时长秒': round(end_med - start_med, 3),
+                '层级': layer,
+            })
+    df = pd.DataFrame(gantt_rows)
+    if not df.empty:
+        df = df.sort_values(['单元', '开始秒'], kind='stable').reset_index(drop=True)
+    return df
+
+
+def build_gantt_rows_sa(rows, max_step_seconds=None, cancel_event=None):
+    """
+    SA 甘特图数据：四工位并行轨道（各自行周期 0→中位）+ 左右点胶头内部动作
+    （视觉对位→探针对位→点胶轮廓，相对该头行周期起点的中位偏移）。
+    返回与 build_gantt_rows 相同的列结构。
+    """
+    import statistics
+    gantt_rows = []
+    stations = [
+        ("点胶", "DispOneChipProfileWorkCycle"),
+        ("贴附", "AfterPickUp StopCondition"),
+        ("热压", "Heater 0 :Heating Complete"),
+        ("检测", "UDP Module - Good"),
+    ]
+    ref_n = 0
+    tlists = {}
+    for name, pattern in stations:
+        tlist = []
+        for row in rows:
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            content = str(row.get('Content', ''))
+            if pattern not in content:
+                continue
+            t = parse_ts(content)
+            if t is not None:
+                tlist.append((t, content))
+        tlist.sort(key=lambda x: x[0])
+        tlists[name] = tlist
+    ref_n = len(tlists["热压"])
+    for name, tlist in tlists.items():
+        if not tlist:
+            continue
+        k = max(1, round(len(tlist) / ref_n)) if name == "检测" and ref_n else 1
+        if name == "贴附":
+            k = 2
+        intervals = []
+        for i in range(0, len(tlist) - k, k):
+            d = (tlist[i + k][0] - tlist[i][0]).total_seconds()
+            if 0 < d < 3600:
+                intervals.append(d)
+        if max_step_seconds is not None:
+            intervals = [d for d in intervals if d <= max_step_seconds]
+        if not intervals:
+            continue
+        med = statistics.median(intervals)
+        gantt_rows.append({
+            '单元': name,
+            '步骤': '行周期',
+            '开始秒': 0.0,
+            '结束秒': round(med, 3),
+            '时长秒': round(med, 3),
+            '层级': '循环',
+        })
+    # 左右点胶头内部动作（视觉对位→探针对位→点胶轮廓），相对该头行周期起点的中位偏移
+    for head, seq in (("左头", "SeqCycle003_LeftDispenserPart.cs"),
+                      ("右头", "SeqCycle005_RightDispenserPart.cs")):
+        prof, align, probe = [], [], []
+        for row in rows:
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            content = str(row.get('Content', ''))
+            if seq not in content:
+                continue
+            t = parse_ts(content)
+            if t is None:
+                continue
+            if 'DispOneChipProfileWorkCycle' in content:
+                prof.append((t, content))
+            elif 'DispOneChipAlignVisionCycle' in content:
+                align.append((t, content))
+            elif 'DispOneChipProbeAlignCycle' in content:
+                probe.append((t, content))
+        prof.sort(key=lambda x: x[0])
+        align.sort(key=lambda x: x[0])
+        probe.sort(key=lambda x: x[0])
+        if len(prof) < 2:
+            continue
+        # 三段偏移：视觉对位 [0, align]；探针对位 [align, probe]；点胶轮廓 [probe, 行周期]
+        segs2 = {"视觉对位": [], "探针对位": [], "点胶轮廓": []}
+        for i in range(len(prof) - 1):
+            a, b = prof[i][0], prof[i + 1][0]
+            al = [x for x in align if a < x[0] < b]
+            pr = [x for x in probe if a < x[0] < b]
+            if al:
+                segs2["视觉对位"].append((0.0, (al[0][0] - a).total_seconds()))
+            if al and pr:
+                segs2["探针对位"].append(((al[0][0] - a).total_seconds(),
+                                          (pr[0][0] - a).total_seconds()))
+            if pr:
+                segs2["点胶轮廓"].append(((pr[0][0] - a).total_seconds(),
+                                          (b - a).total_seconds()))
+        for phase, recs in segs2.items():
+            if max_step_seconds is not None:
+                recs = [(x, y) for x, y in recs if (y - x) <= max_step_seconds]
+            if not recs:
+                continue
+            start_med = statistics.median(x for x, _y in recs)
+            end_med = statistics.median(y for _x, y in recs)
+            if end_med <= start_med:
+                continue
+            gantt_rows.append({
+                '单元': head,
+                '步骤': phase,
+                '开始秒': round(start_med, 3),
+                '结束秒': round(end_med, 3),
+                '时长秒': round(end_med - start_med, 3),
+                '层级': '循环',
+            })
+    return pd.DataFrame(gantt_rows)
+
+
 def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
                      max_step_seconds=None, cancel_event=None):
     """

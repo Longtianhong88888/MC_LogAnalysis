@@ -19,6 +19,8 @@ from models.analysis import (
     analyze_steps,
     analyze_steps_sa,
     build_cycles_df,
+    build_gantt_rows,
+    build_gantt_rows_sa,
     detect_units_per_tray,
     detect_tray_stats,
     down_pareto,
@@ -100,6 +102,9 @@ class LogModel:
 
         wb = load_workbook(path)
         for ws in wb.worksheets:
+            if ws.title == "步骤甘特图":
+                LogModel._format_gantt_sheet(ws, center, border)
+                continue
             # 表头：浅蓝填充 + 加粗 + 居中
             for cell in ws[1]:
                 cell.fill = header_fill
@@ -130,6 +135,84 @@ class LogModel:
                     cell.alignment = center
                     cell.border = border
         wb.save(path)
+
+    @staticmethod
+    def _format_gantt_sheet(ws, center, border):
+        """
+        步骤甘特图：每行一个步骤，每列一个时间块（默认 0.1s，按数据自动放大分辨率），
+        用颜色填充的列数表示该步骤时长；并行步骤在同一时间区间的多行并排可见。
+        层级颜色：循环=浅蓝、批次=浅橙、盘=浅绿。
+        """
+        import math
+        header_fill = PatternFill('solid', fgColor='DDEBF7')
+        header_font = Font(bold=True)
+        layer_fill = {
+            '循环': PatternFill('solid', fgColor='DDEBF7'),   # 浅蓝
+            '批次': PatternFill('solid', fgColor='FCE4D6'),   # 浅橙
+            '盘': PatternFill('solid', fgColor='E2EFDA'),     # 浅绿
+        }
+        # 读取已写入的步骤数据（单元/步骤/开始秒/时长秒/结束秒/层级）
+        rows = list(ws.iter_rows(values_only=True))
+        if len(rows) < 2:
+            return
+        data = [r for r in rows[1:] if r[0] is not None]
+        max_end = max((float(r[4]) for r in data if r[4] not in (None, '')), default=0.0)
+        # 时间块分辨率：默认 0.1s，目标 60~120 列，超出则放大到 0.2/0.5/1/2/5/10...
+        col_sec = 0.1
+        if max_end > 0 and max_end / col_sec > 120:
+            base = max_end / 100.0
+            for step in (0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120):
+                if base <= step:
+                    col_sec = step
+                    break
+            else:
+                col_sec = 120
+        n_cols = int(math.ceil(max_end / col_sec)) if max_end > 0 else 0
+        # 表头样式
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center
+        # 时间块刻度表头（F 列起）
+        for c in range(n_cols):
+            t = (c + 1) * col_sec
+            label = int(t) if col_sec >= 1 or abs(t - round(t)) < 1e-9 else round(t, 1)
+            cell = ws.cell(row=1, column=6 + c, value=label)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center
+        # 数据行块填充
+        for i, r in enumerate(data, start=2):
+            start_s = float(r[2] or 0.0)
+            end_s = float(r[4] or r[2] or 0.0)
+            layer = str(r[5] or '循环')
+            fill = layer_fill.get(layer, layer_fill['循环'])
+            c0 = int(round(start_s / col_sec))
+            c1 = max(int(round(end_s / col_sec)), c0 + 1)  # 至少 1 列，保证可见
+            for c in range(c0, c1):
+                if c >= n_cols:
+                    break
+                cell = ws.cell(row=i, column=6 + c)
+                cell.fill = fill
+                cell.border = border
+            # 左侧数据单元格样式
+            for j in range(min(6, len(r))):
+                cell = ws.cell(row=i, column=j + 1, value=r[j])
+                cell.alignment = center
+                cell.border = border
+        # 列宽：数据列自适应，时间块列固定小宽
+        for j in range(1, 7):
+            letter = get_column_letter(j)
+            max_len = 0
+            for rr in range(1, len(data) + 2):
+                v = ws.cell(row=rr, column=j).value
+                if v is None:
+                    continue
+                max_len = max(max_len, sum(2 if ord(ch) > 127 else 1 for ch in str(v)))
+            ws.column_dimensions[letter].width = min(max(max_len + 2, 8), 24)
+        for c in range(1, n_cols + 1):
+            ws.column_dimensions[get_column_letter(6 + c)].width = 2.5
+        ws.freeze_panes = "F2"
 
     # ---------- 功能一：文档合并与内容拆分 ----------
     def process(self, source_dir, output_dir, keywords=None, separator=None,
@@ -441,6 +524,7 @@ class LogModel:
             progress_callback(40)
 
         steps_df = None
+        gantt_df = None
         if step_units or step_mode == 'sa':
             cutoff = step_max_seconds if step_max_seconds is not None else planned_threshold
             if step_mode == 'sa':
@@ -453,6 +537,12 @@ class LogModel:
                     rows, step_units, step_coefficient,
                     max_step_seconds=cutoff, cancel_event=cancel_event,
                 )
+        if step_mode == 'sa':
+            gantt_df = build_gantt_rows_sa(
+                rows, max_step_seconds=cutoff, cancel_event=cancel_event)
+        elif step_units:
+            gantt_df = build_gantt_rows(
+                rows, step_units, max_step_seconds=cutoff, cancel_event=cancel_event)
 
         if bottleneck_machines:
             # CAW 双机台：上料机/焊接机 各自单颗 CT，取 CT 长者计算 UPH
@@ -470,6 +560,8 @@ class LogModel:
                 sheets['CycleDetail'] = cycles_df
             if steps_df is not None and not steps_df.empty:
                 sheets['步骤分析'] = steps_df
+            if gantt_df is not None and not gantt_df.empty:
+                sheets['步骤甘特图'] = gantt_df
             if not em.empty:
                 sheets['EMProduction'] = em
             if progress_callback:
@@ -577,6 +669,8 @@ class LogModel:
                 sheets['EMProduction'] = em_all
             if steps_df is not None and not steps_df.empty:
                 sheets['步骤分析'] = steps_df
+            if gantt_df is not None and not gantt_df.empty:
+                sheets['步骤甘特图'] = gantt_df
             out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
             if progress_callback:
@@ -617,6 +711,8 @@ class LogModel:
                 sheets['EMProduction'] = em
             if steps_df is not None and not steps_df.empty:
                 sheets['步骤分析'] = steps_df
+            if gantt_df is not None and not gantt_df.empty:
+                sheets['步骤甘特图'] = gantt_df
             out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
             if progress_callback:
@@ -678,6 +774,8 @@ class LogModel:
             sheets['EMProduction'] = em
         if steps_df is not None and not steps_df.empty:
             sheets['步骤分析'] = steps_df
+        if gantt_df is not None and not gantt_df.empty:
+            sheets['步骤甘特图'] = gantt_df
         out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
         self._write_sheets(out_path, sheets, cancel_event=cancel_event)
         if progress_callback:
