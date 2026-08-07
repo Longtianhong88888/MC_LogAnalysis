@@ -411,8 +411,25 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
         to_remove.append("UPH 分析")
     else:
         uph_summary = _read_sheet(os.path.join(output_dir, "UPH_Analysis.xlsx"), "Summary")
-        bottleneck_mode = not uph_summary.empty and "工位" in uph_summary.columns
-        if bottleneck_mode:
+        machine_mode = not ame.empty and "瓶颈机台" in ame.columns
+        if machine_mode:
+            # CAW 双机台：瓶颈机台 + 单颗CT + 整机 UPH，各机台 CT 用图展示
+            b_name = str(ame.iloc[0].get("瓶颈机台") or "")
+            b_ct = str(ame.iloc[0].get("瓶颈CT(秒)") or "")
+            uph = str(ame.iloc[0].get("UPH(个/小时)") or "")
+            subtitle = f"瓶颈机台：{b_name}（单颗CT {b_ct}s）→ UPH ≈ {uph}/h"
+            slide = _section_slide(prs, "UPH 分析")
+            if slide is None:
+                slide = _add_slide(prs, "UPH 分析", subtitle)
+            else:
+                _set_subtitle(slide, subtitle)
+            machine_table = uph_summary.copy()
+            if "单颗CT(秒)" in machine_table.columns:
+                machine_table["单颗CT(秒)"] = machine_table["单颗CT(秒)"].fillna("")
+            _remove_table(slide)
+            _replace_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "各机台单颗CT（秒）",
+                           uph_summary["机台"], uph_summary["单颗CT(秒)"])
+        elif not uph_summary.empty and "工位" in uph_summary.columns:
             # 多工位机：PPT 只放最终结果——瓶颈工位与 UPH，各工位周期用图展示
             b_name = str(ame.iloc[0].get("瓶颈工位") or "")
             b_time = str(ame.iloc[0].get("瓶颈周期(秒)") or "")
