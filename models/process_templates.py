@@ -72,7 +72,7 @@ PROCESS_TEMPLATES = {
                  "unit_pattern": "取料[12]"},
                 {"name": "焊接机", "module": {"file": "记录PLC1"},
                  "trigger": "去交换位", "units_per_cycle": 2,
-                 "parallel_units": 4,
+                 "parallel_units": 4,  # 左右2侧 × 每侧2滑台 = 4 条并行链；每滑台左右2工位各1颗=2颗/周期
                  "unit_pattern": "滑台([1-4](?:左|右))"},
             ],
             "step_analysis": {
