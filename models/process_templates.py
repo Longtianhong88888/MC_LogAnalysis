@@ -47,12 +47,21 @@ PROCESS_TEMPLATES = {
                     "name": "整机",
                     "cycle": "MarkEnd1",
                     "steps": [
-                        {"name": "读码GetSN", "start": "GetSN_Start", "end": "GetSN_End",
-                         "timeout_seconds": 0.5},
-                        {"name": "CCD取像解析", "end": "Parsing CCD data success"},
-                        {"name": "CCD定位", "end": "Ccd Locate Data Check success",
+                        # 单颗循环（MarkEnd1→MarkEnd1）：打标前间隔 + 打标，段和≈CT。
+                        # 打标前间隔=上一颗打标完成到下一颗开始（B 模式顺序切分）。
+                        {"name": "打标前间隔", "end": "MarkStart1"},
+                        # 打标为 A 模式（事件对）：MarkStart1 → MarkEnd1。
+                        {"name": "激光打标", "start": "MarkStart1", "end": "MarkEnd1",
+                         "timeout_seconds": 1.0},
+                        # 以下为 Tray 级动作（每盘约 6 颗 1 次），standalone 独立计时，
+                        # 不参与单颗循环链式切分（避免此前 CCD 被算成 1.8s 伪段）。
+                        {"name": "读码GetSN(每盘)", "start": "GetSN_Start", "end": "GetSN_End",
+                         "standalone": True, "timeout_seconds": 0.5},
+                        {"name": "CCD取像解析(每盘)", "start": "Start parsing CCD data",
+                         "end": "Parsing CCD data success", "standalone": True},
+                        {"name": "CCD定位(每盘)", "start": "Start parsing CCD data",
+                         "end": "Ccd Locate Data Check success", "standalone": True,
                          "timeout_seconds": 0.05},
-                        {"name": "激光打标", "end": "MarkEnd1", "timeout_seconds": 1.0},
                     ],
                 }],
             },

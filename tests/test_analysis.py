@@ -158,6 +158,48 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(row0["中位时长"], "0:00:07.500")
         self.assertEqual(row0["异常影响时长"], "0:00:04.500")  # 12 − 7.5
 
+    def test_analyze_steps_standalone_keeps_chain_partition(self):
+        """standalone 步骤独立计时但不打断链式切分：单颗循环段和仍等于周期长。"""
+        def mk(rows, ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "LM/l.txt",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+
+        rows = []
+        # 周期 = MarkEnd1 间隔 1.4s：打标 1.3s + 间隔 0.1s；读码每 2 个周期插一次（standalone）
+        for i in range(6):
+            base = i * 1.4
+            if i % 2 == 0:
+                mk(rows, base + 0.05, "GetSN_Start")
+                mk(rows, base + 0.35, "GetSN_End")
+            mk(rows, base + 0.4, "MarkStart1")
+            mk(rows, base + 1.7, "MarkEnd1")
+
+        units = [{
+            "name": "整机", "cycle": "MarkEnd1",
+            "steps": [
+                {"name": "打标前间隔", "end": "MarkStart1"},
+                {"name": "打标", "start": "MarkStart1", "end": "MarkEnd1"},
+                {"name": "读码(standalone)", "start": "GetSN_Start", "end": "GetSN_End",
+                 "standalone": True},
+            ],
+        }]
+        df = analyze_steps(rows, units, coefficient=1.5)
+        gap = df[df["步骤"] == "打标前间隔"].iloc[0]
+        mark = df[df["步骤"] == "打标"].iloc[0]
+        read = df[df["步骤"] == "读码(standalone)"].iloc[0]
+        # standalone 不参与链式切分：打标前间隔始终=0.1s（不被 GetSN_End 锚点打断）
+        self.assertEqual(gap["中位时长"], "0:00:00.100")
+        self.assertEqual(mark["中位时长"], "0:00:01.300")
+        # 单颗循环段和 = 周期长 1.4s
+        def to_sec(s):
+            hh, mm, ss = s.split(":")
+            return int(hh) * 3600 + int(mm) * 60 + float(ss)
+        self.assertAlmostEqual(to_sec(gap["中位时长"]) + to_sec(mark["中位时长"]), 1.4, delta=0.01)
+        self.assertEqual(read["中位时长"], "0:00:00.300")
+
     def test_analyze_steps_sa_stations(self):
         def mk(rows, ts, tag):
             h = int(ts // 3600); m = int(ts % 3600 // 60)

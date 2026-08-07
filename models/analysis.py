@@ -369,6 +369,8 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
     - units：每个单元配置 {name, module?, cycle, steps:[{name, start?, end?, timeout_seconds?}]}
       * start+end：步骤时长 = End − Start（事件对模式）
       * 仅 end：步骤时长 = 本步完成 − 上一步完成（顺序切分模式，首步用循环起点）
+      * standalone: true：事件对模式下独立计时，但该步骤的完成事件不参与链式切分
+        （用于每盘一次的 Tray 级动作，如 LM 读码/CCD，避免打乱单颗循环的段边界）
       * module：可选 {"from_path": 文件夹} 或 {"pattern": 正则}，过滤单元行
     - 每步统计时长分布，以中位数为基准；异常 = 时长 > 中位数×coefficient
       或（配置了 timeout_seconds 时）时长 > 中位数 + timeout_seconds。
@@ -439,6 +441,8 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
             # 段长 = 本事件 − 上一事件（并行工位/多吸嘴事件可能交叉，按时间切分避免负时长）
             chain = []
             for i, st in enumerate(steps):
+                if st.get('standalone'):
+                    continue
                 if st.get('start'):
                     for t, cc in step_end_events[i]:
                         if c_start < t <= c_end:
