@@ -466,7 +466,7 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
         if pareto.empty:
             to_remove.append("停机 Pareto")
         else:
-            top = pareto.head(10)
+            top = pareto.head(7)  # 只放前 7 项，避免超过 PPT 页面
             if '原因名称' in top.columns and top['原因名称'].notna().any():
                 # 有原因清单：以中文原因名称展示
                 labels = top['原因名称'].fillna('')
