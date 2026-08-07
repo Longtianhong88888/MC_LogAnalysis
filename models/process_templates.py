@@ -66,8 +66,9 @@ PROCESS_TEMPLATES = {
         "file_filters": ["记录PLC", "RAYPRUS", "Debug", "设备状态"],
         "UPH分析": {
             "bottleneck_machines": [
+                # 上料机：每次给 1 个滑台换料 = 2 颗（与焊接机每滑台周期需求对齐，不是 4 颗）
                 {"name": "上料机", "module": {"file": "记录PLC2"},
-                 "trigger": "放熟料完成", "units_per_cycle": 4,
+                 "trigger": "放熟料完成", "units_per_cycle": 2,
                  "parallel_units": 2,
                  "unit_pattern": "取料[12]"},
                 {"name": "焊接机", "module": {"file": "记录PLC1"},
