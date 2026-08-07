@@ -13,6 +13,7 @@ except ImportError:
     _HAS_XLSXWRITER = False
 
 from models.analysis import (
+    analyze_bottleneck_machines,
     analyze_status,
     analyze_status_derived,
     analyze_steps,
@@ -298,7 +299,7 @@ class LogModel:
                     normal_threshold=10.0, planned_threshold=900.0,
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
                     pure_uph_factor=1.0, bottleneck_stations=None, bottleneck_units_per_row=None,
-                    tray_change=None, parts=None, module_from_path=False,
+                    bottleneck_machines=None, tray_change=None, parts=None, module_from_path=False,
                     step_units=None, step_coefficient=1.5, step_max_seconds=None, step_mode=None,
                     rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
@@ -307,6 +308,26 @@ class LogModel:
             source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(40)
+
+        if bottleneck_machines:
+            # CAW 双机台：上料机/焊接机 各自单颗 CT，取 CT 长者计算 UPH
+            machine_df, bn = analyze_bottleneck_machines(
+                rows, bottleneck_machines, cancel_event=cancel_event,
+            )
+            ame = pd.DataFrame([{
+                '瓶颈机台': bn.get('瓶颈机台', ''),
+                '瓶颈CT(秒)': bn.get('瓶颈CT(秒)', ''),
+                'UPH(个/小时)': bn.get('UPH(个/小时)', ''),
+            }])
+            sheets = {'Summary': machine_df, 'AMESummary': ame}
+            if progress_callback:
+                progress_callback(70)
+            out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
+            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+            if progress_callback:
+                progress_callback(100)
+            return out_path
+
         steps_df = None
         if step_units or step_mode == 'sa':
             cutoff = step_max_seconds if step_max_seconds is not None else planned_threshold

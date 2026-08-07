@@ -65,10 +65,16 @@ PROCESS_TEMPLATES = {
         "description": "CAW 组装机：PLC2 步数记录算周期，RAYPRUS 交互记录取状态与 EM 产量",
         "file_filters": ["记录PLC", "RAYPRUS", "Debug", "设备状态"],
         "UPH分析": {
-            "trigger_keywords": "放熟料完成,放生料完成",
-            "units_per_cycle": 1,
-            "normal_threshold": 10.0,
-            "planned_threshold": 900.0,
+            "bottleneck_machines": [
+                {"name": "上料机", "module": {"file": "记录PLC2"},
+                 "trigger": "放熟料完成", "units_per_cycle": 4,
+                 "parallel_units": 2,
+                 "unit_pattern": "取料[12]"},
+                {"name": "焊接机", "module": {"file": "记录PLC1"},
+                 "trigger": "去交换位", "units_per_cycle": 2,
+                 "parallel_units": 4,
+                 "unit_pattern": "滑台([1-4](?:左|右))"},
+            ],
             "step_analysis": {
                 "coefficient": 1.5,
                 "units": [

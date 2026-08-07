@@ -219,6 +219,8 @@ class LogController:
         if feature == "UPH分析":
             if feature_tpl.get("bottleneck_stations"):
                 settings["bottleneck_stations"] = feature_tpl["bottleneck_stations"]
+            if feature_tpl.get("bottleneck_machines"):
+                settings["bottleneck_machines"] = feature_tpl["bottleneck_machines"]
             if feature_tpl.get("bottleneck_units_per_row") is not None:
                 settings["bottleneck_units_per_row"] = int(feature_tpl["bottleneck_units_per_row"])
             if feature_tpl.get("tray_change"):

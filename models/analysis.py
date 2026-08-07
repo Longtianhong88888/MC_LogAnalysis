@@ -575,6 +575,71 @@ def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
     return pd.DataFrame(all_rows)
 
 
+def analyze_bottleneck_machines(rows, machines, cancel_event=None):
+    """
+    CAW 双机台 UPH：上料机/焊接机各自计算单颗 CT（周期中位 ÷ 每周期颗数），
+    取 CT 较长的机台为瓶颈，UPH = 3600 / 瓶颈单颗CT。
+    machines: [{name, module:{from_path|file}, trigger, units_per_cycle, parallel_units?, unit_pattern?}]
+    unit_pattern：可选，识别机台内的并行子单元（如上料机取料轴、焊接机工位），
+    分别收集各子单元的周期间隔再合并，避免并行单元同时完成事件把间隔算成突发。
+    parallel_units：机台并行单元数（如上料机 2 取料轴、焊接机 2 焊接头），
+    单颗CT = 周期中位 ÷ (每周期颗数 × 并行单元数)。
+    """
+    import statistics
+    results = []
+    for m in machines:
+        module = m.get('module') or {}
+        if module.get('from_path'):
+            prefix = module['from_path'].rstrip('/') + '/'
+            u_rows = [r for r in rows if str(r.get('FileName', '')).startswith(prefix)]
+        elif module.get('file'):
+            kw = module['file']
+            u_rows = [r for r in rows if kw in str(r.get('FileName', ''))]
+        else:
+            u_rows = rows
+        kws = split_phrases(m.get('trigger', ''))
+        unit_pat = re.compile(m.get('unit_pattern', '')) if m.get('unit_pattern') else None
+        if unit_pat:
+            by_unit = {}
+            for mono, content in _iter_monotonic(u_rows, cancel_event):
+                if not _match_kws(content, kws):
+                    continue
+                um = unit_pat.search(content)
+                key = um.group(1) if um and um.groups() else (um.group(0) if um else '')
+                by_unit.setdefault(key, []).append(mono)
+            gaps = []
+            for ts in by_unit.values():
+                ts.sort()
+                gaps.extend(b - a for a, b in zip(ts, ts[1:]) if 0 < b - a < 3600)
+        else:
+            ts = [mono for mono, c in _iter_monotonic(u_rows, cancel_event) if _match_kws(c, kws)]
+            ts.sort()
+            gaps = [b - a for a, b in zip(ts, ts[1:]) if 0 < b - a < 3600]
+        med = statistics.median(gaps) if gaps else None
+        units = float(m.get('units_per_cycle') or 1)
+        parallel = float(m.get('parallel_units') or 1)
+        ct = round(med / (units * parallel), 4) if med else None
+        results.append({
+            '机台': m.get('name', ''),
+            '完成次数': len(by_unit) if unit_pat else len(ts),
+            '周期中位(秒)': round(med, 3) if med else '',
+            '每周期颗数': int(units),
+            '并行单元数': int(parallel),
+            '单颗CT(秒)': ct if ct is not None else '',
+        })
+    df = pd.DataFrame(results)
+    cts = [r['单颗CT(秒)'] for r in results if r['单颗CT(秒)']]
+    if not cts:
+        return df, {'瓶颈机台': '', '瓶颈CT(秒)': '', 'UPH(个/小时)': ''}
+    bottleneck_ct = max(cts)
+    b_name = next(r['机台'] for r in results if r['单颗CT(秒)'] == bottleneck_ct)
+    return df, {
+        '瓶颈机台': b_name,
+        '瓶颈CT(秒)': round(bottleneck_ct, 3),
+        'UPH(个/小时)': round(3600.0 / bottleneck_ct, 2),
+    }
+
+
 def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0):
     """
     按模块汇总 UPH（CoreTech AME 定义）：

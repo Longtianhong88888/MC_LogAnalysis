@@ -7,6 +7,7 @@ import pandas as pd
 from models.analysis import (
     analyze_status,
     analyze_status_derived,
+    analyze_bottleneck_machines,
     analyze_steps,
     analyze_steps_sa,
     build_cycles_df,
@@ -190,6 +191,38 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(dp["异常次数"], 0)
         jc = df[df["步骤"] == "检测"].iloc[0]
         self.assertEqual(jc["循环数"], 3)
+
+    def test_analyze_bottleneck_machines(self):
+        def mk(rows, ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "CAW/记录PLC2当前工位.log",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+
+        rows = []
+        # 上料机取料1/取料2：每 10s 完成一循环（4颗/循环）
+        for t in range(0, 100, 10):
+            mk(rows, t, "取料1 放熟料完成")
+            mk(rows, t, "取料2 放熟料完成")
+        # 焊接机滑台1左/右：每 20s 一循环（2颗/循环）
+        for t in range(0, 100, 20):
+            mk(rows, t, "滑台1左 去交换位")
+            mk(rows, t, "滑台1右 去交换位")
+
+        machines = [
+            {"name": "上料机", "module": {"file": "记录PLC2"},
+             "trigger": "放熟料完成", "units_per_cycle": 4,
+             "unit_pattern": "取料[12]"},
+            {"name": "焊接机", "module": {"file": "记录PLC2"},
+             "trigger": "去交换位", "units_per_cycle": 2,
+             "unit_pattern": "滑台([1-9](?:左|右))"},
+        ]
+        df, bn = analyze_bottleneck_machines(rows, machines)
+        self.assertEqual(df.set_index("机台").loc["上料机", "单颗CT(秒)"], 2.5)    # 10/4
+        self.assertEqual(df.set_index("机台").loc["焊接机", "单颗CT(秒)"], 10.0)   # 20/2
+        self.assertEqual(bn["瓶颈机台"], "焊接机")
+        self.assertEqual(bn["UPH(个/小时)"], 360.0)  # 3600/10
 
     def test_iter_monotonic_time_only_wrap(self):
         from models.analysis import _iter_monotonic
@@ -566,7 +599,10 @@ class AnalysisTest(unittest.TestCase):
             PROCESS_TEMPLATES["LM 激光打标"]["UPH分析"]["trigger_keywords"], "MarkEnd1"
         )
         caw = PROCESS_TEMPLATES["CAW 组装"]
-        self.assertEqual(caw["UPH分析"]["trigger_keywords"], "放熟料完成,放生料完成")
+        machines = caw["UPH分析"]["bottleneck_machines"]
+        self.assertEqual([m["name"] for m in machines], ["上料机", "焊接机"])
+        self.assertEqual(machines[1]["units_per_cycle"], 2)   # 焊接机每周期 2 颗
+        self.assertEqual(machines[1]["parallel_units"], 4)    # 左右 2 侧 × 2 焊接头
         self.assertEqual(caw["file_filters"], ["记录PLC", "RAYPRUS", "Debug", "设备状态"])
         self.assertIn("FR 机台", PROCESS_TEMPLATES)
         fr = PROCESS_TEMPLATES["FR 机台"]
