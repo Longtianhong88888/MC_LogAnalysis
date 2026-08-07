@@ -225,6 +225,17 @@ class LogController:
             # 剔除 "NG"：机台产品码/序列号常含 NG（如 RDA620700NG55423C），会误标正常行
             kws = [k for k in re.split(r'[,，、;；\s]+', base + "," + down_markers) if k and k != 'NG']
             settings["abnormal_keywords"] = ",".join(kws)
+            # UPH 步骤超时异常行标红：复用模板的步骤分析配置
+            uph = template.get("UPH分析") or {}
+            sa = uph.get("step_analysis") or {}
+            if sa.get("units"):
+                settings["step_units"] = sa["units"]
+            if sa.get("mode"):
+                settings["step_mode"] = sa["mode"]
+            if sa.get("coefficient") is not None:
+                settings["step_coefficient"] = float(sa["coefficient"])
+            if sa.get("max_step_seconds") is not None:
+                settings["step_max_seconds"] = float(sa["max_step_seconds"])
         if feature == "UPH分析":
             if feature_tpl.get("bottleneck_stations"):
                 settings["bottleneck_stations"] = feature_tpl["bottleneck_stations"]

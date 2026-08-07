@@ -133,7 +133,8 @@ class LogModel:
     # ---------- 功能一：文档合并与内容拆分 ----------
     def process(self, source_dir, output_dir, keywords=None, separator=None,
                 file_filters=None, rows=None, cancel_event=None, progress_callback=None,
-                merge_groups=None, abnormal_keywords=None):
+                merge_groups=None, abnormal_keywords=None,
+                step_units=None, step_mode=None, step_coefficient=1.5, step_max_seconds=None):
         if progress_callback:
             progress_callback(5)
         all_data = rows if rows is not None else self._read_all(
@@ -143,18 +144,30 @@ class LogModel:
         if progress_callback:
             progress_callback(30)
 
+        # 步骤超时异常行：先跑一次步骤分析，取异常触发行内容用于标红
+        step_lines = set()
+        if step_units or step_mode == 'sa':
+            cutoff = step_max_seconds if step_max_seconds is not None else 900.0
+            if step_mode == 'sa':
+                sdf = analyze_steps_sa(all_data, step_coefficient,
+                                       max_step_seconds=cutoff, cancel_event=cancel_event)
+            elif step_units:
+                sdf = analyze_steps(all_data, step_units, step_coefficient,
+                                    max_step_seconds=cutoff, cancel_event=cancel_event)
+            step_lines = getattr(sdf, 'attrs', {}).get('anomaly_lines') or set()
+
         if merge_groups:
             # 按文件分组（如 PLC1/PLC2）分别导出 Excel
             return self._process_by_groups(
                 all_data, output_dir, keywords, separator, merge_groups,
-                cancel_event, progress_callback, abnormal_keywords,
+                cancel_event, progress_callback, abnormal_keywords, step_lines,
             )
 
         if len(all_data) > self.MERGE_MAX_TOTAL_ROWS:
             # 原始日志过大：放弃合并，按日志文件逐个导出 Excel
             return self._process_per_file(
                 all_data, output_dir, keywords, separator, cancel_event, progress_callback,
-                abnormal_keywords,
+                abnormal_keywords, step_lines,
             )
 
         df_all = pd.DataFrame(all_data)
@@ -165,15 +178,15 @@ class LogModel:
 
         out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
         self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-        if abnormal_keywords:
-            self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
+        self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
 
         if progress_callback:
             progress_callback(100)
         return out_path
 
     def _process_by_groups(self, all_data, output_dir, keywords, separator, merge_groups,
-                           cancel_event=None, progress_callback=None, abnormal_keywords=None):
+                           cancel_event=None, progress_callback=None, abnormal_keywords=None,
+                           step_lines=None):
         """按文件关键词分组分别导出 LogAnalysis_<组名>.xlsx，未匹配行归入“其他”。"""
         import os as _os
         _os.makedirs(output_dir, exist_ok=True)
@@ -193,8 +206,7 @@ class LogModel:
             sheets = self._build_merge_sheets(pd.DataFrame(sub), keywords, separator, cancel_event)
             out_path = _os.path.join(output_dir, 'LogAnalysis_%s.xlsx' % name)
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            if abnormal_keywords:
-                self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
+            self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
             written.append(out_path)
             matched_ids.update(id(r) for r in sub)
             if progress_callback:
@@ -204,8 +216,7 @@ class LogModel:
             sheets = self._build_merge_sheets(pd.DataFrame(others), keywords, separator, cancel_event)
             out_path = _os.path.join(output_dir, 'LogAnalysis_其他.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            if abnormal_keywords:
-                self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
+            self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
             written.append(out_path)
         if progress_callback:
             progress_callback(100)
@@ -239,6 +250,39 @@ class LogModel:
                 cell = row[content_col - 1]
                 val = cell.value
                 if val and any(kw in str(val) for kw in kws):
+                    for c in row:
+                        c.fill = red
+        wb.save(path)
+
+    def _apply_highlights(self, path, abnormal_keywords, step_lines, cancel_event=None):
+        """合并输出统一标红：报警/停机关键词行 + UPH 步骤超时触发行。"""
+        if abnormal_keywords:
+            self._highlight_abnormal_rows(path, abnormal_keywords, cancel_event)
+        if step_lines:
+            self._highlight_step_lines(path, step_lines, cancel_event)
+
+    @staticmethod
+    def _highlight_step_lines(path, lines, cancel_event=None):
+        """将内容精确命中步骤超时异常触发行的日志行整行标红。"""
+        if not lines:
+            return
+        try:
+            wb = load_workbook(path)
+        except Exception:
+            return
+        red = PatternFill('solid', fgColor='FFC7CE')
+        for ws in wb.worksheets:
+            if ws.max_row < 2:
+                continue
+            header = {c.value: idx for idx, c in enumerate(ws[1], start=1)}
+            content_col = header.get('Content') or header.get('OriginalContent')
+            if not content_col:
+                continue
+            for row in ws.iter_rows(min_row=2):
+                if cancel_event is not None and cancel_event.is_set():
+                    break
+                cell = row[content_col - 1]
+                if cell.value and cell.value in lines:
                     for c in row:
                         c.fill = red
         wb.save(path)
@@ -301,7 +345,7 @@ class LogModel:
         return sheets
 
     def _process_per_file(self, all_data, output_dir, keywords, separator, cancel_event=None,
-                          progress_callback=None, abnormal_keywords=None):
+                          progress_callback=None, abnormal_keywords=None, step_lines=None):
         """日志过大：新建子文件夹，按日志文件逐个导出 Excel（文件名 = 日志文件名去掉扩展名）。"""
         sub_dir = os.path.join(output_dir, 'LogAnalysis_Files')
         os.makedirs(sub_dir, exist_ok=True)
@@ -310,10 +354,9 @@ class LogModel:
         if not has_keywords and not has_separator:
             # 无筛选：直接流式写入，避免构建大 DataFrame（最快、内存最低）
             n = self._stream_per_file(sub_dir, all_data, cancel_event)
-            if abnormal_keywords:
-                for f in sorted(os.listdir(sub_dir)):
-                    if f.endswith('.xlsx'):
-                        self._highlight_abnormal_rows(os.path.join(sub_dir, f), abnormal_keywords, cancel_event)
+            for f in sorted(os.listdir(sub_dir)):
+                if f.endswith('.xlsx'):
+                    self._apply_highlights(os.path.join(sub_dir, f), abnormal_keywords, step_lines, cancel_event)
             if progress_callback:
                 progress_callback(100)
             return f"{sub_dir}（日志过大，已按文件分别导出 {n} 个 Excel）"
@@ -329,8 +372,7 @@ class LogModel:
             stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
             out_path = os.path.join(sub_dir, f'{stem}.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            if abnormal_keywords:
-                self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
+            self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
             if progress_callback:
                 progress_callback(30 + int(60 * (idx + 1) / n))
         if progress_callback:

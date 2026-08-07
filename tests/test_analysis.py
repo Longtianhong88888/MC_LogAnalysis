@@ -249,6 +249,43 @@ class AnalysisTest(unittest.TestCase):
         self.assertFalse(reds[0])
         self.assertFalse(reds[2])  # NG 产品码行：调用方剔除 NG 后不标红
 
+    def test_highlight_step_lines_and_anomaly_lines(self):
+        import os as _os
+        from openpyxl import load_workbook
+        # analyze_steps 应跨单元收集异常触发行（不只最后一个单元）
+        def mk(rows, ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "CAW/记录PLC2.log",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+        rows = []
+        t = 0.0
+        for r in range(4):
+            mk(rows, t, "取料1 放熟料完成")
+            mk(rows, t + 2.0, "取料2 放熟料完成")
+            t += 40.0 if r == 2 else 10.0   # 第 3→4 循环间隔 40s → 异常
+        units = [
+            {"name": "取料1", "module": {"pattern": "取料1"}, "cycle": "放熟料完成",
+             "steps": [{"name": "放料", "end": "放熟料完成"}]},
+            {"name": "取料2", "module": {"pattern": "取料2"}, "cycle": "放熟料完成",
+             "steps": [{"name": "放料", "end": "放熟料完成"}]},
+        ]
+        df = analyze_steps(rows, units, coefficient=1.5)
+        lines = df.attrs.get("anomaly_lines") or set()
+        self.assertEqual(len(lines), 2)   # 取料1/取料2 各一条异常触发行
+        # 标红：写入 Excel 后按行内容精确匹配
+        tmp = tempfile.mkdtemp(prefix="sl_")
+        path = _os.path.join(tmp, "t.xlsx")
+        LogModel._write_sheets(path, {"AllLogs": pd.DataFrame({"FileName": [r["FileName"] for r in rows],
+                                                                "Content": [r["Content"] for r in rows]})})
+        LogModel._highlight_step_lines(path, lines)
+        wb = load_workbook(path)
+        ws = wb["AllLogs"]
+        reds = sum(1 for row in ws.iter_rows(min_row=2)
+                   if row[1].fill and row[1].fill.fgColor and row[1].fill.fgColor.rgb == '00FFC7CE')
+        self.assertEqual(reds, len(lines))
+
     def test_iter_monotonic_time_only_wrap(self):
         from models.analysis import _iter_monotonic
         # 纯时间日志跨零点：00:00 之后自动累加一天，保证时间单调

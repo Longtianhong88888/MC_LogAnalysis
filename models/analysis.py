@@ -395,6 +395,7 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
         rows_by_unit[unit.get('name', '单元')] = (unit, u_rows)
 
     all_rows = []
+    anomaly_lines = set()
     for unit_name, (unit, u_rows) in rows_by_unit.items():
         cycle_kws = split_phrases(unit.get('cycle', ''))
         if not cycle_kws:
@@ -412,11 +413,11 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
             for i, st in enumerate(steps):
                 if st.get('start'):
                     if _match_kws(content, split_phrases(st['start'])):
-                        step_events[i].append(mono)
+                        step_events[i].append((mono, content))
                     if st.get('end') and _match_kws(content, split_phrases(st['end'])):
-                        step_end_events[i].append(mono)
+                        step_end_events[i].append((mono, content))
                 elif st.get('end') and _match_kws(content, split_phrases(st['end'])):
-                    step_events[i].append(mono)
+                    step_events[i].append((mono, content))
         if not cycle_ts:
             continue
         cycle_ts.sort()
@@ -428,28 +429,28 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
             # A 模式（事件对）：时长 = End − Start，互不依赖
             for i, st in enumerate(steps):
                 if st.get('start'):
-                    for start_ts in [t for t in step_events[i] if c_start < t <= c_end]:
-                        end_evs = [t for t in step_end_events[i] if t >= start_ts and t <= c_end]
+                    for start_ts, _sc in [e for e in step_events[i] if c_start < e[0] <= c_end]:
+                        end_evs = [e for e in step_end_events[i] if e[0] >= start_ts and e[0] <= c_end]
                         if end_evs:
-                            dur = end_evs[0] - start_ts
+                            dur = end_evs[0][0] - start_ts
                             if dur >= 0:
-                                per_step[i].append(dur)
+                                per_step[i].append((dur, end_evs[0][1]))
             # 链上事件：A 模式的 end 事件 + B 模式的完成事件，按时间排序
             # 段长 = 本事件 − 上一事件（并行工位/多吸嘴事件可能交叉，按时间切分避免负时长）
             chain = []
             for i, st in enumerate(steps):
                 if st.get('start'):
-                    for t in step_end_events[i]:
+                    for t, cc in step_end_events[i]:
                         if c_start < t <= c_end:
-                            chain.append((t, i))
+                            chain.append((t, i, cc))
                 else:
-                    for t in step_events[i]:
+                    for t, cc in step_events[i]:
                         if c_start < t <= c_end:
-                            chain.append((t, i))
+                            chain.append((t, i, cc))
             chain.sort()
             prev_ts = c_start
             prev_i = None
-            for t, i in chain:
+            for t, i, cc in chain:
                 if steps[i].get('start'):
                     # A 模式步骤：end−start 已单独计算，这里仅作后续段的锚点
                     prev_ts = t
@@ -461,15 +462,16 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
                     continue
                 dur = t - prev_ts
                 if dur >= 0:
-                    per_step[i].append(dur)
+                    per_step[i].append((dur, cc))
                 prev_ts = t
                 prev_i = i
         # 统计
         total_sec = (cycle_ts[-1] - cycle_ts[0]) if len(cycle_ts) > 1 else 0.0
         for i, st in enumerate(steps):
-            durs = per_step[i]
+            durs = [d for d, _c in per_step[i]]
             if max_step_seconds is not None:
-                durs = [d for d in durs if d <= max_step_seconds]
+                per_step[i] = [(d, c) for d, c in per_step[i] if d <= max_step_seconds]
+                durs = [d for d, _c in per_step[i]]
             if not durs:
                 continue
             median = statistics.median(durs)
@@ -481,6 +483,9 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
                 anomalies = [d for d in durs if d > median + float(timeout)]
             else:
                 anomalies = [d for d in durs if d > median * coefficient]
+            if anomalies:
+                anom_set = set(anomalies)
+                anomaly_lines.update(c for d, c in per_step[i] if d in anom_set)
             excess = sum(d - median for d in anomalies)
             total_dur = sum(durs)
             n = len(durs)
@@ -498,7 +503,9 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
                 '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
                 '异常频率(次/小时)': round(freq, 2),
             })
-    return pd.DataFrame(all_rows)
+    df = pd.DataFrame(all_rows)
+    df.attrs['anomaly_lines'] = anomaly_lines
+    return df
 
 
 def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
@@ -518,6 +525,7 @@ def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
         ("检测", "UDP Module - Good", 'auto'),
     ]
     tlists = {}
+    anomaly_lines = set()
     for name, pattern, k in stations:
         tlist = []
         for row in rows:
@@ -528,8 +536,8 @@ def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
                 continue
             t = parse_ts(content)
             if t is not None:
-                tlist.append(t)
-        tlist.sort()
+                tlist.append((t, content))
+        tlist.sort(key=lambda x: x[0])
         tlists[name] = (tlist, k)
 
     ref_n = len(tlists["热压"][0])
@@ -541,38 +549,41 @@ def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
             k = max(1, round(len(tlist) / ref_n)) if ref_n else 1
         # 不重叠分块：每 k 个完成事件为一排，间隔 = 第 i+k 个事件 − 第 i 个事件
         # （滑动窗口会把一排算成多个重叠样本，样本数与真实排数不符）
-        intervals = [
-            (tlist[i + k] - tlist[i]).total_seconds()
-            for i in range(0, len(tlist) - k, k)
-            if 0 < (tlist[i + k] - tlist[i]).total_seconds() < 3600
-        ]
+        intervals = []
+        for i in range(0, len(tlist) - k, k):
+            d = (tlist[i + k][0] - tlist[i][0]).total_seconds()
+            if 0 < d < 3600:
+                intervals.append((d, tlist[i + k][1]))  # 异常行 = 该排完成事件行
         if max_step_seconds is not None:
-            intervals = [d for d in intervals if d <= max_step_seconds]
+            intervals = [x for x in intervals if x[0] <= max_step_seconds]
         if not intervals:
             continue
-        median = statistics.median(intervals)
+        median = statistics.median(d for d, _c in intervals)
         if median < min_step_median:
             continue
-        anomalies = [d for d in intervals if d > median * coefficient]
-        excess = sum(d - median for d in anomalies)
-        total_dur = sum(intervals)
+        anomalies = [(d, c) for d, c in intervals if d > median * coefficient]
+        anomaly_lines.update(c for _d, c in anomalies)
+        excess = sum(d - median for d, _c in anomalies)
+        total_dur = sum(d for d, _c in intervals)
         n = len(intervals)
-        total_sec = (tlist[-1] - tlist[0]).total_seconds()
+        total_sec = (tlist[-1][0] - tlist[0][0]).total_seconds()
         freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
         all_rows.append({
             '单元': '整机',
             '步骤': name,
             '循环数': n,
             '中位时长': fmt_hms(median),
-            '平均时长': fmt_hms(statistics.mean(intervals)),
-            'P90时长': fmt_hms(sorted(intervals)[int(n * 0.9) - 1] if n else ''),
-            '最长时长': fmt_hms(max(intervals)),
+            '平均时长': fmt_hms(statistics.mean(d for d, _c in intervals)),
+            'P90时长': fmt_hms(sorted(d for d, _c in intervals)[int(n * 0.9) - 1] if n else ''),
+            '最长时长': fmt_hms(max(d for d, _c in intervals)),
             '异常次数': len(anomalies),
             '异常影响时长': fmt_hms(excess),
             '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
             '异常频率(次/小时)': round(freq, 2),
         })
-    return pd.DataFrame(all_rows)
+    df = pd.DataFrame(all_rows)
+    df.attrs['anomaly_lines'] = anomaly_lines
+    return df
 
 
 def analyze_bottleneck_machines(rows, machines, cancel_event=None):
