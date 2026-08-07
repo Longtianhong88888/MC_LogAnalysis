@@ -353,6 +353,15 @@ def fmt_hms(seconds):
     return "%d:%02d:%02d" % (h, m, sec)
 
 
+def _match_kws(content, kws):
+    """按关键词列表匹配行内容（与 UPH 周期判定一致：纯英文数字关键词按词边界匹配，
+    避免 MarkEnd1 误命中 MarkEnd1_0）。"""
+    if not kws:
+        return False
+    pat = keyword_pattern(kws, allow_trailing_digit=False)
+    return bool(re.search(pat, content, re.IGNORECASE))
+
+
 def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
                   max_step_seconds=None, cancel_event=None):
     """
@@ -396,15 +405,15 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
         step_events = {i: [] for i in range(len(steps))}
         step_end_events = {i: [] for i in range(len(steps))}
         for mono, content in _iter_monotonic(u_rows, cancel_event):
-            if any(kw in content for kw in cycle_kws):
+            if _match_kws(content, cycle_kws):
                 cycle_ts.append(mono)
             for i, st in enumerate(steps):
                 if st.get('start'):
-                    if any(kw in content for kw in split_phrases(st['start'])):
+                    if _match_kws(content, split_phrases(st['start'])):
                         step_events[i].append(mono)
-                    if st.get('end') and any(kw in content for kw in split_phrases(st['end'])):
+                    if st.get('end') and _match_kws(content, split_phrases(st['end'])):
                         step_end_events[i].append(mono)
-                elif st.get('end') and any(kw in content for kw in split_phrases(st['end'])):
+                elif st.get('end') and _match_kws(content, split_phrases(st['end'])):
                     step_events[i].append(mono)
         if not cycle_ts:
             continue
@@ -414,25 +423,38 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
         for ci in range(len(cycle_ts)):
             c_start = cycle_ts[ci]
             c_end = cycle_ts[ci + 1] if ci + 1 < len(cycle_ts) else float('inf')
-            prev_ts = c_start
+            # A 模式（事件对）：时长 = End − Start，互不依赖
             for i, st in enumerate(steps):
-                evs = [t for t in step_events[i] if c_start < t <= c_end]
-                if not evs:
-                    continue
                 if st.get('start'):
-                    # 事件对：取本循环内第一个 start 与其后第一个 end
-                    start_ts = evs[0]
-                    end_evs = [t for t in step_end_events[i] if t >= start_ts and t <= c_end]
-                    end_ts = end_evs[0] if end_evs else None
-                    if end_ts is None:
-                        continue
-                    dur = end_ts - start_ts
-                    prev_ts = end_ts
+                    for start_ts in [t for t in step_events[i] if c_start < t <= c_end]:
+                        end_evs = [t for t in step_end_events[i] if t >= start_ts and t <= c_end]
+                        if end_evs:
+                            dur = end_evs[0] - start_ts
+                            if dur >= 0:
+                                per_step[i].append(dur)
+            # 链上事件：A 模式的 end 事件 + B 模式的完成事件，按时间排序
+            # 段长 = 本事件 − 上一事件（并行工位/多吸嘴事件可能交叉，按时间切分避免负时长）
+            chain = []
+            for i, st in enumerate(steps):
+                if st.get('start'):
+                    for t in step_end_events[i]:
+                        if c_start < t <= c_end:
+                            chain.append((t, i))
                 else:
-                    dur = evs[0] - prev_ts
-                    prev_ts = evs[0]
+                    for t in step_events[i]:
+                        if c_start < t <= c_end:
+                            chain.append((t, i))
+            chain.sort()
+            prev_ts = c_start
+            for t, i in chain:
+                if steps[i].get('start'):
+                    # A 模式步骤：end−start 已单独计算，这里仅作后续段的锚点
+                    prev_ts = t
+                    continue
+                dur = t - prev_ts
                 if dur >= 0:
                     per_step[i].append(dur)
+                prev_ts = t
         # 统计
         total_sec = (cycle_ts[-1] - cycle_ts[0]) if len(cycle_ts) > 1 else 0.0
         for i, st in enumerate(steps):

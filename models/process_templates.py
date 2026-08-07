@@ -69,6 +69,23 @@ PROCESS_TEMPLATES = {
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
+            "step_analysis": {
+                "coefficient": 1.5,
+                "units": [
+                    {"name": "取料1(工位4)", "module": {"pattern": "取料1"}, "cycle": "放熟料完成,放生料完成",
+                     "steps": [
+                         {"name": "取料", "end": "取熟料完成,双取生料完成"},
+                         {"name": "扫码", "end": "扫码完成"},
+                         {"name": "放料", "end": "放熟料完成,放生料完成"},
+                     ]},
+                    {"name": "取料2(工位7)", "module": {"pattern": "取料2"}, "cycle": "放熟料完成,放生料完成",
+                     "steps": [
+                         {"name": "取料", "end": "取熟料完成,双取生料完成"},
+                         {"name": "扫码", "end": "扫码完成"},
+                         {"name": "放料", "end": "放熟料完成,放生料完成"},
+                     ]},
+                ],
+            },
         },
         "EFF分析": {},
         "报警分析": {
