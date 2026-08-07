@@ -198,7 +198,16 @@ def _metrics_table(df):
     if df is None or df.empty:
         return pd.DataFrame()
     row = df.iloc[0]
-    return pd.DataFrame({"指标": row.index, "数值": row.values})
+    out = pd.DataFrame({"指标": row.index, "数值": row.values})
+    # 时间类指标（指标名含 秒/时长）：<60s 按秒、>=60s 按 h:mm:ss 展示
+    mask = out["指标"].astype(str).str.contains("秒|时长", regex=True, na=False)
+    for idx in out.index[mask]:
+        v = out.at[idx, "数值"]
+        try:
+            out.at[idx, "数值"] = fmt_duration(float(v))
+        except (TypeError, ValueError):
+            pass
+    return out
 
 
 def _report_title(process_name):
