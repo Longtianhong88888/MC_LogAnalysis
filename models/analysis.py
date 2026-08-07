@@ -332,6 +332,59 @@ def measure_tray_change(rows, unload_keywords, load_keywords, max_gap=600.0, can
     }
 
 
+def detect_units_per_tray(rows, batch_keywords, unit_keywords, tray_keywords=None,
+                          cancel_event=None):
+    """
+    按批次事件与批次内的完成事件数量自动判定「每批颗数 / 每盘颗数」。
+    适用场景：CCD 拍照定位一批多颗产品（如 LM 一次 CCD 定位 6 颗，一盘 4 批共 24 颗），
+    每批颗数 = 批次事件（CCD）之间完成事件（MarkEnd1）数量的众数；
+    每盘批数 = 换盘事件（Move to unload）之间批次事件数量的众数。
+    返回 {'units_per_batch', 'batches_per_tray', 'units_per_tray', 'batch_count', 'tray_count'}；
+    任一步骤无有效计数时对应字段为 None。
+    """
+    from collections import Counter
+    batch_kws = split_phrases(batch_keywords)
+    unit_kws = split_phrases(unit_keywords)
+    tray_kws = split_phrases(tray_keywords or '')
+    batches, units, trays = [], [], []
+    for mono, content in _iter_monotonic(rows, cancel_event):
+        if batch_kws and _match_kws(content, batch_kws):
+            batches.append(mono)
+        if unit_kws and _match_kws(content, unit_kws):
+            units.append(mono)
+        if tray_kws and _match_kws(content, tray_kws):
+            trays.append(mono)
+    batches.sort()
+    units.sort()
+    trays.sort()
+
+    def mode_of_counts(starts, ends, ev):
+        """统计 [start_i, start_{i+1}) 内 ev 数量，取非零众数。"""
+        cnts = []
+        for a, b in zip(starts, ends):
+            c = bisect.bisect_left(ev, b) - bisect.bisect_right(ev, a)
+            if c > 0:
+                cnts.append(c)
+        if not cnts:
+            return None, 0
+        return Counter(cnts).most_common(1)[0][0], len(cnts)
+
+    units_per_batch, batch_count = (mode_of_counts(batches, batches[1:], units)
+                                    if len(batches) >= 2 else (None, 0))
+    batches_per_tray, tray_count = (mode_of_counts(trays, trays[1:], batches)
+                                    if trays and batches else (None, 0))
+    units_per_tray = None
+    if units_per_batch and batches_per_tray:
+        units_per_tray = units_per_batch * batches_per_tray
+    return {
+        'units_per_batch': units_per_batch,
+        'batches_per_tray': batches_per_tray,
+        'units_per_tray': units_per_tray,
+        'batch_count': batch_count,
+        'tray_count': tray_count,
+    }
+
+
 def fmt_hms(seconds):
     """秒 → h:mm:ss(.mmm)，几百秒几千秒更直观。"""
     try:
@@ -680,11 +733,13 @@ def analyze_bottleneck_machines(rows, machines, cancel_event=None):
     }, cycles_df
 
 
-def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0):
+def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0,
+                  tray_overhead_seconds=None):
     """
     按模块汇总 UPH（CoreTech AME 定义）：
     - UPH(个/小时)：产出数 / 统计时长（实际平均）
-    - Pure UPH：3600 × 每周期产出 / 理想周期CT × pure_uph_factor（未提供时取正常周期平均；并行工位可设 0.5）
+    - Pure UPH：3600 × 每周期产出 / 有效周期 × pure_uph_factor
+      有效周期 = 理想CT（未提供时取正常周期平均）+ 每颗换盘开销（tray_overhead_seconds，换盘时间平摊到整盘产品）
     - Derated UPH M2：3600 × 每周期产出 / 平均I/O周期（剔除 <0.9×理想CT 和 >1.1×最大理论CT 的离群点）
     """
     rows = []
@@ -696,9 +751,14 @@ def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure
         total_sec = g['CycleSeconds'].sum()
         output_count = len(g) * units_per_cycle
         uph = round(output_count / (total_sec / 3600.0), 2) if total_sec > 0 else ''
-        pure = round(3600.0 * units_per_cycle / ideal_ct * pure_uph_factor, 2) if ideal_ct else (
-            round(3600.0 * units_per_cycle / avg_normal * pure_uph_factor, 2) if avg_normal else ''
-        )
+        base_cycle = ideal_ct if ideal_ct else avg_normal
+        if tray_overhead_seconds and base_cycle:
+            pure = round(3600.0 * units_per_cycle / (base_cycle + tray_overhead_seconds)
+                         * pure_uph_factor, 2)
+            eff_cycle = base_cycle + tray_overhead_seconds
+        else:
+            pure = round(3600.0 * units_per_cycle / base_cycle * pure_uph_factor, 2) if base_cycle else ''
+            eff_cycle = base_cycle if base_cycle else None
         valid = g['CycleSeconds']
         if ideal_ct:
             valid = valid[valid >= 0.9 * ideal_ct]
@@ -706,7 +766,7 @@ def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure
             valid = valid[valid <= 1.1 * max_ct]
         avg_valid = valid.mean() if len(valid) else None
         derated_m2 = round(3600.0 * units_per_cycle / avg_valid, 2) if avg_valid else ''
-        rows.append({
+        row = {
             '模块': module,
             '周期总数': len(g),
             '产出数(个)': output_count,
@@ -719,21 +779,27 @@ def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure
             'Pure UPH(个/小时)': pure,
             'Derated UPH M2(个/小时)': derated_m2,
             '涉及文件数': g['FileName'].nunique(),
-        })
+        }
+        if tray_overhead_seconds is not None:
+            row['每颗换盘开销(秒)'] = round(tray_overhead_seconds, 4)
+            row['有效周期(秒)'] = round(eff_cycle, 3) if eff_cycle else ''
+        rows.append(row)
     return pd.DataFrame(rows)
 
 
 def summarize_uph_ame(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None,
-                      em_df=None, run_seconds=None):
+                      em_df=None, run_seconds=None, tray_overhead_seconds=None):
     """CoreTech AME 整机 UPH 指标：Pure UPH（左右轴合并总产能，不乘单轴系数）、M1、M2。"""
     total_cycles = len(cycles_df)
     total_sec = cycles_df['CycleSeconds'].sum() if total_cycles else 0.0
     module_count = cycles_df['Module'].nunique() if total_cycles else 0
     normal = cycles_df.loc[cycles_df['Class'] == '正常周期', 'CycleSeconds'] if total_cycles else pd.Series(dtype=float)
     avg_normal = normal.mean() if len(normal) else None
-    pure = round(3600.0 * units_per_cycle / ideal_ct, 2) if ideal_ct else (
-        round(3600.0 * units_per_cycle / avg_normal, 2) if avg_normal else ''
-    )
+    base_cycle = ideal_ct if ideal_ct else avg_normal
+    if tray_overhead_seconds and base_cycle:
+        pure = round(3600.0 * units_per_cycle / (base_cycle + tray_overhead_seconds), 2)
+    else:
+        pure = round(3600.0 * units_per_cycle / base_cycle, 2) if base_cycle else ''
     # Derated UPH M2：整机 = 各模组 M2 之和（FR 为左轴+右轴，并行工位不按合并周期平均）
     m2_total = 0.0
     if total_cycles:

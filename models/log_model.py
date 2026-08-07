@@ -19,6 +19,7 @@ from models.analysis import (
     analyze_steps,
     analyze_steps_sa,
     build_cycles_df,
+    detect_units_per_tray,
     detect_tray_stats,
     down_pareto,
     measure_tray_change,
@@ -624,8 +625,36 @@ class LogModel:
 
         cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold,
                                  module_pattern=module_pattern, cancel_event=cancel_event)
+        # 换盘时间平摊到整盘产品（LM：整盘打标结束 下料->新盘上料，按 CCD 批次颗数×每盘批数 得每盘颗数）
+        tray_overhead = None
+        tray_cols = {}
+        if tray_change:
+            tc = measure_tray_change(
+                rows, tray_change.get('unload', ''), tray_change.get('load', ''),
+                cancel_event=cancel_event,
+            )
+            det = None
+            if tray_change.get('batch') and tray_change.get('unit'):
+                det = detect_units_per_tray(
+                    rows, tray_change['batch'], tray_change['unit'],
+                    tray_change.get('tray', ''), cancel_event=cancel_event,
+                )
+            units_per_tray = det.get('units_per_tray') if det else None
+            if tc and units_per_tray:
+                tray_overhead = tc['tray_seconds'] / float(units_per_tray)
+                tray_cols = {
+                    '每盘颗数(统计)': units_per_tray,
+                    '每批颗数(统计)': det.get('units_per_batch'),
+                    '换盘次数': tc['tray_count'],
+                    '单次换盘时间(秒)': tc['tray_seconds'],
+                    '每颗换盘开销(秒)': round(tray_overhead, 4),
+                }
         summary = summarize_uph(cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct,
-                                pure_uph_factor=pure_uph_factor)
+                                pure_uph_factor=pure_uph_factor,
+                                tray_overhead_seconds=tray_overhead)
+        if tray_cols:
+            for k, v in tray_cols.items():
+                summary[k] = v
         em = parse_em_production(rows, cancel_event=cancel_event)
         status_summary, _, _ = analyze_status(rows, cancel_event=cancel_event)
         run_seconds = None
@@ -635,7 +664,11 @@ class LogModel:
         ame_summary = summarize_uph_ame(
             cycles, units_per_cycle, ideal_ct=ideal_ct, max_ct=max_ct,
             em_df=em, run_seconds=run_seconds,
+            tray_overhead_seconds=tray_overhead,
         )
+        if tray_cols:
+            for k, v in tray_cols.items():
+                ame_summary[k] = v
         if progress_callback:
             progress_callback(70)
         sheets = {'Summary': summary, 'AMESummary': ame_summary}

@@ -41,6 +41,15 @@ PROCESS_TEMPLATES = {
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
+            # 换盘时间（整盘打标结束 下料->新盘上料）平摊到整盘产品：
+            # 每盘颗数 = CCD 批次间 MarkEnd1 数（每批6颗） × 换盘间 CCD 批次数（每盘4批）
+            "tray_change": {
+                "unload": "Move to unload",
+                "load": "收到上料完成信号",
+                "batch": "Start parsing CCD data",
+                "unit": "MarkEnd1",
+                "tray": "Move to unload",
+            },
             "step_analysis": {
                 "coefficient": 1.5,
                 "units": [{
@@ -53,13 +62,13 @@ PROCESS_TEMPLATES = {
                         # 打标为 A 模式（事件对）：MarkStart1 → MarkEnd1。
                         {"name": "激光打标", "start": "MarkStart1", "end": "MarkEnd1",
                          "timeout_seconds": 1.0},
-                        # 以下为 Tray 级动作（每盘约 6 颗 1 次），standalone 独立计时，
+                        # 以下为 CCD 批次级动作（每批约 6 颗、每盘 4 批），standalone 独立计时，
                         # 不参与单颗循环链式切分（避免此前 CCD 被算成 1.8s 伪段）。
-                        {"name": "读码GetSN(每盘)", "start": "GetSN_Start", "end": "GetSN_End",
+                        {"name": "读码GetSN(每批)", "start": "GetSN_Start", "end": "GetSN_End",
                          "standalone": True, "timeout_seconds": 0.5},
-                        {"name": "CCD取像解析(每盘)", "start": "Start parsing CCD data",
+                        {"name": "CCD取像解析(每批)", "start": "Start parsing CCD data",
                          "end": "Parsing CCD data success", "standalone": True},
-                        {"name": "CCD定位(每盘)", "start": "Start parsing CCD data",
+                        {"name": "CCD定位(每批)", "start": "Start parsing CCD data",
                          "end": "Ccd Locate Data Check success", "standalone": True,
                          "timeout_seconds": 0.05},
                     ],

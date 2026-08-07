@@ -11,6 +11,7 @@ from models.analysis import (
     analyze_steps,
     analyze_steps_sa,
     build_cycles_df,
+    detect_units_per_tray,
     detect_tray_stats,
     down_pareto,
     measure_tray_change,
@@ -91,6 +92,39 @@ class AnalysisTest(unittest.TestCase):
         self.assertIsNotNone(stats)
         self.assertEqual(stats["tray_count"], 4)
         self.assertAlmostEqual(stats["tray_seconds"], 12.0, delta=0.1)
+
+    def test_detect_units_per_tray(self):
+        # LM 式：CCD 每批定位多颗（MarkEnd1），每盘多批；批次/批数由日志自动统计
+        def mk(ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "LM/l.txt",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+
+        rows = []
+        for tray, base in enumerate([0.0, 40.0]):
+            mk(base, "Move to unload")
+            for b in range(3):
+                ccd = base + 1.0 + b * 10.0
+                mk(ccd, "Start parsing CCD data")
+                for k in range(4):
+                    mk(ccd + 0.5 + k * 1.0, "MarkEnd1")
+        stats = detect_units_per_tray(rows, "Start parsing CCD data", "MarkEnd1", "Move to unload")
+        self.assertEqual(stats["units_per_batch"], 4)   # 每批 4 颗
+        self.assertEqual(stats["batches_per_tray"], 3)  # 每盘 3 批
+        self.assertEqual(stats["units_per_tray"], 12)   # 每盘 12 颗
+
+    def test_summarize_uph_tray_overhead(self):
+        # 换盘时间平摊到整盘产品：有效周期 = 正常周期平均 + 每颗换盘开销
+        df = build_cycles_df(CYCLE_ROWS, "放生料完成,放熟料完成")
+        summary = summarize_uph(df, 1, tray_overhead_seconds=0.5)
+        row0 = summary.iloc[0]
+        self.assertEqual(row0['每颗换盘开销(秒)'], 0.5)
+        self.assertEqual(row0['有效周期(秒)'], 10.5)
+        self.assertEqual(row0['Pure UPH(个/小时)'], round(3600.0 / 10.5, 2))
+        ame = summarize_uph_ame(df, 1, tray_overhead_seconds=0.5)
+        self.assertEqual(ame.iloc[0]['Pure UPH(个/小时)'], round(3600.0 / 10.5, 2))
 
     def test_analyze_steps_anomaly_and_ignore_fast(self):
         def mk(rows, ts, tag):
