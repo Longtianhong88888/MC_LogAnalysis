@@ -385,14 +385,23 @@ def detect_units_per_tray(rows, batch_keywords, unit_keywords, tray_keywords=Non
     }
 
 
-def fmt_hms(seconds):
-    """秒 → h:mm:ss(.mmm)，几百秒几千秒更直观。"""
+def fmt_duration(seconds):
+    """
+    时间展示统一格式（Excel/PPT 通用约定）：
+    - 低于 60 秒：按秒显示（整数秒显示整数，小数保留最多 3 位并去尾零，如 0.05 / 1.3 / 45）
+    - 超过 60 秒（含 60）：按 h:mm:ss(.mmm) 显示（如 12:02:32）
+    """
     try:
         seconds = float(seconds)
     except (TypeError, ValueError):
         return ''
-    if seconds < 0:
+    if seconds < 0 or seconds != seconds:  # NaN
         return ''
+    if seconds < 60:
+        if abs(seconds - round(seconds)) < 1e-9:
+            return str(int(round(seconds)))
+        s = "%.3f" % seconds
+        return s.rstrip('0').rstrip('.')
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
     s = seconds % 60
@@ -404,6 +413,10 @@ def fmt_hms(seconds):
     if ms:
         return "%d:%02d:%02d.%03d" % (h, m, sec, ms)
     return "%d:%02d:%02d" % (h, m, sec)
+
+
+# 兼容旧名（步骤分析时长列统一走 fmt_duration）
+fmt_hms = fmt_duration
 
 
 def _match_kws(content, kws):
@@ -432,7 +445,7 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
     - 同一步骤在 merge_gap（默认 0.05 秒）内的连续事件合并为一次（多吸嘴/多穴并行
       事件间隔仅 1ms，按批次算时长而非按吸嘴）。
     - 输出指标：循环数、中位时长、异常次数、异常影响时长（超额时长）、
-      异常时间占比、异常频率（次/小时）。时间为 h:mm:ss 格式。
+      异常时间占比、异常频率（次/小时）。时长列格式：<60 秒按秒、>=60 秒按 h:mm:ss。
     """
     import statistics
     from collections import Counter

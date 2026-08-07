@@ -158,10 +158,24 @@ class AnalysisTest(unittest.TestCase):
         self.assertIn("GetSN", steps)
         gsn = df[df["步骤"] == "GetSN"].iloc[0]
         self.assertEqual(gsn["异常次数"], 1)         # 1.2s > 0.69+0.5
-        self.assertEqual(gsn["中位时长"], "0:00:00.690")
-        self.assertEqual(gsn["异常影响时长"], "0:00:00.510")
+        self.assertEqual(gsn["中位时长"], "0.69")
+        self.assertEqual(gsn["异常影响时长"], "0.51")
         mark = df[df["步骤"] == "打标"].iloc[0]
         self.assertGreaterEqual(mark["循环数"], 1)
+
+    def test_fmt_duration_rule(self):
+        # 约定：<60 秒按秒显示，>=60 秒按 h:mm:ss 显示
+        from models.analysis import fmt_duration
+        self.assertEqual(fmt_duration(0.05), "0.05")
+        self.assertEqual(fmt_duration(0.1), "0.1")
+        self.assertEqual(fmt_duration(1.3), "1.3")
+        self.assertEqual(fmt_duration(7.5), "7.5")
+        self.assertEqual(fmt_duration(45), "45")
+        self.assertEqual(fmt_duration(59.999), "59.999")
+        self.assertEqual(fmt_duration(60), "0:01:00")
+        self.assertEqual(fmt_duration(61.5), "0:01:01.500")
+        self.assertEqual(fmt_duration(86396.148), "23:59:56.148")
+        self.assertEqual(fmt_duration(""), "")
 
     def test_analyze_steps_exclude_long_stop(self):
         def mk(rows, ts, tag):
@@ -189,8 +203,8 @@ class AnalysisTest(unittest.TestCase):
         row0 = df.iloc[0]
         self.assertEqual(row0["循环数"], 2)          # 2000s 的停机循环被剔除
         self.assertEqual(row0["异常次数"], 1)          # 只剩 12s 这一个异常
-        self.assertEqual(row0["中位时长"], "0:00:07.500")
-        self.assertEqual(row0["异常影响时长"], "0:00:04.500")  # 12 − 7.5
+        self.assertEqual(row0["中位时长"], "7.5")
+        self.assertEqual(row0["异常影响时长"], "4.5")  # 12 − 7.5
 
     def test_analyze_steps_standalone_keeps_chain_partition(self):
         """standalone 步骤独立计时但不打断链式切分：单颗循环段和仍等于周期长。"""
@@ -225,14 +239,16 @@ class AnalysisTest(unittest.TestCase):
         mark = df[df["步骤"] == "打标"].iloc[0]
         read = df[df["步骤"] == "读码(standalone)"].iloc[0]
         # standalone 不参与链式切分：打标前间隔始终=0.1s（不被 GetSN_End 锚点打断）
-        self.assertEqual(gap["中位时长"], "0:00:00.100")
-        self.assertEqual(mark["中位时长"], "0:00:01.300")
+        self.assertEqual(gap["中位时长"], "0.1")
+        self.assertEqual(mark["中位时长"], "1.3")
         # 单颗循环段和 = 周期长 1.4s
         def to_sec(s):
+            if ":" not in s:
+                return float(s)
             hh, mm, ss = s.split(":")
             return int(hh) * 3600 + int(mm) * 60 + float(ss)
         self.assertAlmostEqual(to_sec(gap["中位时长"]) + to_sec(mark["中位时长"]), 1.4, delta=0.01)
-        self.assertEqual(read["中位时长"], "0:00:00.300")
+        self.assertEqual(read["中位时长"], "0.3")
 
     def test_analyze_steps_sa_stations(self):
         def mk(rows, ts, tag):
@@ -260,8 +276,8 @@ class AnalysisTest(unittest.TestCase):
         hp = df[df["步骤"] == "热压"].iloc[0]
         self.assertEqual(hp["循环数"], 3)
         self.assertEqual(hp["异常次数"], 1)          # 30s > 10×1.5
-        self.assertEqual(hp["中位时长"], "0:00:10")
-        self.assertEqual(hp["异常影响时长"], "0:00:20")
+        self.assertEqual(hp["中位时长"], "10")
+        self.assertEqual(hp["异常影响时长"], "20")
         dp = df[df["步骤"] == "点胶"].iloc[0]
         self.assertEqual(dp["循环数"], 3)
         self.assertEqual(dp["异常次数"], 0)
@@ -284,8 +300,8 @@ class AnalysisTest(unittest.TestCase):
             mk(base + 5.0, "DispOneChipAlignVisionCycle()")
             mk(base + 12.0, "DispOneChipProbeAlignCycle()")
         df = analyze_steps_sa(rows, coefficient=1.5)
-        for phase, expect in (("视觉对位", "0:00:05"), ("探针对位", "0:00:07"),
-                              ("点胶轮廓", "0:00:08")):
+        for phase, expect in (("视觉对位", "5"), ("探针对位", "7"),
+                              ("点胶轮廓", "8")):
             r = df[(df["单元"] == "右头") & (df["步骤"] == phase)].iloc[0]
             self.assertEqual(r["中位时长"], expect)
             self.assertEqual(r["循环数"], 2)

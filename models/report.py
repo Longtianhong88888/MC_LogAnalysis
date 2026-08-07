@@ -17,6 +17,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
+from models.analysis import fmt_duration
 from utils.resource_utils import find_external_resource
 
 HEADER_FILL = RGBColor(0xDD, 0xEB, 0xF7)
@@ -121,6 +122,19 @@ def _add_slide(prs, title, subtitle=""):
     return slide
 
 
+def _display_value(col, value):
+    """PPT 表格单元格显示：时间列（列名含 秒/时长）按 <60s 秒、>=60s h:mm:ss 展示；
+    图表仍取原始数值，不受影响。"""
+    if pd.isna(value):
+        return ''
+    if isinstance(col, str) and ('秒' in col or '时长' in col):
+        try:
+            return fmt_duration(float(value))
+        except (TypeError, ValueError):
+            return str(value)
+    return str(value)
+
+
 def _add_table(slide, df, left, top, width, height, max_rows=12):
     data = df.head(max_rows)
     rows, cols = data.shape
@@ -135,7 +149,7 @@ def _add_table(slide, df, left, top, width, height, max_rows=12):
     for j, col in enumerate(data.columns):
         m = sum(2 if ord(ch) > 127 else 1 for ch in str(col))
         for value in data[col]:
-            s = "" if pd.isna(value) else str(value)
+            s = _display_value(col, value)
             m = max(m, sum(2 if ord(ch) > 127 else 1 for ch in s))
         lens.append(max(m, 5))
     total_len = sum(lens)
@@ -158,7 +172,7 @@ def _add_table(slide, df, left, top, width, height, max_rows=12):
     for i, (_, row) in enumerate(data.iterrows(), start=1):
         for j, value in enumerate(row):
             cell = table.cell(i, j)
-            cell.text = "" if pd.isna(value) else str(value)
+            cell.text = _display_value(data.columns[j], value)
             cell.text_frame.paragraphs[0].font.size = Pt(10)
             cell.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE
@@ -327,7 +341,7 @@ def _update_table(slide, df, max_rows=12):
             _set_text_preserving(table.cell(0, j).text_frame, str(data.columns[j]))
         for i, (_, row) in enumerate(data.iterrows(), start=1):
             for j in range(n_cols):
-                value = '' if pd.isna(row.iloc[j]) else str(row.iloc[j])
+                value = _display_value(data.columns[j], row.iloc[j])
                 _set_text_preserving(table.cell(i, j).text_frame, value)
         return
 
