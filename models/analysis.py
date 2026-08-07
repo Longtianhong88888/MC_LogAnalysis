@@ -385,11 +385,12 @@ def detect_units_per_tray(rows, batch_keywords, unit_keywords, tray_keywords=Non
     }
 
 
-def fmt_duration(seconds):
+def fmt_duration(seconds, with_ms=True):
     """
     时间展示统一格式（Excel/PPT 通用约定）：
     - 低于 60 秒：按秒显示（整数秒显示整数，小数保留最多 3 位并去尾零，如 0.05 / 1.3 / 45）
-    - 超过 60 秒（含 60）：按 h:mm:ss(.mmm) 显示（如 12:02:32）
+    - 超过 60 秒（含 60）：按 h:mm:ss(.mmm) 显示（如 12:02:32）；
+      with_ms=False（PPT 汇总展示）时只到秒（如 12:02:32）
     """
     try:
         seconds = float(seconds)
@@ -410,7 +411,7 @@ def fmt_duration(seconds):
         ms = 0
         s += 1
     sec = int(s)
-    if ms:
+    if ms and with_ms:
         return "%d:%02d:%02d.%03d" % (h, m, sec, ms)
     return "%d:%02d:%02d" % (h, m, sec)
 

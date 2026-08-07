@@ -175,6 +175,9 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(fmt_duration(60), "0:01:00")
         self.assertEqual(fmt_duration(61.5), "0:01:01.500")
         self.assertEqual(fmt_duration(86396.148), "23:59:56.148")
+        # PPT 汇总展示：h:mm:ss 只到秒
+        self.assertEqual(fmt_duration(61.5, with_ms=False), "0:01:01")
+        self.assertEqual(fmt_duration(86396.148, with_ms=False), "23:59:56")
         self.assertEqual(fmt_duration(""), "")
 
     def test_analyze_steps_exclude_long_stop(self):

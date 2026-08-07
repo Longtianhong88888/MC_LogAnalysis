@@ -129,7 +129,7 @@ def _display_value(col, value):
         return ''
     if isinstance(col, str) and ('秒' in col or '时长' in col):
         try:
-            return fmt_duration(float(value))
+            return fmt_duration(float(value), with_ms=False)
         except (TypeError, ValueError):
             return str(value)
     return str(value)
@@ -204,7 +204,7 @@ def _metrics_table(df):
     for idx in out.index[mask]:
         v = out.at[idx, "数值"]
         try:
-            out.at[idx, "数值"] = fmt_duration(float(v))
+            out.at[idx, "数值"] = fmt_duration(float(v), with_ms=False)
         except (TypeError, ValueError):
             pass
     return out
