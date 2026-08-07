@@ -574,6 +574,8 @@ def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
     - 热压：Heater 0 :Heating Complete，每排 1 次
     - 检测：UDP Module - Good，每排 k 次（k = round(事件数/热压排数) 自动估算）
     每排周期 = 第 i+k 个完成事件 − 第 i 个完成事件；异常判定与通用逻辑一致。
+    额外输出左右点胶头内部动作（视觉对位→探针对位→点胶轮廓，按头分行，
+    段和≈该头的每排周期；双头交替时整机点胶排周期≈单头周期/2）。
     """
     stations = [
         ("点胶", "DispOneChipProfileWorkCycle", 1),
@@ -638,9 +640,95 @@ def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
             '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
             '异常频率(次/小时)': round(freq, 2),
         })
+    # 左右点胶头内部动作（毫秒级 Sequence 日志，可细分）
+    phase_rows, phase_anomalies = _sa_dispense_phases(
+        rows, coefficient, min_step_median, max_step_seconds, cancel_event)
+    all_rows.extend(phase_rows)
+    anomaly_lines.update(phase_anomalies)
     df = pd.DataFrame(all_rows)
     df.attrs['anomaly_lines'] = anomaly_lines
     return df
+
+
+def _sa_dispense_phases(rows, coefficient=1.5, min_step_median=0.01,
+                        max_step_seconds=None, cancel_event=None):
+    """
+    SA 点胶工位左右头的内部动作：视觉对位(DispOneChipAlignVisionCycle)
+    → 探针对位(DispOneChipProbeAlignCycle) → 点胶轮廓(DispOneChipProfileWorkCycle)。
+    按 Sequence 名（SeqCycle003_Left/SeqCycle005_Right）区分左右头，B 模式链式切分，
+    段和 ≈ 该头每排周期（左头≈13.4s、右头≈19.3s，实测与行 CT 差<1%）。
+    返回 (行列表, 异常触发行集合)；供 analyze_steps_sa 追加输出。
+    """
+    import statistics
+    heads = [
+        ("左头", "SeqCycle003_LeftDispenserPart.cs"),
+        ("右头", "SeqCycle005_RightDispenserPart.cs"),
+    ]
+    all_rows = []
+    anomaly_lines = set()
+    for head, seq in heads:
+        prof, align, probe = [], [], []
+        for row in rows:
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            content = str(row.get('Content', ''))
+            if seq not in content:
+                continue
+            t = parse_ts(content)
+            if t is None:
+                continue
+            if 'DispOneChipProfileWorkCycle' in content:
+                prof.append((t, content))
+            elif 'DispOneChipAlignVisionCycle' in content:
+                align.append((t, content))
+            elif 'DispOneChipProbeAlignCycle' in content:
+                probe.append((t, content))
+        prof.sort(key=lambda x: x[0])
+        align.sort(key=lambda x: x[0])
+        probe.sort(key=lambda x: x[0])
+        if len(prof) < 2:
+            continue
+        total_sec = (prof[-1][0] - prof[0][0]).total_seconds()
+        segs = {"视觉对位": [], "探针对位": [], "点胶轮廓": []}
+        for i in range(len(prof) - 1):
+            a = prof[i][0]
+            b = prof[i + 1][0]
+            al = [x for x in align if a < x[0] < b]
+            pr = [x for x in probe if a < x[0] < b]
+            if al:
+                segs["视觉对位"].append(((al[0][0] - a).total_seconds(), al[0][1]))
+            if al and pr:
+                segs["探针对位"].append(((pr[0][0] - al[0][0]).total_seconds(), pr[0][1]))
+            if pr:
+                segs["点胶轮廓"].append(((b - pr[0][0]).total_seconds(), prof[i + 1][1]))
+        for phase, durs in segs.items():
+            if max_step_seconds is not None:
+                durs = [x for x in durs if x[0] <= max_step_seconds]
+            if not durs:
+                continue
+            median = statistics.median(d for d, _c in durs)
+            if median < min_step_median:
+                continue
+            anomalies = [(d, c) for d, c in durs if d > median * coefficient]
+            anomaly_lines.update(c for _d, c in anomalies)
+            excess = sum(d - median for d, _c in anomalies)
+            total_dur = sum(d for d, _c in durs)
+            n = len(durs)
+            freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
+            all_rows.append({
+                '单元': head,
+                '步骤': phase,
+                '循环数': n,
+                '中位时长': fmt_hms(median),
+                '平均时长': fmt_hms(statistics.mean(d for d, _c in durs)),
+                'P90时长': fmt_hms(sorted(d for d, _c in durs)[int(n * 0.9) - 1] if n else ''),
+                '最长时长': fmt_hms(max(d for d, _c in durs)),
+                '异常次数': len(anomalies),
+                '异常影响时长': fmt_hms(excess),
+                '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
+                '异常频率(次/小时)': round(freq, 2),
+            })
+    return all_rows, anomaly_lines
 
 
 def analyze_bottleneck_machines(rows, machines, cancel_event=None):

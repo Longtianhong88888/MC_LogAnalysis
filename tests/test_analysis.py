@@ -268,6 +268,28 @@ class AnalysisTest(unittest.TestCase):
         jc = df[df["步骤"] == "检测"].iloc[0]
         self.assertEqual(jc["循环数"], 3)
 
+    def test_analyze_steps_sa_dispense_phases(self):
+        # 右点胶头内部动作：视觉对位→探针对位→点胶轮廓，B 模式段和≈该头行周期
+        def mk(ts, tag, head="SeqCycle005_RightDispenserPart.cs"):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "SA/l.txt",
+                         "Content": "[000] Sequence, , 20260803-%02d-%02d-%02d-%03d, %s, 30, %s"
+                                    % (h, m, sec, ms, head, tag)})
+
+        rows = []
+        for base in (0.0, 20.0, 40.0):
+            mk(base, "DispOneChipProfileWorkCycle()")
+            mk(base + 5.0, "DispOneChipAlignVisionCycle()")
+            mk(base + 12.0, "DispOneChipProbeAlignCycle()")
+        df = analyze_steps_sa(rows, coefficient=1.5)
+        for phase, expect in (("视觉对位", "0:00:05"), ("探针对位", "0:00:07"),
+                              ("点胶轮廓", "0:00:08")):
+            r = df[(df["单元"] == "右头") & (df["步骤"] == phase)].iloc[0]
+            self.assertEqual(r["中位时长"], expect)
+            self.assertEqual(r["循环数"], 2)
+
     def test_analyze_bottleneck_machines(self):
         def mk(rows, ts, tag):
             h = int(ts // 3600); m = int(ts % 3600 // 60)

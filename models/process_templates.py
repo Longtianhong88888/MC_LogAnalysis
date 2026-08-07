@@ -179,9 +179,11 @@ PROCESS_TEMPLATES = {
                 "coefficient": 1.5,
                 "units": [
                     {"name": "左轴", "module": {"pattern": "左轴"}, "cycle": "轴点胶完成",
-                     "steps": [{"name": "点胶", "start": "左轴开始点胶", "end": "左轴点胶完成"}]},
+                     # FR 日志为秒级精度，点胶循环内子动作同秒无法细分；
+                     # 用 B 模式单步（本轴点胶完成→下颗完成）= 整循环，段和=CT。
+                     "steps": [{"name": "点胶(整循环)", "end": "左轴点胶完成"}]},
                     {"name": "右轴", "module": {"pattern": "右轴"}, "cycle": "轴点胶完成",
-                     "steps": [{"name": "点胶", "start": "右轴开始点胶", "end": "右轴点胶完成"}]},
+                     "steps": [{"name": "点胶(整循环)", "end": "右轴点胶完成"}]},
                 ],
             },
         },
