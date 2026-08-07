@@ -56,21 +56,26 @@ PROCESS_TEMPLATES = {
                     "name": "整机",
                     "cycle": "MarkEnd1",
                     "steps": [
-                        # 单颗循环（MarkEnd1→MarkEnd1）：打标前间隔 + 打标，段和≈CT。
-                        # 打标前间隔=上一颗打标完成到下一颗开始（B 模式顺序切分）。
+                        # 单颗循环（MarkEnd1→MarkEnd1），按轴/平台运动节拍拆分，段和=CT：
+                        #  打标前间隔（B 模式顺序切分）= 上一颗完成到下一颗开始；
+                        #  Z轴焦距定位（A 模式）= MarkStart1 → MarkStart1_0；
+                        #  激光打标（A 模式）= MarkStart1_0 → MarkEnd1_0（振镜扫描）。
                         {"name": "打标前间隔", "end": "MarkStart1"},
-                        # 打标为 A 模式（事件对）：MarkStart1 → MarkEnd1。
-                        {"name": "激光打标", "start": "MarkStart1", "end": "MarkEnd1",
+                        {"name": "Z轴焦距定位", "start": "MarkStart1", "end": "MarkStart1_0",
+                         "timeout_seconds": 0.1},
+                        {"name": "激光打标(振镜扫描)", "start": "MarkStart1_0", "end": "MarkEnd1_0",
                          "timeout_seconds": 1.0},
-                        # 以下为 CCD 批次级动作（每批约 6 颗、每盘 4 批），standalone 独立计时，
+                        # 批次级动作（每批约 6 颗、每盘 4 批），standalone 独立计时，
                         # 不参与单颗循环链式切分（避免此前 CCD 被算成 1.8s 伪段）。
                         {"name": "读码GetSN(每批)", "start": "GetSN_Start", "end": "GetSN_End",
                          "standalone": True, "timeout_seconds": 0.5},
-                        {"name": "CCD取像解析(每批)", "start": "Start parsing CCD data",
-                         "end": "Parsing CCD data success", "standalone": True},
-                        {"name": "CCD定位(每批)", "start": "Start parsing CCD data",
-                         "end": "Ccd Locate Data Check success", "standalone": True,
-                         "timeout_seconds": 0.05},
+                        {"name": "CCD轴移动定位(每批)", "start": "Move CcdPos finish",
+                         "end": "CCD定位完成", "standalone": True, "timeout_seconds": 1.0},
+                        # 平台级动作（每盘约 24 颗），standalone 独立计时。
+                        {"name": "平台下料(每盘)", "start": "发送下料请求信号",
+                         "end": "收到下料完成信号", "standalone": True, "timeout_seconds": 5.0},
+                        {"name": "平台上料(每盘)", "start": "发送上料请求信号",
+                         "end": "收到上料完成信号", "standalone": True, "timeout_seconds": 5.0},
                     ],
                 }],
             },
