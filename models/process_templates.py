@@ -90,7 +90,19 @@ PROCESS_TEMPLATES = {
                          {"name": "放熟料", "end": "放熟料完成"},
                      ]},
                 ] + [
-                    # 焊接机（PLC1）：2 焊接头 4 工站 8 工位（滑台1-4 × 左/右）
+                    # 焊接机（PLC1）：支架流程 = chassis（每滑台一个，不带左/右）
+                    {"name": "焊接机-滑台%d支架" % s,
+                     "module": {"pattern": "滑台%dclassis" % s},
+                     "cycle": "classis中轉軸去焊接位",
+                     "steps": [
+                         {"name": "支架请求上生料", "end": "classis平台请求上生料"},
+                         {"name": "支架中转去上料位", "end": "classis中轉軸去上料位"},
+                         {"name": "支架装载完成", "end": "classis平台上生料完成"},
+                         {"name": "支架中转去焊接位", "end": "classis中轉軸去焊接位"},
+                     ]}
+                    for s in range(1, 5)
+                ] + [
+                    # 焊接机（PLC1）：焊接流程 = 2 焊接头 4 工站 8 工位（滑台1-4 × 左/右）
                     {"name": "焊接机-滑台%d%s" % (s, side),
                      "module": {"pattern": "滑台%d%s" % (s, side)},
                      "cycle": "去交换位",
