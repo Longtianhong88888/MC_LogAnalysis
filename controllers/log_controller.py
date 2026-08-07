@@ -218,6 +218,13 @@ class LogController:
             settings["pure_uph_factor"] = float(feature_tpl["pure_uph_factor"])
         if feature == "文档合并与内容拆分" and template.get("merge_groups"):
             settings["merge_groups"] = template["merge_groups"]
+        if feature == "文档合并与内容拆分":
+            alarm = template.get("报警分析") or {}
+            base = alarm.get("alarm_keywords") or "报警,ALARM,ERROR,NG,失败,异常,停止信号"
+            down_markers = "AutoRun Stop,ErrOn,Err=,生产流程出现异常,当前设备状态Maunal,status:DOWN,MachineState:[Down],机械手不安全,换盘提示,超时"
+            # 剔除 "NG"：机台产品码/序列号常含 NG（如 RDA620700NG55423C），会误标正常行
+            kws = [k for k in re.split(r'[,，、;；\s]+', base + "," + down_markers) if k and k != 'NG']
+            settings["abnormal_keywords"] = ",".join(kws)
         if feature == "UPH分析":
             if feature_tpl.get("bottleneck_stations"):
                 settings["bottleneck_stations"] = feature_tpl["bottleneck_stations"]

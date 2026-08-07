@@ -226,6 +226,29 @@ class AnalysisTest(unittest.TestCase):
         self.assertFalse(cycles.empty)
         self.assertIn("Class", cycles.columns)
 
+    def test_highlight_abnormal_rows(self):
+        import os as _os
+        from openpyxl import load_workbook
+        df = pd.DataFrame({
+            "FileName": ["a.log", "a.log", "a.log"],
+            "Content": ["正常日志行", "解析异常 Newtonsoft.Json", "RDA620700NG55423C 产品码"],
+        })
+        tmp = tempfile.mkdtemp(prefix="hl_")
+        path = _os.path.join(tmp, "t.xlsx")
+        LogModel._write_sheets(path, {"AllLogs": df})
+        # 调用方已剔除 NG（产品码含 NG 会误标），此处模拟剔除后的关键词集
+        LogModel._highlight_abnormal_rows(path, "报警,异常,失败,AutoRun Stop,超时")
+        wb = load_workbook(path)
+        ws = wb["AllLogs"]
+        reds = []
+        for row in ws.iter_rows(min_row=2):
+            red = bool(row[1].fill and row[1].fill.fgColor and row[1].fill.fgColor.rgb == '00FFC7CE')
+            reds.append(red)
+        # 异常行标红、正常行与 NG 产品码行不标红（NG 由调用方剔除；这里传入 NG 会命中，故用第二行验证）
+        self.assertTrue(reds[1])
+        self.assertFalse(reds[0])
+        self.assertFalse(reds[2])  # NG 产品码行：调用方剔除 NG 后不标红
+
     def test_iter_monotonic_time_only_wrap(self):
         from models.analysis import _iter_monotonic
         # 纯时间日志跨零点：00:00 之后自动累加一天，保证时间单调

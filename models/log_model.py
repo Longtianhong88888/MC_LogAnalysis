@@ -133,7 +133,7 @@ class LogModel:
     # ---------- 功能一：文档合并与内容拆分 ----------
     def process(self, source_dir, output_dir, keywords=None, separator=None,
                 file_filters=None, rows=None, cancel_event=None, progress_callback=None,
-                merge_groups=None):
+                merge_groups=None, abnormal_keywords=None):
         if progress_callback:
             progress_callback(5)
         all_data = rows if rows is not None else self._read_all(
@@ -147,7 +147,7 @@ class LogModel:
             # 按文件分组（如 PLC1/PLC2）分别导出 Excel
             return self._process_by_groups(
                 all_data, output_dir, keywords, separator, merge_groups,
-                cancel_event, progress_callback,
+                cancel_event, progress_callback, abnormal_keywords,
             )
 
         if len(all_data) > self.MERGE_MAX_TOTAL_ROWS:
@@ -164,13 +164,15 @@ class LogModel:
 
         out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
         self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+        if abnormal_keywords:
+            self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
 
         if progress_callback:
             progress_callback(100)
         return out_path
 
     def _process_by_groups(self, all_data, output_dir, keywords, separator, merge_groups,
-                           cancel_event=None, progress_callback=None):
+                           cancel_event=None, progress_callback=None, abnormal_keywords=None):
         """按文件关键词分组分别导出 LogAnalysis_<组名>.xlsx，未匹配行归入“其他”。"""
         import os as _os
         _os.makedirs(output_dir, exist_ok=True)
@@ -190,6 +192,8 @@ class LogModel:
             sheets = self._build_merge_sheets(pd.DataFrame(sub), keywords, separator, cancel_event)
             out_path = _os.path.join(output_dir, 'LogAnalysis_%s.xlsx' % name)
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+            if abnormal_keywords:
+                self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
             written.append(out_path)
             matched_ids.update(id(r) for r in sub)
             if progress_callback:
@@ -199,12 +203,44 @@ class LogModel:
             sheets = self._build_merge_sheets(pd.DataFrame(others), keywords, separator, cancel_event)
             out_path = _os.path.join(output_dir, 'LogAnalysis_其他.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+            if abnormal_keywords:
+                self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
             written.append(out_path)
         if progress_callback:
             progress_callback(100)
         if written:
             return "; ".join(written) + "（已按分组分别导出）"
         return "无匹配日志"
+
+    @staticmethod
+    def _highlight_abnormal_rows(path, abnormal_kws, cancel_event=None):
+        """将内容命中异常关键词的日志行整行标红（浅红底 FFC7CE）。"""
+        if not abnormal_kws:
+            return
+        kws = [k for k in re.split(r'[,，、;；\s]+', str(abnormal_kws)) if k]
+        if not kws:
+            return
+        try:
+            wb = load_workbook(path)
+        except Exception:
+            return
+        red = PatternFill('solid', fgColor='FFC7CE')
+        for ws in wb.worksheets:
+            if ws.max_row < 2:
+                continue
+            header = {c.value: idx for idx, c in enumerate(ws[1], start=1)}
+            content_col = header.get('Content') or header.get('OriginalContent')
+            if not content_col:
+                continue
+            for row in ws.iter_rows(min_row=2):
+                if cancel_event is not None and cancel_event.is_set():
+                    break
+                cell = row[content_col - 1]
+                val = cell.value
+                if val and any(kw in str(val) for kw in kws):
+                    for c in row:
+                        c.fill = red
+        wb.save(path)
 
     def _build_merge_sheets(self, df_all, keywords, separator, cancel_event=None):
         """关键词筛选 + 分隔符拆分，返回 {'AllLogs':..., 'Filtered':...}。"""
