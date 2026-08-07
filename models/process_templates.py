@@ -120,6 +120,8 @@ PROCESS_TEMPLATES = {
                      "module": {"pattern": "滑台%d%s" % (s, side)},
                      "cycle": "去交换位",
                      "steps": [
+                         {"name": "下熟料", "end": "纠偏平台下熟料完成"},
+                         {"name": "上生料", "end": "纠偏平台上生料完成"},
                          {"name": "PR1纠偏", "end": "平台PR1"},
                          {"name": "纠偏", "end": "平台糾偏", "timeout_seconds": 0.5},
                          {"name": "贴合", "end": "平台贴合", "timeout_seconds": 0.5},
