@@ -41,6 +41,13 @@
 - **每盘颗数**：按 Tray ID（carrierId/CubeTrayId）动态分段统计，不写死；同一盘号跨小时复用按间隔切段（run_gap=300s）。
 - **换盘时间**：SA 式「同工位 卸载→下一次装载」间隔中位数（`measure_tray_change`，O(n log n) 二分）。
 - **状态推导**：活动关键词→RUN；停机关键词（AutoRun Stop/ErrOn/生产流程出现异常）按 EReason 清单归类 DOWN/IDLE；纯时间日志按文件名补日期（`_row_date`），防止混排成 100+ 年时长。
+- **单颗循环步骤分析**（`analyze_steps`，输出到 UPH_Analysis.xlsx 的「步骤分析」sheet）：
+  - 模板 `step_analysis` 配置：`units[{name, module(from_path/pattern), cycle, steps[{name, start?, end?, timeout_seconds?}]}]` + `coefficient`（默认 1.5）。
+  - start+end=事件对时长；仅 end=顺序切分（本步完成−上一步完成）。
+  - 异常 = 时长 > 中位×系数，或（配 timeout_seconds 时）> 中位+超时秒；**中位时长 < 0.01 秒的动作直接忽略**（信号抖动，如 CCD定位 2ms）。
+  - 指标：循环数/中位/平均/P90/最长时长、异常次数、异常影响时长（超额时长）、异常时间占比、异常频率（次/小时）；时间统一 h:mm:ss（`fmt_hms`）。
+  - 已配置制程：LM（GetSN/CCD取像解析/CCD定位/激光打标）、FR（左/右轴点胶）、SA（点胶/贴附/热压/检测）、ACF（上料/主机/下料）；CAW 待定步骤名。
+  - UI：UPH 参数页「步骤异常系数」（默认 1.5，可调）。
 
 ## 界面（Apple 风格，views/main_window.py）
 

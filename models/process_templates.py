@@ -41,6 +41,21 @@ PROCESS_TEMPLATES = {
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
+            "step_analysis": {
+                "coefficient": 1.5,
+                "units": [{
+                    "name": "整机",
+                    "cycle": "MarkEnd1",
+                    "steps": [
+                        {"name": "读码GetSN", "start": "GetSN_Start", "end": "GetSN_End",
+                         "timeout_seconds": 0.5},
+                        {"name": "CCD取像解析", "end": "Parsing CCD data success"},
+                        {"name": "CCD定位", "end": "Ccd Locate Data Check success",
+                         "timeout_seconds": 0.05},
+                        {"name": "激光打标", "end": "MarkEnd1", "timeout_seconds": 1.0},
+                    ],
+                }],
+            },
         },
         "EFF分析": {},
         "报警分析": {"alarm_keywords": DEFAULT_ALARM_KEYWORDS},
@@ -72,6 +87,15 @@ PROCESS_TEMPLATES = {
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
+            "step_analysis": {
+                "coefficient": 1.5,
+                "units": [
+                    {"name": "左轴", "module": {"pattern": "左轴"}, "cycle": "轴点胶完成",
+                     "steps": [{"name": "点胶", "start": "左轴开始点胶", "end": "左轴点胶完成"}]},
+                    {"name": "右轴", "module": {"pattern": "右轴"}, "cycle": "轴点胶完成",
+                     "steps": [{"name": "点胶", "start": "右轴开始点胶", "end": "右轴点胶完成"}]},
+                ],
+            },
         },
         "EFF分析": {},
         "报警分析": {
@@ -99,6 +123,19 @@ PROCESS_TEMPLATES = {
                 {"name": "检测", "function": "sa_inspect"},
             ],
             "bottleneck_units_per_row": 2,
+            "step_analysis": {
+                "coefficient": 1.5,
+                "units": [{
+                    "name": "整机",
+                    "cycle": "Heater 0 :Heating Complete",
+                    "steps": [
+                        {"name": "点胶", "end": "DispOneChipProfileWorkCycle"},
+                        {"name": "贴附", "end": "AfterPickUp StopCondition"},
+                        {"name": "热压", "end": "Heater 0 :Heating Complete"},
+                        {"name": "检测", "end": "UDP Module - Good"},
+                    ],
+                }],
+            },
             "tray_change": {
                 "pattern": "JigLoadingCycle",
                 "unload_pattern": "JigUnloadingCycle",
@@ -140,6 +177,26 @@ PROCESS_TEMPLATES = {
             "units_per_cycle": 1,
             "normal_threshold": 10.0,
             "planned_threshold": 900.0,
+            "step_analysis": {
+                "coefficient": 1.5,
+                "units": [
+                    {"name": "上料機", "module": {"from_path": "上料機"}, "cycle": "更新Carrier盘",
+                     "steps": [
+                         {"name": "取料", "end": "托盘取料后二维码"},
+                         {"name": "放料装盘", "end": "放料成功"},
+                     ]},
+                    {"name": "主機", "module": {"from_path": "主機"}, "cycle": "Cavity cnt:1",
+                     "steps": [
+                         {"name": "压合出料", "end": "ProdCountCarrier"},
+                     ]},
+                    {"name": "下料機", "module": {"from_path": "下料機"}, "cycle": "UnloadDuts Finish",
+                     "steps": [
+                         {"name": "上料取件", "end": "托盘取料后二维码"},
+                         {"name": "测试完成", "end": "Test1Cycle Finish"},
+                         {"name": "下料取件", "end": "SetStateAfterPickFromSocket"},
+                     ]},
+                ],
+            },
         },
         "EFF分析": {
             "activity_keywords": "更新Carrier盘,Cavity cnt:1,UnloadDuts Finish",

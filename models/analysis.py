@@ -332,6 +332,137 @@ def measure_tray_change(rows, unload_keywords, load_keywords, max_gap=600.0, can
     }
 
 
+def fmt_hms(seconds):
+    """秒 → h:mm:ss(.mmm)，几百秒几千秒更直观。"""
+    try:
+        seconds = float(seconds)
+    except (TypeError, ValueError):
+        return ''
+    if seconds < 0:
+        return ''
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = seconds % 60
+    ms = int(round((s - int(s)) * 1000))
+    if ms >= 1000:
+        ms = 0
+        s += 1
+    sec = int(s)
+    if ms:
+        return "%d:%02d:%02d.%03d" % (h, m, sec, ms)
+    return "%d:%02d:%02d" % (h, m, sec)
+
+
+def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01, cancel_event=None):
+    """
+    单颗循环步骤深度分析：
+    - units：每个单元配置 {name, module?, cycle, steps:[{name, start?, end?, timeout_seconds?}]}
+      * start+end：步骤时长 = End − Start（事件对模式）
+      * 仅 end：步骤时长 = 本步完成 − 上一步完成（顺序切分模式，首步用循环起点）
+      * module：可选 {"from_path": 文件夹} 或 {"pattern": 正则}，过滤单元行
+    - 每步统计时长分布，以中位数为基准；异常 = 时长 > 中位数×coefficient
+      或（配置了 timeout_seconds 时）时长 > 中位数 + timeout_seconds。
+    - 中位时长低于 min_step_median（默认 0.01 秒）的动作视为信号抖动，直接忽略。
+    - 输出指标：循环数、中位时长、异常次数、异常影响时长（超额时长）、
+      异常时间占比、异常频率（次/小时）。时间为 h:mm:ss 格式。
+    """
+    import statistics
+    from collections import Counter
+    rows_by_unit = {}
+    for unit in units:
+        module = unit.get('module') or {}
+        if module.get('from_path'):
+            prefix = module['from_path'].rstrip('/') + '/'
+            u_rows = [r for r in rows if str(r.get('FileName', '')).startswith(prefix)]
+        elif module.get('pattern'):
+            pat = re.compile(module['pattern'])
+            u_rows = [r for r in rows if pat.search(str(r.get('Content', '')))]
+        else:
+            u_rows = rows
+        rows_by_unit[unit.get('name', '单元')] = (unit, u_rows)
+
+    all_rows = []
+    for unit_name, (unit, u_rows) in rows_by_unit.items():
+        cycle_kws = split_phrases(unit.get('cycle', ''))
+        if not cycle_kws:
+            continue
+        steps = unit.get('steps') or []
+        if not steps:
+            continue
+        # 收集循环边界与各步骤事件（单调时间）
+        cycle_ts = []
+        step_events = {i: [] for i in range(len(steps))}
+        step_end_events = {i: [] for i in range(len(steps))}
+        for mono, content in _iter_monotonic(u_rows, cancel_event):
+            if any(kw in content for kw in cycle_kws):
+                cycle_ts.append(mono)
+            for i, st in enumerate(steps):
+                if st.get('start'):
+                    if any(kw in content for kw in split_phrases(st['start'])):
+                        step_events[i].append(mono)
+                    if st.get('end') and any(kw in content for kw in split_phrases(st['end'])):
+                        step_end_events[i].append(mono)
+                elif st.get('end') and any(kw in content for kw in split_phrases(st['end'])):
+                    step_events[i].append(mono)
+        if not cycle_ts:
+            continue
+        cycle_ts.sort()
+        # 每个循环内组装各步骤时长
+        per_step = {i: [] for i in range(len(steps))}
+        for ci in range(len(cycle_ts)):
+            c_start = cycle_ts[ci]
+            c_end = cycle_ts[ci + 1] if ci + 1 < len(cycle_ts) else float('inf')
+            prev_ts = c_start
+            for i, st in enumerate(steps):
+                evs = [t for t in step_events[i] if c_start < t <= c_end]
+                if not evs:
+                    continue
+                if st.get('start'):
+                    # 事件对：取本循环内第一个 start 与其后第一个 end
+                    start_ts = evs[0]
+                    end_evs = [t for t in step_end_events[i] if t >= start_ts and t <= c_end]
+                    end_ts = end_evs[0] if end_evs else None
+                    if end_ts is None:
+                        continue
+                    dur = end_ts - start_ts
+                    prev_ts = end_ts
+                else:
+                    dur = evs[0] - prev_ts
+                    prev_ts = evs[0]
+                if dur >= 0:
+                    per_step[i].append(dur)
+        # 统计
+        total_sec = (cycle_ts[-1] - cycle_ts[0]) if len(cycle_ts) > 1 else 0.0
+        for i, st in enumerate(steps):
+            durs = per_step[i]
+            if not durs:
+                continue
+            median = statistics.median(durs)
+            if median < min_step_median:
+                continue  # 低于 0.01 秒的动作忽略
+            timeout = st.get('timeout_seconds')
+            anomalies = [d for d in durs if d > median * coefficient or
+                         (timeout is not None and d > median + float(timeout))]
+            excess = sum(d - median for d in anomalies)
+            total_dur = sum(durs)
+            n = len(durs)
+            freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
+            all_rows.append({
+                '单元': unit_name,
+                '步骤': st.get('name', '步骤%d' % (i + 1)),
+                '循环数': n,
+                '中位时长': fmt_hms(median),
+                '平均时长': fmt_hms(statistics.mean(durs)),
+                'P90时长': fmt_hms(sorted(durs)[int(n * 0.9) - 1] if n else ''),
+                '最长时长': fmt_hms(max(durs)),
+                '异常次数': len(anomalies),
+                '异常影响时长': fmt_hms(excess),
+                '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
+                '异常频率(次/小时)': round(freq, 2),
+            })
+    return pd.DataFrame(all_rows)
+
+
 def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0):
     """
     按模块汇总 UPH（CoreTech AME 定义）：

@@ -7,6 +7,7 @@ import pandas as pd
 from models.analysis import (
     analyze_status,
     analyze_status_derived,
+    analyze_steps,
     build_cycles_df,
     detect_tray_stats,
     down_pareto,
@@ -88,6 +89,43 @@ class AnalysisTest(unittest.TestCase):
         self.assertIsNotNone(stats)
         self.assertEqual(stats["tray_count"], 4)
         self.assertAlmostEqual(stats["tray_seconds"], 12.0, delta=0.1)
+
+    def test_analyze_steps_anomaly_and_ignore_fast(self):
+        def mk(rows, ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "LM/l.txt",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+
+        rows = []
+        # 3 个循环：GetSN(0.2/0.18/1.2s)、CCD定位(0.002s 快步骤)、打标(0.3/0.28/2.5s)
+        for i, (gs, mark) in enumerate([(0.20, 0.30), (0.18, 0.28), (1.20, 2.50)]):
+            base = i * 10.0
+            mk(rows, base, "GetSN_Start")
+            mk(rows, base + gs, "GetSN_End")
+            mk(rows, base + gs + 0.002, "Ccd Locate Data Check success")
+            mk(rows, base + gs + 0.3, "MarkEnd1")
+
+        units = [{
+            "name": "整机", "cycle": "MarkEnd1",
+            "steps": [
+                {"name": "GetSN", "start": "GetSN_Start", "end": "GetSN_End",
+                 "timeout_seconds": 0.5},
+                {"name": "CCD定位", "end": "Ccd Locate Data Check success"},
+                {"name": "打标", "end": "MarkEnd1"},
+            ],
+        }]
+        df = analyze_steps(rows, units, coefficient=1.5)
+        steps = set(df["步骤"])
+        self.assertNotIn("CCD定位", steps)          # 中位 0.002s < 0.01s 被忽略
+        self.assertIn("GetSN", steps)
+        gsn = df[df["步骤"] == "GetSN"].iloc[0]
+        self.assertEqual(gsn["异常次数"], 1)         # 1.2s > 0.69+0.5
+        self.assertEqual(gsn["中位时长"], "0:00:00.690")
+        self.assertEqual(gsn["异常影响时长"], "0:00:00.510")
+        mark = df[df["步骤"] == "打标"].iloc[0]
+        self.assertGreaterEqual(mark["循环数"], 1)
 
     def test_iter_monotonic_time_only_wrap(self):
         from models.analysis import _iter_monotonic

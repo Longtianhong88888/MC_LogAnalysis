@@ -185,6 +185,8 @@ class LogController:
                 "planned_threshold": float(view.uph_planned_spin.value()),
                 "ideal_ct": self._to_float(view.uph_ideal_ct_edit.text()),
                 "max_ct": self._to_float(view.uph_max_ct_edit.text()),
+                "step_coefficient": float(getattr(view, 'uph_step_coef_spin', None).value())
+                if hasattr(view, 'uph_step_coef_spin') else 1.5,
             }
         if feature == "EFF分析":
             return {
@@ -223,6 +225,10 @@ class LogController:
                 settings["tray_change"] = feature_tpl["tray_change"]
             if feature_tpl.get("parts"):
                 settings["parts"] = feature_tpl["parts"]
+            if feature_tpl.get("step_analysis"):
+                settings["step_units"] = feature_tpl["step_analysis"].get("units")
+                if feature_tpl["step_analysis"].get("coefficient") is not None:
+                    settings["step_coefficient"] = float(feature_tpl["step_analysis"]["coefficient"])
             if feature_tpl.get("module_from_path"):
                 settings["module_from_path"] = True
         if feature == "报警分析" and feature_tpl.get("module_from_path"):

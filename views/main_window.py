@@ -577,6 +577,11 @@ class MainWindow(QMainWindow):
         self.uph_ideal_ct_edit.setPlaceholderText("留空自动取正常周期平均")
         self.uph_max_ct_edit = QLineEdit()
         self.uph_max_ct_edit.setPlaceholderText("留空则不按上限过滤")
+        self.uph_step_coef_spin = QDoubleSpinBox()
+        self.uph_step_coef_spin.setRange(1.0, 10.0)
+        self.uph_step_coef_spin.setDecimals(1)
+        self.uph_step_coef_spin.setValue(1.5)
+        self.uph_step_coef_spin.setSuffix(" ×中位时长")
         self._form_page([
             ("完成动作关键词", self.uph_trigger_edit),
             ("每周期产出数",     self.uph_units_spin),
@@ -584,6 +589,7 @@ class MainWindow(QMainWindow):
             ("计划性停机阈值",   self.uph_planned_spin),
             ("理想周期CT(秒)",   self.uph_ideal_ct_edit),
             ("最大理论周期CT(秒)", self.uph_max_ct_edit),
+            ("步骤异常系数",     self.uph_step_coef_spin),
         ], note)
 
     def _build_eff_page(self):
@@ -637,6 +643,9 @@ class MainWindow(QMainWindow):
             self.uph_planned_spin.setValue(float(uph.get("planned_threshold") or 900.0))
             self.uph_ideal_ct_edit.setText("" if not uph.get("ideal_ct") else str(uph["ideal_ct"]))
             self.uph_max_ct_edit.setText("" if not uph.get("max_ct") else str(uph["max_ct"]))
+            sa = uph.get("step_analysis") or {}
+            if sa.get("coefficient") is not None:
+                self.uph_step_coef_spin.setValue(float(sa["coefficient"]))
             self.eff_planned_hours_edit.setText("" if not eff.get("planned_hours") else str(eff["planned_hours"]))
             self.eff_pdt_reason_edit.setText(str(eff.get("pdt_reason_ids") or ""))
             self.alarm_keywords_edit.setText(str(alarm.get("alarm_keywords") or DEFAULT_ALARM_KEYWORDS))

@@ -15,6 +15,7 @@ except ImportError:
 from models.analysis import (
     analyze_status,
     analyze_status_derived,
+    analyze_steps,
     build_cycles_df,
     detect_tray_stats,
     down_pareto,
@@ -297,6 +298,7 @@ class LogModel:
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
                     pure_uph_factor=1.0, bottleneck_stations=None, bottleneck_units_per_row=None,
                     tray_change=None, parts=None, module_from_path=False,
+                    step_units=None, step_coefficient=1.5,
                     rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
@@ -304,6 +306,9 @@ class LogModel:
             source_dir, progress_callback, file_filters=file_filters, cancel_event=cancel_event)
         if progress_callback:
             progress_callback(40)
+        steps_df = None
+        if step_units:
+            steps_df = analyze_steps(rows, step_units, step_coefficient, cancel_event=cancel_event)
 
         if parts:
             # 多部分机台（如上料机/主机/下料机）：各部分独立 UPH，换盘时间可平摊
@@ -400,6 +405,8 @@ class LogModel:
             sheets = {'Summary': summary, 'AMESummary': ame_summary}
             if not em_all.empty:
                 sheets['EMProduction'] = em_all
+            if steps_df is not None and not steps_df.empty:
+                sheets['步骤分析'] = steps_df
             out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
             if progress_callback:
@@ -438,6 +445,8 @@ class LogModel:
             sheets = {'Summary': stations_df, 'AMESummary': ame}
             if not em.empty:
                 sheets['EMProduction'] = em
+            if steps_df is not None and not steps_df.empty:
+                sheets['步骤分析'] = steps_df
             out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
             if progress_callback:
@@ -465,6 +474,8 @@ class LogModel:
             sheets['CycleDetail'] = cycles
         if not em.empty:
             sheets['EMProduction'] = em
+        if steps_df is not None and not steps_df.empty:
+            sheets['步骤分析'] = steps_df
         out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
         self._write_sheets(out_path, sheets, cancel_event=cancel_event)
         if progress_callback:
