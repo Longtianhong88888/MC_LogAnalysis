@@ -363,7 +363,7 @@ def _match_kws(content, kws):
 
 
 def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
-                  max_step_seconds=None, cancel_event=None):
+                  max_step_seconds=None, merge_gap=0.05, cancel_event=None):
     """
     单颗循环步骤深度分析：
     - units：每个单元配置 {name, module?, cycle, steps:[{name, start?, end?, timeout_seconds?}]}
@@ -374,6 +374,8 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
       或（配置了 timeout_seconds 时）时长 > 中位数 + timeout_seconds。
     - 中位时长低于 min_step_median（默认 0.01 秒）的动作视为信号抖动，直接忽略。
     - 时长超过 max_step_seconds（默认 None=不剔除）视为超长停机，从步骤统计与异常中剔除。
+    - 同一步骤在 merge_gap（默认 0.05 秒）内的连续事件合并为一次（多吸嘴/多穴并行
+      事件间隔仅 1ms，按批次算时长而非按吸嘴）。
     - 输出指标：循环数、中位时长、异常次数、异常影响时长（超额时长）、
       异常时间占比、异常频率（次/小时）。时间为 h:mm:ss 格式。
     """
@@ -446,15 +448,22 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
                             chain.append((t, i))
             chain.sort()
             prev_ts = c_start
+            prev_i = None
             for t, i in chain:
                 if steps[i].get('start'):
                     # A 模式步骤：end−start 已单独计算，这里仅作后续段的锚点
+                    prev_ts = t
+                    prev_i = i
+                    continue
+                if prev_i == i and (t - prev_ts) < merge_gap:
+                    # 同一步骤的并行突发（多吸嘴），合并为一次
                     prev_ts = t
                     continue
                 dur = t - prev_ts
                 if dur >= 0:
                     per_step[i].append(dur)
                 prev_ts = t
+                prev_i = i
         # 统计
         total_sec = (cycle_ts[-1] - cycle_ts[0]) if len(cycle_ts) > 1 else 0.0
         for i, st in enumerate(steps):
