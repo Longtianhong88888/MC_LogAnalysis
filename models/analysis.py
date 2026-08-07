@@ -587,8 +587,11 @@ def analyze_bottleneck_machines(rows, machines, cancel_event=None):
     """
     import statistics
     results = []
+    cycle_records = []
     for m in machines:
         module = m.get('module') or {}
+        normal = float(m.get('normal_threshold') or 10.0)
+        planned = float(m.get('planned_threshold') or 900.0)
         if module.get('from_path'):
             prefix = module['from_path'].rstrip('/') + '/'
             u_rows = [r for r in rows if str(r.get('FileName', '')).startswith(prefix)]
@@ -599,22 +602,43 @@ def analyze_bottleneck_machines(rows, machines, cancel_event=None):
             u_rows = rows
         kws = split_phrases(m.get('trigger', ''))
         unit_pat = re.compile(m.get('unit_pattern', '')) if m.get('unit_pattern') else None
+        events = []
+        for mono, content in _iter_monotonic(u_rows, cancel_event):
+            if _match_kws(content, kws):
+                events.append((mono, content))
         if unit_pat:
             by_unit = {}
-            for mono, content in _iter_monotonic(u_rows, cancel_event):
-                if not _match_kws(content, kws):
-                    continue
+            for mono, content in events:
                 um = unit_pat.search(content)
                 key = um.group(1) if um and um.groups() else (um.group(0) if um else '')
-                by_unit.setdefault(key, []).append(mono)
+                by_unit.setdefault(key, []).append((mono, content))
             gaps = []
-            for ts in by_unit.values():
-                ts.sort()
-                gaps.extend(b - a for a, b in zip(ts, ts[1:]) if 0 < b - a < 3600)
+            for evs in by_unit.values():
+                evs.sort()
+                for (t1, c1), (t2, _c2) in zip(evs, evs[1:]):
+                    d = t2 - t1
+                    if 0 < d < 3600:
+                        gaps.append(d)
+                        cycle_records.append({
+                            '模块': m.get('name', ''),
+                            'TriggerTime': datetime.fromtimestamp(t1).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+                            'CycleSeconds': round(d, 3),
+                            'Class': '计划性停机' if d > planned else ('异常周期' if d > normal else '正常周期'),
+                        })
         else:
-            ts = [mono for mono, c in _iter_monotonic(u_rows, cancel_event) if _match_kws(c, kws)]
-            ts.sort()
-            gaps = [b - a for a, b in zip(ts, ts[1:]) if 0 < b - a < 3600]
+            events.sort()
+            ts = [t for t, _c in events]
+            gaps = []
+            for (t1, _c1), (t2, _c2) in zip(events, events[1:]):
+                d = t2 - t1
+                if 0 < d < 3600:
+                    gaps.append(d)
+                    cycle_records.append({
+                        '模块': m.get('name', ''),
+                        'TriggerTime': datetime.fromtimestamp(t1).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+                        'CycleSeconds': round(d, 3),
+                        'Class': '计划性停机' if d > planned else ('异常周期' if d > normal else '正常周期'),
+                    })
         med = statistics.median(gaps) if gaps else None
         units = float(m.get('units_per_cycle') or 1)
         parallel = float(m.get('parallel_units') or 1)
@@ -633,11 +657,12 @@ def analyze_bottleneck_machines(rows, machines, cancel_event=None):
         return df, {'瓶颈机台': '', '瓶颈CT(秒)': '', 'UPH(个/小时)': ''}
     bottleneck_ct = max(cts)
     b_name = next(r['机台'] for r in results if r['单颗CT(秒)'] == bottleneck_ct)
+    cycles_df = pd.DataFrame(cycle_records, columns=['模块', 'TriggerTime', 'CycleSeconds', 'Class'])
     return df, {
         '瓶颈机台': b_name,
         '瓶颈CT(秒)': round(bottleneck_ct, 3),
         'UPH(个/小时)': round(3600.0 / bottleneck_ct, 2),
-    }
+    }, cycles_df
 
 
 def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0):

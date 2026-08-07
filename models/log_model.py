@@ -370,17 +370,22 @@ class LogModel:
 
         if bottleneck_machines:
             # CAW 双机台：上料机/焊接机 各自单颗 CT，取 CT 长者计算 UPH
-            machine_df, bn = analyze_bottleneck_machines(
+            machine_df, bn, cycles_df = analyze_bottleneck_machines(
                 rows, bottleneck_machines, cancel_event=cancel_event,
             )
+            em = parse_em_production(rows, cancel_event=cancel_event)
             ame = pd.DataFrame([{
                 '瓶颈机台': bn.get('瓶颈机台', ''),
                 '瓶颈CT(秒)': bn.get('瓶颈CT(秒)', ''),
                 'UPH(个/小时)': bn.get('UPH(个/小时)', ''),
             }])
             sheets = {'Summary': machine_df, 'AMESummary': ame}
+            if cycles_df is not None and not cycles_df.empty:
+                sheets['CycleDetail'] = cycles_df
             if steps_df is not None and not steps_df.empty:
                 sheets['步骤分析'] = steps_df
+            if not em.empty:
+                sheets['EMProduction'] = em
             if progress_callback:
                 progress_callback(70)
             out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')

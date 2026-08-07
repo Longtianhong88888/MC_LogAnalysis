@@ -218,11 +218,13 @@ class AnalysisTest(unittest.TestCase):
              "trigger": "去交换位", "units_per_cycle": 2,
              "unit_pattern": "滑台([1-9](?:左|右))"},
         ]
-        df, bn = analyze_bottleneck_machines(rows, machines)
+        df, bn, cycles = analyze_bottleneck_machines(rows, machines)
         self.assertEqual(df.set_index("机台").loc["上料机", "单颗CT(秒)"], 2.5)    # 10/4
         self.assertEqual(df.set_index("机台").loc["焊接机", "单颗CT(秒)"], 10.0)   # 20/2
         self.assertEqual(bn["瓶颈机台"], "焊接机")
         self.assertEqual(bn["UPH(个/小时)"], 360.0)  # 3600/10
+        self.assertFalse(cycles.empty)
+        self.assertIn("Class", cycles.columns)
 
     def test_iter_monotonic_time_only_wrap(self):
         from models.analysis import _iter_monotonic
