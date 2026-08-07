@@ -127,6 +127,35 @@ class AnalysisTest(unittest.TestCase):
         mark = df[df["步骤"] == "打标"].iloc[0]
         self.assertGreaterEqual(mark["循环数"], 1)
 
+    def test_analyze_steps_exclude_long_stop(self):
+        def mk(rows, ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "FR/l.txt",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+
+        rows = []
+        # 首边界后 3 个循环：正常 3s、超长停机 2000s（>900 应剔除）、异常慢 12s
+        mk(rows, 0.0, "左轴点胶完成")
+        base = 1.0
+        for i, dur in enumerate([3.0, 2000.0, 12.0]):
+            mk(rows, base, "左轴开始点胶")
+            base += dur
+            mk(rows, base, "左轴点胶完成")
+            base += 1.0
+
+        units = [{
+            "name": "左轴", "module": {"pattern": "左轴"}, "cycle": "轴点胶完成",
+            "steps": [{"name": "点胶", "start": "左轴开始点胶", "end": "左轴点胶完成"}],
+        }]
+        df = analyze_steps(rows, units, coefficient=1.5, max_step_seconds=900.0)
+        row0 = df.iloc[0]
+        self.assertEqual(row0["循环数"], 2)          # 2000s 的停机循环被剔除
+        self.assertEqual(row0["异常次数"], 1)          # 只剩 12s 这一个异常
+        self.assertEqual(row0["中位时长"], "0:00:07.500")
+        self.assertEqual(row0["异常影响时长"], "0:00:04.500")  # 12 − 7.5
+
     def test_iter_monotonic_time_only_wrap(self):
         from models.analysis import _iter_monotonic
         # 纯时间日志跨零点：00:00 之后自动累加一天，保证时间单调

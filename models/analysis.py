@@ -353,7 +353,8 @@ def fmt_hms(seconds):
     return "%d:%02d:%02d" % (h, m, sec)
 
 
-def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01, cancel_event=None):
+def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
+                  max_step_seconds=None, cancel_event=None):
     """
     单颗循环步骤深度分析：
     - units：每个单元配置 {name, module?, cycle, steps:[{name, start?, end?, timeout_seconds?}]}
@@ -363,6 +364,7 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01, cancel_eve
     - 每步统计时长分布，以中位数为基准；异常 = 时长 > 中位数×coefficient
       或（配置了 timeout_seconds 时）时长 > 中位数 + timeout_seconds。
     - 中位时长低于 min_step_median（默认 0.01 秒）的动作视为信号抖动，直接忽略。
+    - 时长超过 max_step_seconds（默认 None=不剔除）视为超长停机，从步骤统计与异常中剔除。
     - 输出指标：循环数、中位时长、异常次数、异常影响时长（超额时长）、
       异常时间占比、异常频率（次/小时）。时间为 h:mm:ss 格式。
     """
@@ -435,6 +437,8 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01, cancel_eve
         total_sec = (cycle_ts[-1] - cycle_ts[0]) if len(cycle_ts) > 1 else 0.0
         for i, st in enumerate(steps):
             durs = per_step[i]
+            if max_step_seconds is not None:
+                durs = [d for d in durs if d <= max_step_seconds]
             if not durs:
                 continue
             median = statistics.median(durs)

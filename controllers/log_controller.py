@@ -229,6 +229,8 @@ class LogController:
                 settings["step_units"] = feature_tpl["step_analysis"].get("units")
                 if feature_tpl["step_analysis"].get("coefficient") is not None:
                     settings["step_coefficient"] = float(feature_tpl["step_analysis"]["coefficient"])
+                if feature_tpl["step_analysis"].get("max_step_seconds") is not None:
+                    settings["step_max_seconds"] = float(feature_tpl["step_analysis"]["max_step_seconds"])
             if feature_tpl.get("module_from_path"):
                 settings["module_from_path"] = True
         if feature == "报警分析" and feature_tpl.get("module_from_path"):

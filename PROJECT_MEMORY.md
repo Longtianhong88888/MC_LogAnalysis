@@ -44,7 +44,7 @@
 - **单颗循环步骤分析**（`analyze_steps`，输出到 UPH_Analysis.xlsx 的「步骤分析」sheet）：
   - 模板 `step_analysis` 配置：`units[{name, module(from_path/pattern), cycle, steps[{name, start?, end?, timeout_seconds?}]}]` + `coefficient`（默认 1.5）。
   - start+end=事件对时长；仅 end=顺序切分（本步完成−上一步完成）。
-  - 异常 = 时长 > 中位×系数，或（配 timeout_seconds 时）> 中位+超时秒；**中位时长 < 0.01 秒的动作直接忽略**（信号抖动，如 CCD定位 2ms）。
+  - 异常 = 时长 > 中位×系数，或（配 timeout_seconds 时）> 中位+超时秒；**中位时长 < 0.01 秒的动作直接忽略**（信号抖动，如 CCD定位 2ms）；**时长 > 计划性停机阈值（默认 900s，可用模板 max_step_seconds 覆盖）视为超长停机，从步骤统计与异常中剔除**（FR 42 分钟停机不再计入点胶异常）。
   - 指标：循环数/中位/平均/P90/最长时长、异常次数、异常影响时长（超额时长）、异常时间占比、异常频率（次/小时）；时间统一 h:mm:ss（`fmt_hms`）。
   - 已配置制程：LM（GetSN/CCD取像解析/CCD定位/激光打标）、FR（左/右轴点胶）、SA（点胶/贴附/热压/检测）、ACF（上料/主机/下料）；CAW 待定步骤名。
   - UI：UPH 参数页「步骤异常系数」（默认 1.5，可调）。
