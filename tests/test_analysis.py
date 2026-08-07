@@ -8,6 +8,7 @@ from models.analysis import (
     analyze_status,
     analyze_status_derived,
     analyze_steps,
+    analyze_steps_sa,
     build_cycles_df,
     detect_tray_stats,
     down_pareto,
@@ -155,6 +156,40 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(row0["异常次数"], 1)          # 只剩 12s 这一个异常
         self.assertEqual(row0["中位时长"], "0:00:07.500")
         self.assertEqual(row0["异常影响时长"], "0:00:04.500")  # 12 − 7.5
+
+    def test_analyze_steps_sa_stations(self):
+        def mk(rows, ts, tag):
+            h = int(ts // 3600); m = int(ts % 3600 // 60)
+            s = ts % 60
+            sec = int(s); ms = int(round((s - sec) * 1000))
+            rows.append({"FileName": "SA/l.txt",
+                         "Content": "%02d:%02d:%02d.%03d %s" % (h, m, sec, ms, tag)})
+
+        rows = []
+        t = 0.0
+        # 4 排：每排 点胶→贴附×2→热压→检测×2；热压间隔 10/10/10/30s（末排异常）
+        for r, hp in enumerate([10.0, 10.0, 10.0, 30.0]):
+            mk(rows, t, "DispOneChipProfileWorkCycle")
+            mk(rows, t + 2.0, "AfterPickUp StopCondition")
+            mk(rows, t + 3.0, "AfterPickUp StopCondition")
+            mk(rows, t + hp, "Heater 0 :Heating Complete")
+            mk(rows, t + hp + 0.5, "UDP Module - Good")
+            mk(rows, t + hp + 1.0, "UDP Module - Good")
+            t += hp
+
+        df = analyze_steps_sa(rows, coefficient=1.5)
+        steps = set(df["步骤"])
+        self.assertEqual(steps, {"点胶", "贴附", "热压", "检测"})
+        hp = df[df["步骤"] == "热压"].iloc[0]
+        self.assertEqual(hp["循环数"], 3)
+        self.assertEqual(hp["异常次数"], 1)          # 30s > 10×1.5
+        self.assertEqual(hp["中位时长"], "0:00:10")
+        self.assertEqual(hp["异常影响时长"], "0:00:20")
+        dp = df[df["步骤"] == "点胶"].iloc[0]
+        self.assertEqual(dp["循环数"], 3)
+        self.assertEqual(dp["异常次数"], 0)
+        jc = df[df["步骤"] == "检测"].iloc[0]
+        self.assertEqual(jc["循环数"], 3)
 
     def test_iter_monotonic_time_only_wrap(self):
         from models.analysis import _iter_monotonic

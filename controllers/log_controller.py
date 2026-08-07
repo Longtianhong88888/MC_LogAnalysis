@@ -227,6 +227,8 @@ class LogController:
                 settings["parts"] = feature_tpl["parts"]
             if feature_tpl.get("step_analysis"):
                 settings["step_units"] = feature_tpl["step_analysis"].get("units")
+                if feature_tpl["step_analysis"].get("mode"):
+                    settings["step_mode"] = feature_tpl["step_analysis"]["mode"]
                 if feature_tpl["step_analysis"].get("coefficient") is not None:
                     settings["step_coefficient"] = float(feature_tpl["step_analysis"]["coefficient"])
                 if feature_tpl["step_analysis"].get("max_step_seconds") is not None:

@@ -16,6 +16,7 @@ from models.analysis import (
     analyze_status,
     analyze_status_derived,
     analyze_steps,
+    analyze_steps_sa,
     build_cycles_df,
     detect_tray_stats,
     down_pareto,
@@ -298,7 +299,7 @@ class LogModel:
                     ideal_ct=None, max_ct=None, file_filters=None, module_pattern=None,
                     pure_uph_factor=1.0, bottleneck_stations=None, bottleneck_units_per_row=None,
                     tray_change=None, parts=None, module_from_path=False,
-                    step_units=None, step_coefficient=1.5, step_max_seconds=None,
+                    step_units=None, step_coefficient=1.5, step_max_seconds=None, step_mode=None,
                     rows=None, cancel_event=None, progress_callback=None):
         if progress_callback:
             progress_callback(5)
@@ -307,12 +308,18 @@ class LogModel:
         if progress_callback:
             progress_callback(40)
         steps_df = None
-        if step_units:
+        if step_units or step_mode == 'sa':
             cutoff = step_max_seconds if step_max_seconds is not None else planned_threshold
-            steps_df = analyze_steps(
-                rows, step_units, step_coefficient,
-                max_step_seconds=cutoff, cancel_event=cancel_event,
-            )
+            if step_mode == 'sa':
+                steps_df = analyze_steps_sa(
+                    rows, step_coefficient,
+                    max_step_seconds=cutoff, cancel_event=cancel_event,
+                )
+            elif step_units:
+                steps_df = analyze_steps(
+                    rows, step_units, step_coefficient,
+                    max_step_seconds=cutoff, cancel_event=cancel_event,
+                )
 
         if parts:
             # 多部分机台（如上料机/主机/下料机）：各部分独立 UPH，换盘时间可平摊

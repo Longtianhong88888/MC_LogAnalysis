@@ -141,17 +141,8 @@ PROCESS_TEMPLATES = {
             ],
             "bottleneck_units_per_row": 2,
             "step_analysis": {
+                "mode": "sa",
                 "coefficient": 1.5,
-                "units": [{
-                    "name": "整机",
-                    "cycle": "Heater 0 :Heating Complete",
-                    "steps": [
-                        {"name": "点胶", "end": "DispOneChipProfileWorkCycle"},
-                        {"name": "贴附", "end": "AfterPickUp StopCondition"},
-                        {"name": "热压", "end": "Heater 0 :Heating Complete"},
-                        {"name": "检测", "end": "UDP Module - Good"},
-                    ],
-                }],
             },
             "tray_change": {
                 "pattern": "JigLoadingCycle",

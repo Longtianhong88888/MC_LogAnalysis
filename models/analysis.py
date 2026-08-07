@@ -498,6 +498,80 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
     return pd.DataFrame(all_rows)
 
 
+def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
+                     max_step_seconds=None, cancel_event=None):
+    """
+    SA 专用步骤分析：按四工位的每排周期计算（与瓶颈判定同一套口径）。
+    - 点胶：DispOneChipProfileWorkCycle，每排 1 次
+    - 贴附：AfterPickUp StopCondition，每排 2 次
+    - 热压：Heater 0 :Heating Complete，每排 1 次
+    - 检测：UDP Module - Good，每排 k 次（k = round(事件数/热压排数) 自动估算）
+    每排周期 = 第 i+k 个完成事件 − 第 i 个完成事件；异常判定与通用逻辑一致。
+    """
+    stations = [
+        ("点胶", "DispOneChipProfileWorkCycle", 1),
+        ("贴附", "AfterPickUp StopCondition", 2),
+        ("热压", "Heater 0 :Heating Complete", 1),
+        ("检测", "UDP Module - Good", 'auto'),
+    ]
+    tlists = {}
+    for name, pattern, k in stations:
+        tlist = []
+        for row in rows:
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            content = str(row.get('Content', ''))
+            if pattern not in content:
+                continue
+            t = parse_ts(content)
+            if t is not None:
+                tlist.append(t)
+        tlist.sort()
+        tlists[name] = (tlist, k)
+
+    ref_n = len(tlists["热压"][0])
+    all_rows = []
+    for name, (tlist, k) in tlists.items():
+        if not tlist:
+            continue
+        if k == 'auto':
+            k = max(1, round(len(tlist) / ref_n)) if ref_n else 1
+        # 不重叠分块：每 k 个完成事件为一排，间隔 = 第 i+k 个事件 − 第 i 个事件
+        # （滑动窗口会把一排算成多个重叠样本，样本数与真实排数不符）
+        intervals = [
+            (tlist[i + k] - tlist[i]).total_seconds()
+            for i in range(0, len(tlist) - k, k)
+            if 0 < (tlist[i + k] - tlist[i]).total_seconds() < 3600
+        ]
+        if max_step_seconds is not None:
+            intervals = [d for d in intervals if d <= max_step_seconds]
+        if not intervals:
+            continue
+        median = statistics.median(intervals)
+        if median < min_step_median:
+            continue
+        anomalies = [d for d in intervals if d > median * coefficient]
+        excess = sum(d - median for d in anomalies)
+        total_dur = sum(intervals)
+        n = len(intervals)
+        total_sec = (tlist[-1] - tlist[0]).total_seconds()
+        freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
+        all_rows.append({
+            '单元': '整机',
+            '步骤': name,
+            '循环数': n,
+            '中位时长': fmt_hms(median),
+            '平均时长': fmt_hms(statistics.mean(intervals)),
+            'P90时长': fmt_hms(sorted(intervals)[int(n * 0.9) - 1] if n else ''),
+            '最长时长': fmt_hms(max(intervals)),
+            '异常次数': len(anomalies),
+            '异常影响时长': fmt_hms(excess),
+            '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
+            '异常频率(次/小时)': round(freq, 2),
+        })
+    return pd.DataFrame(all_rows)
+
+
 def summarize_uph(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None, pure_uph_factor=1.0):
     """
     按模块汇总 UPH（CoreTech AME 定义）：
