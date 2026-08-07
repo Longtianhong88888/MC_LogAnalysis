@@ -154,6 +154,7 @@ class LogModel:
             # 原始日志过大：放弃合并，按日志文件逐个导出 Excel
             return self._process_per_file(
                 all_data, output_dir, keywords, separator, cancel_event, progress_callback,
+                abnormal_keywords,
             )
 
         df_all = pd.DataFrame(all_data)
@@ -300,7 +301,7 @@ class LogModel:
         return sheets
 
     def _process_per_file(self, all_data, output_dir, keywords, separator, cancel_event=None,
-                          progress_callback=None):
+                          progress_callback=None, abnormal_keywords=None):
         """日志过大：新建子文件夹，按日志文件逐个导出 Excel（文件名 = 日志文件名去掉扩展名）。"""
         sub_dir = os.path.join(output_dir, 'LogAnalysis_Files')
         os.makedirs(sub_dir, exist_ok=True)
@@ -309,6 +310,10 @@ class LogModel:
         if not has_keywords and not has_separator:
             # 无筛选：直接流式写入，避免构建大 DataFrame（最快、内存最低）
             n = self._stream_per_file(sub_dir, all_data, cancel_event)
+            if abnormal_keywords:
+                for f in sorted(os.listdir(sub_dir)):
+                    if f.endswith('.xlsx'):
+                        self._highlight_abnormal_rows(os.path.join(sub_dir, f), abnormal_keywords, cancel_event)
             if progress_callback:
                 progress_callback(100)
             return f"{sub_dir}（日志过大，已按文件分别导出 {n} 个 Excel）"
@@ -324,6 +329,8 @@ class LogModel:
             stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
             out_path = os.path.join(sub_dir, f'{stem}.xlsx')
             self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+            if abnormal_keywords:
+                self._highlight_abnormal_rows(out_path, abnormal_keywords, cancel_event)
             if progress_callback:
                 progress_callback(30 + int(60 * (idx + 1) / n))
         if progress_callback:

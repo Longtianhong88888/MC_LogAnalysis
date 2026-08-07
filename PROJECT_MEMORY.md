@@ -75,6 +75,7 @@
 
 - `process(abnormal_keywords=...)` 写入后把命中行整行标浅红（`_highlight_abnormal_rows`，FFC7CE）。
 - 控制器从模板报警关键词 + 停机标记（AutoRun Stop / ErrOn / 生产流程出现异常 / status:DOWN / 机械手不安全 / 换盘提示 / 超时等）构建，并**剔除 NG**（产品码常含 NG，如 RDA620700NG55423C 会误标）。
+- 标红对**所有制程、所有输出路径生效**：普通合并 LogAnalysis.xlsx、按分组（merge_groups）、大日志 per-file（LogAnalysis_Files，含流式写入路径）。
 - 注意：UPH 步骤超时是时长判定、非关键词，未纳入标红（需异常行交叉引用，待定）。
 - 注意：环境需装 pptx / xlsxwriter / PyQt5，否则相关用例报错（不是代码问题）。
 
