@@ -72,18 +72,39 @@ PROCESS_TEMPLATES = {
             "step_analysis": {
                 "coefficient": 1.5,
                 "units": [
-                    {"name": "取料1(工位4)", "module": {"pattern": "取料1"}, "cycle": "放熟料完成,放生料完成",
+                    # 上料机（PLC2）：左右取料轴；每轴 2 生料吸嘴 + 2 熟料吸嘴
+                    {"name": "上料机-取料1", "module": {"pattern": "取料1"}, "cycle": "放熟料完成",
                      "steps": [
-                         {"name": "取料", "end": "取熟料完成,双取生料完成"},
+                         {"name": "取生料", "end": "双取生料完成"},
                          {"name": "扫码", "end": "扫码完成"},
-                         {"name": "放料", "end": "放熟料完成,放生料完成"},
+                         {"name": "取熟料", "end": "取熟料完成"},
+                         {"name": "放生料", "end": "放生料完成"},
+                         {"name": "放熟料", "end": "放熟料完成"},
                      ]},
-                    {"name": "取料2(工位7)", "module": {"pattern": "取料2"}, "cycle": "放熟料完成,放生料完成",
+                    {"name": "上料机-取料2", "module": {"pattern": "取料2"}, "cycle": "放熟料完成",
                      "steps": [
-                         {"name": "取料", "end": "取熟料完成,双取生料完成"},
+                         {"name": "取生料", "end": "双取生料完成"},
                          {"name": "扫码", "end": "扫码完成"},
-                         {"name": "放料", "end": "放熟料完成,放生料完成"},
+                         {"name": "取熟料", "end": "取熟料完成"},
+                         {"name": "放生料", "end": "放生料完成"},
+                         {"name": "放熟料", "end": "放熟料完成"},
                      ]},
+                ] + [
+                    # 焊接机（PLC1）：2 焊接头 4 工站 8 工位（滑台1-4 × 左/右）
+                    {"name": "焊接机-滑台%d%s" % (s, side),
+                     "module": {"pattern": "滑台%d%s" % (s, side)},
+                     "cycle": "去交换位",
+                     "steps": [
+                         {"name": "PR1纠偏", "end": "平台PR1"},
+                         {"name": "纠偏", "end": "平台糾偏", "timeout_seconds": 0.5},
+                         {"name": "贴合", "end": "平台贴合", "timeout_seconds": 0.5},
+                         {"name": "判定PR3", "end": "平台PR3"},
+                         {"name": "焊接", "end": "平台焊接", "timeout_seconds": 1.0},
+                         {"name": "检查PR6", "end": "平台PR6"},
+                         {"name": "压合回零", "end": "压合回零", "timeout_seconds": 1.0},
+                         {"name": "交换", "end": "去交换位", "timeout_seconds": 0.5},
+                     ]}
+                    for s in range(1, 5) for side in ("左", "右")
                 ],
             },
         },

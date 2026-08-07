@@ -476,8 +476,11 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
             if median < min_step_median:
                 continue  # 低于 0.01 秒的动作忽略
             timeout = st.get('timeout_seconds')
-            anomalies = [d for d in durs if d > median * coefficient or
-                         (timeout is not None and d > median + float(timeout))]
+            if timeout is not None:
+                # 配置了超时秒数：以 中位+超时 为唯一判定（亚秒步骤用系数会误报）
+                anomalies = [d for d in durs if d > median + float(timeout)]
+            else:
+                anomalies = [d for d in durs if d > median * coefficient]
             excess = sum(d - median for d in anomalies)
             total_dur = sum(durs)
             n = len(durs)
