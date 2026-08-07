@@ -216,6 +216,8 @@ class LogController:
             settings["module_pattern"] = feature_tpl["module_pattern"]
         if feature_tpl.get("pure_uph_factor") is not None:
             settings["pure_uph_factor"] = float(feature_tpl["pure_uph_factor"])
+        if feature == "文档合并与内容拆分" and template.get("merge_groups"):
+            settings["merge_groups"] = template["merge_groups"]
         if feature == "UPH分析":
             if feature_tpl.get("bottleneck_stations"):
                 settings["bottleneck_stations"] = feature_tpl["bottleneck_stations"]

@@ -62,8 +62,12 @@ PROCESS_TEMPLATES = {
         "机台状态分析": {},
     },
     "CAW 组装": {
-        "description": "CAW 组装机：PLC2 步数记录算周期，RAYPRUS 交互记录取状态与 EM 产量",
+        "description": "CAW 组装机：PLC2 上料机 + PLC1 焊接机（左右工作区并行）；UPH 按双机台瓶颈判定（焊接机为瓶颈，整机≈1250/hr）；合并分析按 PLC1/PLC2 分组导出",
         "file_filters": ["记录PLC", "RAYPRUS", "Debug", "设备状态"],
+        "merge_groups": [
+            {"name": "PLC1焊接机", "file": "记录PLC1"},
+            {"name": "PLC2上料机", "file": "记录PLC2"},
+        ],
         "UPH分析": {
             "bottleneck_machines": [
                 # 上料机：每次给 1 个滑台换料 = 2 颗（与焊接机每滑台周期需求对齐，不是 4 颗）

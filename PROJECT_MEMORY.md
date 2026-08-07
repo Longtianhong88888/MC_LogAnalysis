@@ -41,6 +41,7 @@
   - 上料机：放熟料完成 周期中位 10.8s，每周期 2 颗（**每次给 1 个滑台换料**，与焊接机每滑台周期需求对齐），并行 2 取料轴 → 单颗CT 2.71s，UPH≈1330/hr。
   - 焊接机：去交换位 周期中位 23.05s（按 8 工位分单元测，避免并行交换突发），每周期 2 颗（每滑台左右 2 工位各 1 颗），并行 4（**左右 2 侧 × 每侧 2 滑台**）→ 单颗CT 2.88s → **瓶颈=焊接机，UPH≈1249/hr（整机；单边≈625）**。
   - 机台配置：`module.file` 文件名匹配（CAW PLC 文件平铺）、`unit_pattern` 按子单元测周期（正则捕获组）、`parallel_units` 并行单元数。
+  - 一键分析修复：CAW UPH Excel 带「步骤分析」sheet（bottleneck_machines 分支也计算步骤）；合并分析按 `merge_groups` 分组导出 LogAnalysis_PLC1焊接机/PLC2上料机/其他.xlsx（模板级 `merge_groups` 配置）。
 - **EFF** = 操作时间(运行+待机) ÷ 计划生产时间；停机按 ReasonID 拆 pDT/uDT。
 - **每盘颗数**：按 Tray ID（carrierId/CubeTrayId）动态分段统计，不写死；同一盘号跨小时复用按间隔切段（run_gap=300s）。
 - **换盘时间**：SA 式「同工位 卸载→下一次装载」间隔中位数（`measure_tray_change`，O(n log n) 二分）。
