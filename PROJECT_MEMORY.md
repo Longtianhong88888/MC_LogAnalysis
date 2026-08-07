@@ -77,6 +77,7 @@
 - 控制器从模板报警关键词 + 停机标记（AutoRun Stop / ErrOn / 生产流程出现异常 / status:DOWN / 机械手不安全 / 换盘提示 / 超时等）构建，并**剔除 NG**（产品码常含 NG，如 RDA620700NG55423C 会误标）。
 - 标红对**所有制程、所有输出路径生效**：普通合并 LogAnalysis.xlsx、按分组（merge_groups）、大日志 per-file（LogAnalysis_Files，含流式写入路径）。
 - UPH 步骤超时标红：`analyze_steps`/`analyze_steps_sa` 把异常步骤的触发行内容存入 `df.attrs['anomaly_lines']`（注意：该集合须在单元循环外初始化，否则只剩最后一个单元）；合并 feature 先跑一次步骤分析，写入后按行内容精确标红（`_highlight_step_lines`）。CAW 实测：焊接机 1851 行 + 上料机 411 行步骤超时标红。
+- 已验证：SA（analyze_steps_sa 模式）530 行步骤超时标红；ACF（4.8M 行 per-file 路径）上料機每时文件约 320 行标红。ACF 全量合并+标红约 6-7 分钟（480 万行 openpyxl 逐行检查），属正常开销。
 - 注意：环境需装 pptx / xlsxwriter / PyQt5，否则相关用例报错（不是代码问题）。
 
 ## 已知问题 / 待办
