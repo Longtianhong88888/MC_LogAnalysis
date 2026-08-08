@@ -112,12 +112,17 @@ class LogModelTest(unittest.TestCase):
         self.assertTrue(os.path.exists(path))  # LogAnalysis.xlsx
 
     def test_detect_encoding_gbk_single_byte_fallback(self):
-        from utils.file_utils import detect_encoding
+        # 验证 GBK 中文日志能正确解码（不依赖 chardet 对编码标签的具体命名，
+        # 不同 chardet 版本可能返回 GB2312/GBK/GB18030，标签本身不影响解码正确性）
+        from utils.file_utils import read_file_with_fallback
         src = tempfile.mkdtemp()
         path = os.path.join(src, "gbk.log")
         with open(path, "wb") as f:
             f.write("2026-07-08 00:00:00 真空信号不达标\n".encode("gbk"))
-        self.assertIn(detect_encoding(path).lower(), ("gbk", "gb2312"))
+        lines, enc = read_file_with_fallback(path)
+        self.assertEqual(lines, ["2026-07-08 00:00:00 真空信号不达标"])
+        self.assertIn(enc.lower().replace("-", "").replace("_", ""),
+                      ("gbk", "gb2312", "gb18030"))
 
     def test_find_external_resource(self):
         from utils.resource_utils import find_external_resource
