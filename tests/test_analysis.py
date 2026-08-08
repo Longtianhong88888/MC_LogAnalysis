@@ -679,6 +679,8 @@ class AnalysisTest(unittest.TestCase):
     def test_available_reason_lists(self):
         from models.reason_codes import available_reason_lists
         lists = available_reason_lists()
+        if not lists:
+            self.skipTest("外部 EReasonList 目录为内部数据未入库（CI 环境缺失），跳过")
         self.assertIn("LM", lists)
         self.assertIn("FR", lists)
 
@@ -944,6 +946,9 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(list(right["CycleSeconds"]), [8.0])
 
     def test_ppt_report(self):
+        from utils.resource_utils import find_external_resource
+        if not find_external_resource("Analysis_Report.pptx"):
+            self.skipTest("Analysis_Report.pptx 模板为内部数据未入库（CI 环境缺失），跳过")
         from models.report import build_ppt_report
         from pptx import Presentation
         src = tempfile.mkdtemp()
