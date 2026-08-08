@@ -1,0 +1,428 @@
+{
+  "pptx": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx",
+  "generated_at": "20260808_084228",
+  "summary": {
+    "error": 10,
+    "warning": 1,
+    "not_checked": 0
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 3,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 24,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 626.4
+        },
+        "single_line_width_pt": 352.36,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 352.36,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -554.4,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第1章 功能与亮点\n六大功能，覆盖日志分析的完整链路"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 4,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 37,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 963.36
+        },
+        "single_line_width_pt": 547.29,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 547.29,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -891.36,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第1章 功能与亮点\n亮点：自动模板、瓶颈判定、换盘分摊、步骤甘特、异常标红、自动报告"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 5,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 19,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 496.8
+        },
+        "single_line_width_pt": 285.25,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 285.25,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -424.8,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第2章 操作教学\n5 步完成一次机台日志分析"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 6,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 30,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 781.92
+        },
+        "single_line_width_pt": 439.26,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 439.26,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -709.92,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第2章 操作教学\n界面一看就懂：左边选功能，右边筛日志，下方看结果"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 7,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 26,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 678.24
+        },
+        "single_line_width_pt": 382.12,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 382.12,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -606.24,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第3章 制程与口径\n五种制程模板，参数与算法已按机台配好"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 8,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 31,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 807.84
+        },
+        "single_line_width_pt": 462.77,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 462.77,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -735.84,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第3章 制程与口径\nUPH 口径：实际、Pure、Derated M1/M2 与有效 UPH"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 9,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 29,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 756.0
+        },
+        "single_line_width_pt": 426.76,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 426.76,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -684.0,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第3章 制程与口径\n步骤拆到运动节拍，甘特图一眼看出先后与并行"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 10,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 28,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 730.08
+        },
+        "single_line_width_pt": 417.83,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 417.83,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -658.08,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第3章 制程与口径\nEFF、状态与报警：三张表讲清设备效率与异常"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 11,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 28,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 730.08
+        },
+        "single_line_width_pt": 416.04,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 416.04,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -658.08,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第4章 输出与注意\n一次分析，输出可编辑的 Excel 与 PPT 报告"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "textbox_fit_failure",
+      "message": "文本估计边界已经越出可用内容区，存在明确的文本框 fit 失败风险。",
+      "slide_number": 12,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 24.0,
+        "line_count_estimated": 21,
+        "inner_rect_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 72.00000000000001
+        },
+        "estimated_text_bounds_pt": {
+          "left": 53.61,
+          "top": 25.19,
+          "width": 0.0,
+          "height": 548.64
+        },
+        "single_line_width_pt": 307.72,
+        "effective_inner_width_pt": 1.0,
+        "width_pressure_ratio": 307.72,
+        "max_line_width_pt": 0.0,
+        "last_line_width_pt": 0.0,
+        "bottom_gap_pt": -476.64,
+        "right_gap_pt": 0.0,
+        "overflow_area_pt2": 0.0,
+        "overflow_ratio": 0.0,
+        "text": "第4章 输出与注意\n使用前注意这几点，避免踩坑"
+      },
+      "suggested_fix": "增加文本框高度、减少文案密度，或把内容拆到更多卡片 / 更多页。"
+    },
+    {
+      "severity": "warning",
+      "issue_type": "font_size_outside_theme_scale",
+      "message": "显式字号不属于 active theme_tokens 的语义字号表，可能是局部手填档位。",
+      "slide_number": 1,
+      "shape_id": 2,
+      "source_kind": "shape_text",
+      "details": {
+        "font_size_pt": 54.0,
+        "text": "MC Log Analysis",
+        "shape_name": "TextBox 1",
+        "setting_source": "run",
+        "recommendation_status": "unresolved",
+        "recommended_token_field": null,
+        "recommended_token": null,
+        "recommended_value_pt": null,
+        "role": null,
+        "typography_language": "zh",
+        "typography_profile": "zh_formal",
+        "east_asia_font_name": "宋体",
+        "font_size_policy_source": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/generated/slide_specs.yaml",
+        "allowed_font_sizes_pt": [
+          9.0,
+          10.5,
+          12.0,
+          14.0,
+          16.0,
+          24.0,
+          30.0,
+          40.0
+        ]
+      },
+      "suggested_fix": "把该文本绑定到已有 typography token；确需新档位时先更新 theme_tokens 并记录语义用途。"
+    }
+  ],
+  "counts": {
+    "shape_count": 118,
+    "text_item_count": 119,
+    "explicit_font_size_occurrence_count": 153,
+    "table_cell_format_record_count": 38,
+    "table_paragraph_format_record_count": 38
+  },
+  "font_size_policy": {
+    "typography_profile": "zh_formal",
+    "latin_font_name": "Times New Roman",
+    "east_asia_font_name": "宋体",
+    "hero_title_font_pt": 40.0,
+    "section_title_font_pt": 30.0,
+    "page_title_font_pt": 24.0,
+    "subtitle_font_pt": 16.0,
+    "minor_title_font_pt": 14.0,
+    "body_font_pt": 12.0,
+    "label_font_pt": 10.5,
+    "caption_font_pt": 9.0,
+    "table_font_pt": 10.5,
+    "source": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/generated/slide_specs.yaml",
+    "_field_sources": {
+      "hero_title_font_pt": "theme_tokens",
+      "section_title_font_pt": "theme_tokens",
+      "page_title_font_pt": "theme_tokens",
+      "subtitle_font_pt": "theme_tokens",
+      "minor_title_font_pt": "theme_tokens",
+      "body_font_pt": "theme_tokens",
+      "label_font_pt": "theme_tokens",
+      "caption_font_pt": "theme_tokens",
+      "table_font_pt": "theme_tokens"
+    }
+  }
+}

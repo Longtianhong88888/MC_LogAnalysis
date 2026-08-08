@@ -5,13 +5,13 @@
 - 主使用场景：新用户培训材料 + 日常使用参考（可随时翻阅）。
 - 目标动作：读者看完能理解工具能做什么、亮点在哪，并按 5 步完成一次机台日志分析并拿到 Excel / PPT 报告。
 - 是否需要无人讲解也能读懂：是（self-contained）。
-- 参考模板文件：无（不沿用 Analysis_Report.pptx，那是分析报告模板，不是说明 deck 模板）。
-- 模板 / 品牌约束：无品牌素材；不使用任何机构 logo。
+- 参考模板文件：`PPT模板.pptx`（项目根目录，鸿海/富士康风格模板）。
+- 模板 / 品牌约束：template_locked——必须继承模板 master/layout（版权行、右上 logo、页码/页脚、封面/目录/章节/内容页体系），不重建品牌。
 - 交付物要求：可编辑 pptx（16:9），正文中文宋体、英文 Times New Roman，正文字号 ≥12pt，表格 10.5pt；同时交付逐页预览图与验证证据。
 - 验证要求：package_preflight / structure_precheck / 预览导出 / render_review / 人工 visual review。
 
 ## Deck Contract
-- source_context：no_template
+- source_context：template_locked
 - delivery_context：self-contained_reading_deck
 - communication_profile：technical_explainer
 - visual_profile：corporate_clear
@@ -24,11 +24,12 @@
   - 字体：中文 宋体、英文 Times New Roman（标题可用黑体系，但保持成对切换）
 
 ## 模板取证
-- 页面系统判断：无模板，空白页直生（build route = 空白页直生 editable deck）。
-- 关键母版 / layout 元素：统一自定义页眉（左上标题区 + 右下页码/版本），用 slide 层原生形状实现，不依赖母版。
-- 字号系统：按 theme_tokens（hero 40 / section 30 / page title 24 / subtitle 16 / minor 14 / body 12 / label 10.5 / caption 9 / table 10.5）。
-- 计划采用的构建路线：空白页直生，python-pptx 原生文本/形状/表格；预览导出走 PowerPoint（本机已装）。
-- 最小 PoC 结论：直接用 python-pptx 新建 16:9 页 + 自定义页眉即可稳定渲染。
+- 页面系统判断：layout 族 = 1_cover（封面）/ 1_agenda（目录）/ 1~4_new category（章节页）/ 1~5_content page（内容页）；模板自带 2 张示例页（封面 + 目录）。
+- 关键母版 / layout 元素：master 含底部版权 “© 2026 Hon Hai Precision Industry Co., Ltd.”（10pt）与右上 logo 图片（0.58in）；layout 含页码占位（‹#› 右下）、页脚占位、内容页 TITLE + OBJECT（左文本 7.19in）+ BITMAP（右图 4.59in）占位。
+- 字号系统：封面标题文本框 54pt（EF5149）；内容页标题继承 layout（构建时显式设 24pt）；正文 12pt；版权 10pt；表格 10.5pt。
+- 配色：模板主题 强调色 EF5149（红橙，封面标题/大数字）+ 深蓝 083C63（页码/次级标题）+ 白底；本 deck 沿用该配色（不再用自定义 1F4E79 蓝）。
+- 计划采用的构建路线：master-first / layout-first——基于 `PPT模板.pptx` 打开，删除示例页，用模板 layout 逐页创建并继承 master 版权/logo/页码；封面标题按模板样式（54pt EF5149）自加文本框。
+- 最小 PoC 结论：新建 layout 页后版权/logo/页码/页脚自动继承（需在构建后抽查确认）。
 
 ## 风格与边界
 - 风格参考：corporate_clear（清晰、稳定、克制），无花哨装饰。
