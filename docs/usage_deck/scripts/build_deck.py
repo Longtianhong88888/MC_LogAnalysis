@@ -222,17 +222,16 @@ def build_overview(prs):
         x = 0.7 + i * 4.1
         add_text(slide, x, 2.7, 3.8, 1.0, num, size=40, bold=True, color=ACCENT)
         add_text(slide, x + 0.05, 3.85, 3.7, 0.4, label, size=16, bold=True, color=NAVY)
-        add_text(slide, x + 0.05, 4.35, 3.75, 1.0, desc, size=12, color=GRAY, line_spacing=1.3)
+        add_text(slide, x + 0.05, 4.35, 3.75, 1.0, desc, size=14, color=GRAY, line_spacing=1.4)
     add_rect_text(slide, 0.7, 5.9, 12.0, 0.8,
                   "支持“一键分析”：一次运行完成全部功能，结果在界面显示，并自动导出 4 个分析 Excel 与 PPT 报告。",
-                  fill=RGBColor(0xFD, 0xEF, 0xEE), size=14, bold=True, color=ACCENT)
+                  fill=RGBColor(0xFD, 0xEF, 0xEE), size=16, bold=True, color=ACCENT)
 
 
-def build_grid_page(prs, eyebrow, title, cards, cols=3, start=0):
+def build_grid_page(prs, eyebrow, title, cards, cols=3, start=0, ch=2.45):
     """浅色系磨砂玻璃卡片：页内每卡不同色（pastel 色板轮转），半透明+白描边+深字。"""
     slide = content_slide(prs, eyebrow, title)
     cw = 3.9 if cols == 3 else 5.95
-    ch = 2.25
     gap = 0.14
     for i, (t, body) in enumerate(cards):
         row, col = divmod(i, cols)
@@ -240,14 +239,14 @@ def build_grid_page(prs, eyebrow, title, cards, cols=3, start=0):
         y = 1.75 + row * (ch + 0.2)
         fill = PASTEL[(start + i) % len(PASTEL)]
         shp = add_rect_text(slide, x, y, cw, ch, t, fill=fill, line_color=WHITE,
-                            transparency=45, size=14, bold=True,
+                            transparency=45, size=16, bold=True,
                             color=CARD_TITLE, anchor=MSO_ANCHOR.TOP, margin=0.14)
         p = shp.text_frame.add_paragraph()
         p.line_spacing = 1.25
         p.space_before = Pt(6)
         r = p.add_run()
         r.text = body
-        _set_run(r, 12, False, CARD_BODY)
+        _set_run(r, 14, False, CARD_BODY)
     return slide
 
 
@@ -260,39 +259,43 @@ def build_flow(prs):
         ("4 选择功能", "合并 / UPH / EFF / 报警 / 状态 / 一键"),
         ("5 自动报告", "界面显示结果，并导出 Excel / PPT"),
     ]
-    bw, bh, gap = 2.16, 1.1, 0.38
-    y = 2.35
+    bw, bh, gap = 2.2, 1.55, 0.34
+    y = 2.15
     for i, (t, desc) in enumerate(steps):
         x = 0.7 + i * (bw + gap)
         add_rect_text(slide, x, y, bw, bh, t, fill=NAVY, radius=0.08,
-                      size=14, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
-        add_text(slide, x - 0.1, y + bh + 0.16, bw + 0.2, 1.0, desc,
-                 size=12, color=GRAY, align=PP_ALIGN.CENTER, line_spacing=1.3)
+                      size=16, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
+        add_text(slide, x - 0.17, y + bh + 0.2, bw + 0.34, 1.0, desc,
+                 size=14, color=GRAY, align=PP_ALIGN.CENTER, line_spacing=1.4)
         if i < 4:
             add_arrow(slide, x + bw - 0.02, y + bh / 2, gap + 0.06)
-    add_text(slide, 0.7, 5.7, 12.0, 0.4,
-             "提示：日志文件筛选框会自动填充与制程匹配的内容，有特殊需求也可手动输入。",
-             size=12, color=GRAY)
+    add_rect_text(slide, 0.7, 5.05, 12.0, 1.55, "操作小贴士",
+                  fill=PASTEL[0], line_color=WHITE, transparency=45,
+                  size=16, bold=True, color=CARD_TITLE, anchor=MSO_ANCHOR.TOP, margin=0.18)
+    tips = ("· 日志文件筛选框会自动填充与制程匹配的内容，有特殊需求可手动输入\n"
+            "· 制程模板会自动预填 UPH 触发词、报警关键词、制程名称（原因清单）\n"
+            "· 一键分析 = 合并拆分 + UPH + EFF + 报警 + 机台状态，一次全部完成")
+    add_text(slide, 0.95, 5.62, 11.5, 0.9, tips, size=14, color=CARD_BODY, line_spacing=1.5)
 
 
 def build_ui_map(prs):
     slide = content_slide(prs, "第2章 操作教学", "界面一看就懂：左边选功能，右边筛日志，下方看结果")
-    add_text(slide, 0.7, 1.6, 12.0, 0.4, "界面示意（非截图）：三块区域各司其职。", size=12, color=GRAY)
+    add_text(slide, 0.7, 1.6, 12.0, 0.45, "界面示意（非截图）：三块区域各司其职。", size=14, color=GRAY)
     add_rect_text(slide, 0.7, 2.15, 2.95, 4.2, "功能选择",
-                  fill=RGBColor(0xFD, 0xEF, 0xEE), size=14, bold=True, color=ACCENT,
+                  fill=RGBColor(0xFD, 0xEF, 0xEE), size=16, bold=True, color=ACCENT,
                   anchor=MSO_ANCHOR.TOP, margin=0.14)
     for j, it in enumerate(["文档合并与内容拆分", "UPH 分析", "EFF 分析", "报警分析", "机台状态分析", "一键分析"]):
-        add_text(slide, 0.92, 2.65 + j * 0.58, 2.6, 0.4, "· " + it, size=12, color=GRAY)
+        add_text(slide, 0.92, 2.65 + j * 0.58, 2.6, 0.45, "· " + it, size=14, color=GRAY)
     add_rect_text(slide, 3.85, 2.15, 8.85, 2.45, "制程模板 · 日志文件筛选 · 解析参数",
-                  fill=GRAY_LIGHT, size=14, bold=True, color=NAVY, anchor=MSO_ANCHOR.TOP, margin=0.14)
-    add_text(slide, 4.08, 2.72, 8.4, 0.4, "制程下拉：LM / CAW / FR / SA / ACF / 通用 / 自定义", size=12)
-    add_text(slide, 4.08, 3.22, 8.4, 0.4, "日志文件筛选：自动填充与制程匹配的内容，可手动修改", size=12)
-    add_text(slide, 4.08, 3.72, 8.4, 0.4, "解析参数：关键词、分隔符（默认左对齐）", size=12)
+                  fill=GRAY_LIGHT, size=16, bold=True, color=NAVY, anchor=MSO_ANCHOR.TOP, margin=0.14)
+    add_text(slide, 4.08, 2.72, 8.4, 0.45, "制程下拉：LM / CAW / FR / SA / ACF / 通用 / 自定义", size=14)
+    add_text(slide, 4.08, 3.22, 8.4, 0.45, "日志文件筛选：自动填充与制程匹配的内容，可手动修改", size=14)
+    add_text(slide, 4.08, 3.72, 8.4, 0.45, "解析参数：关键词、分隔符（默认左对齐）", size=14)
     add_rect_text(slide, 3.85, 4.85, 8.85, 1.5, "解析结果",
-                  fill=WHITE, line_color=NAVY, size=14, bold=True, color=NAVY, anchor=MSO_ANCHOR.TOP, margin=0.14)
+                  fill=WHITE, line_color=NAVY, size=16, bold=True, color=NAVY, anchor=MSO_ANCHOR.TOP, margin=0.14)
     add_text(slide, 4.08, 5.42, 8.4, 0.8,
              "分析结果表格与进度显示；顶部“使用说明”按钮可查看各制程说明与计算逻辑，右下角为版权信息。",
-             size=12, color=GRAY, line_spacing=1.4)
+             size=14, color=GRAY, line_spacing=1.4)
 
 
 def build_process_table(prs):
@@ -346,30 +349,39 @@ def build_formulas(prs):
         ("Derated UPH M1 = EM 投入数 ÷ RUN 时长", "多模组整机 = 各模组 M1 之和。"),
         ("有效 UPH = 3600 × 每周期产出 ÷（基础周期 + 每颗换盘开销）", "每颗换盘开销 = 单次换盘时间 ÷ 每盘颗数。"),
     ]
-    y = 1.7
+    y = 1.55
     for formula, note in items:
-        add_text(slide, 0.7, y, 12.0, 0.42, formula, size=14, bold=True, color=NAVY)
-        add_text(slide, 0.7, y + 0.42, 12.0, 0.36, note, size=12, color=GRAY)
-        y += 1.0
-        add_line(slide, 0.7, y - 0.12, 12.0, color=LINE_GRAY, weight=0.75)
-    add_text(slide, 0.7, y + 0.05, 9.0, 0.5,
+        add_text(slide, 0.7, y, 6.9, 0.5, formula, size=16, bold=True, color=NAVY)
+        add_text(slide, 0.7, y + 0.46, 6.9, 0.55, note, size=14, color=GRAY, line_spacing=1.3)
+        y += 1.08
+        add_line(slide, 0.7, y - 0.08, 6.9, color=LINE_GRAY, weight=0.75)
+    add_text(slide, 0.7, y + 0.02, 6.9, 0.9,
              "周期分类：间隔 > 计划性停机阈值 → 计划性停机；> 正常周期阈值 → 异常周期；其余为正常周期。",
-             size=12, color=GRAY)
+             size=14, color=GRAY, line_spacing=1.4)
+    # 右侧：换盘分摊真实示例卡（填满 BITMAP 区域）
+    add_rect_text(slide, 8.0, 1.7, 4.7, 4.9, "换盘时间分摊示例（LM）",
+                  fill=PASTEL[3], line_color=WHITE, transparency=45,
+                  size=16, bold=True, color=CARD_TITLE, anchor=MSO_ANCHOR.TOP, margin=0.2)
+    add_text(slide, 8.3, 2.55, 4.15, 3.8,
+             "单次换盘（下料 → 新盘上料）：\n15.46 秒\n\n"
+             "每盘颗数：24 颗\n每颗换盘开销：\n15.46 ÷ 24 ≈ 0.64 秒\n\n"
+             "有效周期 = 1.65 + 0.64 ≈ 2.29 秒\nPure UPH ≈ 1570 / 小时",
+             size=14, color=CARD_BODY, line_spacing=1.35)
 
 
 def build_gantt(prs):
     slide = content_slide(prs, "第3章 制程与口径", "步骤拆到运动节拍，甘特图一眼看出先后与并行")
     add_text(slide, 0.7, 1.6, 6.0, 0.5, "每个区块的步骤时间总和 ≈ CT（周期中位）。",
-             size=14, bold=True, color=NAVY)
+             size=16, bold=True, color=NAVY)
     add_text(slide, 0.7, 2.15, 6.1, 2.3,
              "步骤按轴 / 平台运动节拍拆分，例如 LM 单颗循环：\n\n"
              "打标前间隔 → Z 轴焦距定位 → 激光打标（振镜扫描）\n\n"
              "批次级：读码 GetSN、CCD 轴移动定位（每批 6 颗）\n\n"
              "盘级：平台下料、平台上料（每盘 24 颗）",
-             size=12, color=GRAY, line_spacing=1.35)
+             size=14, color=GRAY, line_spacing=1.4)
     add_text(slide, 0.7, 5.0, 6.1, 1.5,
              "异常判定 = 中位时长 + 超时秒数；超时 / 报警 / 停机行在日志 Excel 中自动标红。",
-             size=12, color=GRAY, line_spacing=1.35)
+             size=14, color=GRAY, line_spacing=1.4)
     # 右侧 BITMAP 占位放甘特示例图
     if GANTT_PNG.exists():
         for ph in slide.placeholders:
@@ -389,8 +401,14 @@ def build_eff_page(prs):
         ("机台状态分析", "优先读 status:RUN/IDLE/DOWN 行；无 status 时按“活动 + 停机关键词”推导时间线，输出各状态时长 / 占比 / 小时分布。"),
         ("报警分析", "按关键词命中计数，按机台 / 模组汇总；EReason 清单映射中文原因名称。"),
     ]
-    return build_grid_page(prs, "第3章 制程与口径", "EFF、状态与报警：三张表讲清设备效率与异常",
-                           cards, cols=3, start=4)
+    slide = build_grid_page(prs, "第3章 制程与口径", "EFF、状态与报警：三张表讲清设备效率与异常",
+                            cards, cols=3, start=4, ch=2.9)
+    add_text(slide, 0.7, 5.35, 12.0, 1.2,
+             "停机分类：EReason 清单中的计划停机（Planned / Routine）计入 pDT，其余计入 uDT；\n"
+             "未填计划停机 ReasonID 时，全部停机计入可用性损失。\n\n"
+             "状态推导：优先识别日志中的 status:RUN / IDLE / DOWN 行；无 status 行时按活动与停机关键词推导时间线。",
+             size=14, color=GRAY, line_spacing=1.5)
+    return slide
 
 
 def build_output_table(prs):

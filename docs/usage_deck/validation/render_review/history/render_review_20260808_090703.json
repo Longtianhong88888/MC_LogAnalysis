@@ -1,0 +1,15 @@
+{
+  "pptx": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx",
+  "generated_at": "20260808_090703",
+  "summary": {
+    "error": 0,
+    "warning": 0,
+    "not_checked": 0
+  },
+  "issues": [],
+  "preview_dir": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/rendered/ppt_preview",
+  "counts": {
+    "shape_count": 135,
+    "text_item_count": 136
+  }
+}
