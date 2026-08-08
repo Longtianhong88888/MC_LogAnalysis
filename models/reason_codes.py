@@ -40,6 +40,7 @@ def load_reason_codes(device):
     if path:
         try:
             df = pd.read_excel(path)
+            mapping = {}
             for _, r in df.iterrows():
                 code = str(r.get('ERRORNO', '')).strip()
                 key = code.lstrip('0') or '0'
@@ -48,10 +49,12 @@ def load_reason_codes(device):
                     'category': str(r.get('ATT3', '')),
                     'state': str(r.get('ATT4', '')),
                 }
+            # 仅解析成功才缓存；文件损坏/格式变更时下次重新读取，避免永久空映射
+            _CACHE[device] = mapping
+            return mapping
         except Exception:
-            mapping = {}
-    _CACHE[device] = mapping
-    return mapping
+            return {}
+    return {}
 
 
 def reason_info(mapping, reason_id):

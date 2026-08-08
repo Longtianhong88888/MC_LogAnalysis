@@ -13,6 +13,7 @@ except ImportError:
     _HAS_XLSXWRITER = False
 
 from models.analysis import (
+    analyze_bottleneck,
     analyze_bottleneck_machines,
     analyze_status,
     analyze_status_derived,
@@ -31,12 +32,20 @@ from models.analysis import (
     summarize_uph,
     summarize_uph_ame,
 )
+from models.reason_codes import load_reason_codes
 from utils.file_utils import read_files, clean_for_excel
 
 
 class LogModel:
     # 文档合并的行数上限：超过后放弃合并，改为按日志文件逐个导出 Excel
     MERGE_MAX_TOTAL_ROWS = 1_000_000
+
+    @staticmethod
+    def _load_reason_map(reason_device):
+        """按制程名加载 EReason 清单映射；未指定时返回 None。"""
+        if not reason_device:
+            return None
+        return load_reason_codes(reason_device)
 
     # ---------- 通用：读取 / 导出 ----------
     def _read_all(self, source_dir, progress_callback=None, file_filters=None, cancel_event=None):
@@ -68,7 +77,6 @@ class LogModel:
         with pd.ExcelWriter(out_path, **writer_kwargs) as writer:
             for sheet_name, df in sheets.items():
                 if cancel_event is not None and cancel_event.is_set():
-                    from models.exceptions import OperationCancelled
                     raise OperationCancelled()
                 if len(df) <= max_rows:
                     if len(df) > LogModel.MAX_FORMAT_ROWS:
@@ -80,7 +88,6 @@ class LogModel:
                     n = (len(df) + max_rows - 1) // max_rows
                     for i in range(n):
                         if cancel_event is not None and cancel_event.is_set():
-                            from models.exceptions import OperationCancelled
                             raise OperationCancelled()
                         chunk = df.iloc[i * max_rows:(i + 1) * max_rows]
                         name = f"{sheet_name}_{i + 1}"[:31]
@@ -289,7 +296,6 @@ class LogModel:
         total = len(merge_groups)
         for gi, group in enumerate(merge_groups):
             if cancel_event is not None and cancel_event.is_set():
-                from models.exceptions import OperationCancelled
                 raise OperationCancelled()
             name = group.get('name', '组%d' % (gi + 1))
             file_kw = group.get('file', '')
@@ -412,7 +418,6 @@ class LogModel:
                 max_parts = 0
                 for _, row in filtered_df.iterrows():
                     if cancel_event is not None and cancel_event.is_set():
-                        from models.exceptions import OperationCancelled
                         raise OperationCancelled()
                     parts = row['Content'].split(sep)
                     parts = [clean_for_excel(p) for p in parts]
@@ -458,7 +463,6 @@ class LogModel:
         n = len(file_names)
         for idx, fname in enumerate(file_names):
             if cancel_event is not None and cancel_event.is_set():
-                from models.exceptions import OperationCancelled
                 raise OperationCancelled()
             sub = pd.DataFrame([r for r in all_data if r.get('FileName') == fname])
             sheets = self._build_merge_sheets(sub, keywords, separator, cancel_event)
@@ -552,182 +556,204 @@ class LogModel:
         elif step_units:
             gantt_df = build_gantt_rows(
                 rows, step_units, max_step_seconds=cutoff, cancel_event=cancel_event)
-
         if bottleneck_machines:
-            # CAW 双机台：上料机/焊接机 各自单颗 CT，取 CT 长者计算 UPH
-            machine_df, bn, cycles_df = analyze_bottleneck_machines(
-                rows, bottleneck_machines, cancel_event=cancel_event,
-            )
-            em = parse_em_production(rows, cancel_event=cancel_event)
-            ame = pd.DataFrame([{
-                '瓶颈机台': bn.get('瓶颈机台', ''),
-                '瓶颈CT(秒)': bn.get('瓶颈CT(秒)', ''),
-                'UPH(个/小时)': bn.get('UPH(个/小时)', ''),
-            }])
-            sheets = {'Summary': machine_df, 'AMESummary': ame}
-            if cycles_df is not None and not cycles_df.empty:
-                sheets['CycleDetail'] = cycles_df
-            if steps_df is not None and not steps_df.empty:
-                sheets['步骤分析'] = steps_df
-            if gantt_df is not None and not gantt_df.empty:
-                sheets['步骤甘特图'] = gantt_df
-            if not em.empty:
-                sheets['EMProduction'] = em
-            if progress_callback:
-                progress_callback(70)
-            out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
-            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            if progress_callback:
-                progress_callback(100)
-            return out_path
-
+            return self._analyze_uph_machines(
+                rows, bottleneck_machines, steps_df, gantt_df,
+                output_dir, cancel_event, progress_callback)
         if parts:
-            # 多部分机台（如上料机/主机/下料机）：各部分独立 UPH，换盘时间可平摊
-            part_summaries = []
-            ame_rows = []
-            for part in parts:
-                name = part.get('name', '')
-                trigger = part.get('trigger', '')
-                units = int(part.get('units_per_cycle', units_per_cycle or 1))
-                part_normal = float(part.get('normal_threshold', normal_threshold))
-                part_planned = float(part.get('planned_threshold', planned_threshold))
-                p_rows = [r for r in rows if str(r.get('FileName', '')).split('/')[0] == name]
-                cycles = build_cycles_df(p_rows, trigger, part_normal, part_planned,
-                                         module_from_path=module_from_path, cancel_event=cancel_event)
-                if cycles.empty:
-                    row = {'模块': name, '周期总数': 0, '产出数(个)': 0, '统计时长(秒)': 0,
-                           'UPH(个/小时)': '', 'Pure UPH(个/小时)': '', 'Derated UPH M2(个/小时)': ''}
-                    if part.get('tray_seconds') or part.get('tray_detect'):
-                        row.update({'每盘颗数(统计)': '', '换盘次数': '',
-                                    '单次换盘时间(秒)': '', '每颗换盘开销(秒)': '',
-                                    '有效周期(秒)': '', '有效UPH(个/小时)': ''})
-                    part_summaries.append(pd.DataFrame([row]))
-                    ame_rows.append({'模块': name, 'Pure UPH(个/小时)': '', 'UPH(个/小时)': '', '产出数(个)': 0})
-                    continue
-                s = summarize_uph(cycles, units, ideal_ct=ideal_ct, max_ct=max_ct,
-                                  pure_uph_factor=pure_uph_factor)
-                tray_s = part.get('tray_seconds')
-                units_per_tray = part.get('units_per_tray') or part.get('rows_per_tray')
-                tray_stats = None
-                if part.get('tray_detect'):
-                    try:
-                        tray_stats = detect_tray_stats(
-                            p_rows,
-                            part['tray_detect']['tray_id'],
-                            part['tray_detect'].get('unit'),
-                            segments=part['tray_detect'].get('segments', 'id'),
-                            run_gap=float(part['tray_detect'].get('run_gap', 300.0)),
-                            cancel_event=cancel_event,
-                        )
-                    except Exception:
-                        tray_stats = None
-                if tray_stats:
-                    units_per_tray = tray_stats['units_per_tray']
-                    s['每盘颗数(统计)'] = tray_stats['units_per_tray']
-                    s['换盘次数'] = tray_stats['tray_count']
-                    s['单次换盘时间(秒)'] = tray_stats['tray_seconds']
-                if part.get('tray_change'):
-                    # SA 式：换盘时间 = 同工位 卸载 -> 下一次装载 的间隔
-                    tc = measure_tray_change(
+            return self._analyze_uph_parts(
+                rows, parts, units_per_cycle, normal_threshold, planned_threshold,
+                ideal_ct, max_ct, pure_uph_factor, module_from_path,
+                steps_df, gantt_df, output_dir, cancel_event, progress_callback)
+        if bottleneck_stations:
+            return self._analyze_uph_stations(
+                rows, bottleneck_stations, bottleneck_units_per_row or units_per_cycle,
+                tray_change, steps_df, gantt_df,
+                output_dir, cancel_event, progress_callback)
+        return self._analyze_uph_basic(
+            rows, trigger_keywords, units_per_cycle, normal_threshold, planned_threshold,
+            ideal_ct, max_ct, module_pattern, pure_uph_factor, tray_change,
+            steps_df, gantt_df, output_dir, cancel_event, progress_callback)
+
+    def _analyze_uph_machines(self, rows, bottleneck_machines, steps_df, gantt_df, output_dir, cancel_event, progress_callback):
+
+        # CAW 双机台：上料机/焊接机 各自单颗 CT，取 CT 长者计算 UPH
+        machine_df, bn, cycles_df = analyze_bottleneck_machines(
+            rows, bottleneck_machines, cancel_event=cancel_event,
+        )
+        em = parse_em_production(rows, cancel_event=cancel_event)
+        ame = pd.DataFrame([{
+            '瓶颈机台': bn.get('瓶颈机台', ''),
+            '瓶颈CT(秒)': bn.get('瓶颈CT(秒)', ''),
+            'UPH(个/小时)': bn.get('UPH(个/小时)', ''),
+        }])
+        sheets = {'Summary': machine_df, 'AMESummary': ame}
+        if cycles_df is not None and not cycles_df.empty:
+            sheets['CycleDetail'] = cycles_df
+        if steps_df is not None and not steps_df.empty:
+            sheets['步骤分析'] = steps_df
+        if gantt_df is not None and not gantt_df.empty:
+            sheets['步骤甘特图'] = gantt_df
+        if not em.empty:
+            sheets['EMProduction'] = em
+        if progress_callback:
+            progress_callback(70)
+        out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+        if progress_callback:
+            progress_callback(100)
+        return out_path
+
+
+    def _analyze_uph_parts(self, rows, parts, units_per_cycle, normal_threshold, planned_threshold, ideal_ct, max_ct, pure_uph_factor, module_from_path, steps_df, gantt_df, output_dir, cancel_event, progress_callback):
+
+        # 多部分机台（如上料机/主机/下料机）：各部分独立 UPH，换盘时间可平摊
+        part_summaries = []
+        ame_rows = []
+        for part in parts:
+            name = part.get('name', '')
+            trigger = part.get('trigger', '')
+            units = int(part.get('units_per_cycle', units_per_cycle or 1))
+            part_normal = float(part.get('normal_threshold', normal_threshold))
+            part_planned = float(part.get('planned_threshold', planned_threshold))
+            p_rows = [r for r in rows if str(r.get('FileName', '')).split('/')[0] == name]
+            cycles = build_cycles_df(p_rows, trigger, part_normal, part_planned,
+                                     module_from_path=module_from_path, cancel_event=cancel_event)
+            if cycles.empty:
+                row = {'模块': name, '周期总数': 0, '产出数(个)': 0, '统计时长(秒)': 0,
+                       'UPH(个/小时)': '', 'Pure UPH(个/小时)': '', 'Derated UPH M2(个/小时)': ''}
+                if part.get('tray_seconds') or part.get('tray_detect'):
+                    row.update({'每盘颗数(统计)': '', '换盘次数': '',
+                                '单次换盘时间(秒)': '', '每颗换盘开销(秒)': '',
+                                '有效周期(秒)': '', '有效UPH(个/小时)': ''})
+                part_summaries.append(pd.DataFrame([row]))
+                ame_rows.append({'模块': name, 'Pure UPH(个/小时)': '', 'UPH(个/小时)': '', '产出数(个)': 0})
+                continue
+            s = summarize_uph(cycles, units, ideal_ct=ideal_ct, max_ct=max_ct,
+                              pure_uph_factor=pure_uph_factor)
+            tray_s = part.get('tray_seconds')
+            units_per_tray = part.get('units_per_tray') or part.get('rows_per_tray')
+            tray_stats = None
+            if part.get('tray_detect'):
+                try:
+                    tray_stats = detect_tray_stats(
                         p_rows,
-                        part['tray_change'].get('unload', ''),
-                        part['tray_change'].get('load', ''),
+                        part['tray_detect']['tray_id'],
+                        part['tray_detect'].get('unit'),
+                        segments=part['tray_detect'].get('segments', 'id'),
+                        run_gap=float(part['tray_detect'].get('run_gap', 300.0)),
                         cancel_event=cancel_event,
                     )
-                    if tc:
-                        tray_s = tc['tray_seconds']
-                        s['换盘次数'] = tc['tray_count']
-                        s['单次换盘时间(秒)'] = tc['tray_seconds']
-                if tray_s and units_per_tray:
-                    try:
-                        pure_f = float(s.iloc[0].get('Pure UPH(个/小时)'))
-                        base_cycle = 3600.0 * units / pure_f
-                        overhead = float(tray_s) / float(units_per_tray)
-                        eff_cycle = base_cycle + overhead
-                        s['每颗换盘开销(秒)'] = round(overhead, 3)
-                        s['有效周期(秒)'] = round(eff_cycle, 3)
-                        s['有效UPH(个/小时)'] = round(3600.0 * units / eff_cycle, 2)
-                    except (TypeError, ValueError, ZeroDivisionError):
-                        pass
-                part_summaries.append(s)
-                r0 = s.iloc[0]
-                p_em = parse_em_production(p_rows, cancel_event=cancel_event)
-                em_input = int(p_em['InputQty'].sum()) if not p_em.empty else ''
-                em_good = int(p_em['GoodQty'].sum()) if not p_em.empty else ''
-                ame_rows.append({
-                    '模块': name,
-                    'Pure UPH(个/小时)': r0.get('Pure UPH(个/小时)'),
-                    'Derated UPH M1(个/小时)': '',
-                    'Derated UPH M2(个/小时)': r0.get('Derated UPH M2(个/小时)'),
-                    'UPH(个/小时)': r0.get('UPH(个/小时)'),
-                    '产出数(个)': r0.get('产出数(个)'),
-                    'EM投入数(个)': em_input,
-                    'EM良品数(个)': em_good,
-                    '运行时间RUN(秒)': '',
-                    '周期总数': r0.get('周期总数'),
-                    '统计时长(秒)': r0.get('统计时长(秒)'),
-                    '平均正常周期(秒)': r0.get('平均正常周期(秒)'),
-                })
-            summary = pd.concat(part_summaries, ignore_index=True)
-            ame_summary = pd.DataFrame(ame_rows)
-            em_all = parse_em_production(rows, cancel_event=cancel_event)
-            if progress_callback:
-                progress_callback(70)
-            sheets = {'Summary': summary, 'AMESummary': ame_summary}
-            if not em_all.empty:
-                sheets['EMProduction'] = em_all
-            if steps_df is not None and not steps_df.empty:
-                sheets['步骤分析'] = steps_df
-            if gantt_df is not None and not gantt_df.empty:
-                sheets['步骤甘特图'] = gantt_df
-            out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
-            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            if progress_callback:
-                progress_callback(100)
-            return out_path
-
-        if bottleneck_stations:
-            # 多工位机：自动判定瓶颈工位，UPH = 每排产品数 × 3600 / 瓶颈工位每排周期
-            from models.analysis import analyze_bottleneck
-            units = bottleneck_units_per_row or units_per_cycle
-            stations_df, bn = analyze_bottleneck(
-                rows, bottleneck_stations, units, tray_change=tray_change,
-                cancel_event=cancel_event,
-            )
-            b_name = bn.get('瓶颈工位') or ''
-            eff_cycle = bn.get('有效周期(秒)')
-            pure = round(units * 3600.0 / eff_cycle, 2) if eff_cycle else ''
-            em = parse_em_production(rows, cancel_event=cancel_event)
-            ame = pd.DataFrame([{
-                '瓶颈工位': b_name,
-                '瓶颈周期(秒)': bn.get('瓶颈周期(秒)') or '',
-                '换盘次数': bn.get('换盘次数') or '',
-                '单次换盘时间(秒)': bn.get('单次换盘时间(秒)') or '',
-                '每盘排数': bn.get('每盘排数') or '',
-                '每排换盘开销(秒)': bn.get('每排换盘开销(秒)') or '',
-                '有效周期(秒)': eff_cycle if eff_cycle else '',
-                '单颗CT(秒)': round(eff_cycle / units, 3) if eff_cycle else '',
-                '每排产品数(个)': units,
-                'Pure UPH(个/小时)': pure,
+                except Exception:
+                    tray_stats = None
+            if tray_stats:
+                units_per_tray = tray_stats['units_per_tray']
+                s['每盘颗数(统计)'] = tray_stats['units_per_tray']
+                s['换盘次数'] = tray_stats['tray_count']
+                s['单次换盘时间(秒)'] = tray_stats['tray_seconds']
+            if part.get('tray_change'):
+                # SA 式：换盘时间 = 同工位 卸载 -> 下一次装载 的间隔
+                tc = measure_tray_change(
+                    p_rows,
+                    part['tray_change'].get('unload', ''),
+                    part['tray_change'].get('load', ''),
+                    cancel_event=cancel_event,
+                )
+                if tc:
+                    tray_s = tc['tray_seconds']
+                    s['换盘次数'] = tc['tray_count']
+                    s['单次换盘时间(秒)'] = tc['tray_seconds']
+            if tray_s and units_per_tray:
+                try:
+                    pure_f = float(s.iloc[0].get('Pure UPH(个/小时)'))
+                    base_cycle = 3600.0 * units / pure_f
+                    overhead = float(tray_s) / float(units_per_tray)
+                    eff_cycle = base_cycle + overhead
+                    s['每颗换盘开销(秒)'] = round(overhead, 3)
+                    s['有效周期(秒)'] = round(eff_cycle, 3)
+                    s['有效UPH(个/小时)'] = round(3600.0 * units / eff_cycle, 2)
+                except (TypeError, ValueError, ZeroDivisionError):
+                    pass
+            part_summaries.append(s)
+            r0 = s.iloc[0]
+            p_em = parse_em_production(p_rows, cancel_event=cancel_event)
+            em_input = int(p_em['InputQty'].sum()) if not p_em.empty else ''
+            em_good = int(p_em['GoodQty'].sum()) if not p_em.empty else ''
+            ame_rows.append({
+                '模块': name,
+                'Pure UPH(个/小时)': r0.get('Pure UPH(个/小时)'),
                 'Derated UPH M1(个/小时)': '',
-                'Derated UPH M2(个/小时)': pure if pure != '' else '',
-                'EM投入数(个)': int(em['InputQty'].sum()) if not em.empty else '',
-            }])
-            if progress_callback:
-                progress_callback(70)
-            sheets = {'Summary': stations_df, 'AMESummary': ame}
-            if not em.empty:
-                sheets['EMProduction'] = em
-            if steps_df is not None and not steps_df.empty:
-                sheets['步骤分析'] = steps_df
-            if gantt_df is not None and not gantt_df.empty:
-                sheets['步骤甘特图'] = gantt_df
-            out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
-            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            if progress_callback:
-                progress_callback(100)
-            return out_path
+                'Derated UPH M2(个/小时)': r0.get('Derated UPH M2(个/小时)'),
+                'UPH(个/小时)': r0.get('UPH(个/小时)'),
+                '产出数(个)': r0.get('产出数(个)'),
+                'EM投入数(个)': em_input,
+                'EM良品数(个)': em_good,
+                '运行时间RUN(秒)': '',
+                '周期总数': r0.get('周期总数'),
+                '统计时长(秒)': r0.get('统计时长(秒)'),
+                '平均正常周期(秒)': r0.get('平均正常周期(秒)'),
+            })
+        summary = pd.concat(part_summaries, ignore_index=True)
+        ame_summary = pd.DataFrame(ame_rows)
+        em_all = parse_em_production(rows, cancel_event=cancel_event)
+        if progress_callback:
+            progress_callback(70)
+        sheets = {'Summary': summary, 'AMESummary': ame_summary}
+        if not em_all.empty:
+            sheets['EMProduction'] = em_all
+        if steps_df is not None and not steps_df.empty:
+            sheets['步骤分析'] = steps_df
+        if gantt_df is not None and not gantt_df.empty:
+            sheets['步骤甘特图'] = gantt_df
+        out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+        if progress_callback:
+            progress_callback(100)
+        return out_path
 
+
+    def _analyze_uph_stations(self, rows, bottleneck_stations, units, tray_change, steps_df, gantt_df, output_dir, cancel_event, progress_callback):
+
+        # 多工位机：自动判定瓶颈工位，UPH = 每排产品数 × 3600 / 瓶颈工位每排周期
+        stations_df, bn = analyze_bottleneck(
+            rows, bottleneck_stations, units, tray_change=tray_change,
+            cancel_event=cancel_event,
+        )
+        b_name = bn.get('瓶颈工位') or ''
+        eff_cycle = bn.get('有效周期(秒)')
+        pure = round(units * 3600.0 / eff_cycle, 2) if eff_cycle else ''
+        em = parse_em_production(rows, cancel_event=cancel_event)
+        ame = pd.DataFrame([{
+            '瓶颈工位': b_name,
+            '瓶颈周期(秒)': bn.get('瓶颈周期(秒)') or '',
+            '换盘次数': bn.get('换盘次数') or '',
+            '单次换盘时间(秒)': bn.get('单次换盘时间(秒)') or '',
+            '每盘排数': bn.get('每盘排数') or '',
+            '每排换盘开销(秒)': bn.get('每排换盘开销(秒)') or '',
+            '有效周期(秒)': eff_cycle if eff_cycle else '',
+            '单颗CT(秒)': round(eff_cycle / units, 3) if eff_cycle else '',
+            '每排产品数(个)': units,
+            'Pure UPH(个/小时)': pure,
+            'Derated UPH M1(个/小时)': '',
+            'Derated UPH M2(个/小时)': pure if pure != '' else '',
+            'EM投入数(个)': int(em['InputQty'].sum()) if not em.empty else '',
+        }])
+        if progress_callback:
+            progress_callback(70)
+        sheets = {'Summary': stations_df, 'AMESummary': ame}
+        if not em.empty:
+            sheets['EMProduction'] = em
+        if steps_df is not None and not steps_df.empty:
+            sheets['步骤分析'] = steps_df
+        if gantt_df is not None and not gantt_df.empty:
+            sheets['步骤甘特图'] = gantt_df
+        out_path = os.path.join(output_dir, 'UPH_Analysis.xlsx')
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+        if progress_callback:
+            progress_callback(100)
+        return out_path
+
+    def _analyze_uph_basic(self, rows, trigger_keywords, units_per_cycle, normal_threshold, planned_threshold, ideal_ct, max_ct, module_pattern, pure_uph_factor, tray_change, steps_df, gantt_df, output_dir, cancel_event, progress_callback):
         cycles = build_cycles_df(rows, trigger_keywords, normal_threshold, planned_threshold,
                                  module_pattern=module_pattern, cancel_event=cancel_event)
         # 换盘时间平摊到整盘产品（LM：整盘打标结束 下料->新盘上料，按 CCD 批次颗数×每盘批数 得每盘颗数）
@@ -791,16 +817,15 @@ class LogModel:
             progress_callback(100)
         return out_path
 
+
+
     # ---------- 功能三：EFF 分析 ----------
     def analyze_eff(self, source_dir, output_dir, planned_hours=None,
                     pdt_reason_ids=None, reason_device=None, file_filters=None, rows=None,
                     cancel_event=None, activity_keywords=None, stop_reason_keywords=None,
                     progress_callback=None):
         """CoreTech AME 效率：EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态。"""
-        reason_map = None
-        if reason_device:
-            from models.reason_codes import load_reason_codes
-            reason_map = load_reason_codes(reason_device)
+        reason_map = LogModel._load_reason_map(reason_device)
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(
@@ -838,10 +863,7 @@ class LogModel:
     def analyze_alarms(self, source_dir, output_dir, alarm_keywords="报警,ALARM,ERROR,NG,失败,异常,停止信号",
                        file_filters=None, rows=None, cancel_event=None, reason_device=None,
                        module_from_path=False, progress_callback=None):
-        reason_map = None
-        if reason_device:
-            from models.reason_codes import load_reason_codes
-            reason_map = load_reason_codes(reason_device)
+        reason_map = LogModel._load_reason_map(reason_device)
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(
@@ -869,10 +891,7 @@ class LogModel:
     def analyze_status(self, source_dir, output_dir, file_filters=None, rows=None, cancel_event=None,
                        activity_keywords=None, stop_reason_keywords=None, reason_device=None,
                        progress_callback=None):
-        reason_map = None
-        if reason_device:
-            from models.reason_codes import load_reason_codes
-            reason_map = load_reason_codes(reason_device)
+        reason_map = LogModel._load_reason_map(reason_device)
         if progress_callback:
             progress_callback(5)
         rows = rows if rows is not None else self._read_all(

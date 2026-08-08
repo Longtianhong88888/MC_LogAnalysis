@@ -25,21 +25,21 @@ def detect_encoding(file_path):
 
 # ---------- 读取单个文件（带回退编码） ----------
 def read_file_with_fallback(file_path):
+    with open(file_path, 'rb') as f:
+        raw = f.read()
+    # 单次读盘：依次按检测编码/UTF-8/GBK 解码，避免每个候选编码都重新读全文件
     encodings = [detect_encoding(file_path), 'utf-8', 'gbk', 'gb2312']
     for enc in encodings:
         if enc is None:
             continue
         try:
-            with open(file_path, 'r', encoding=enc, errors='strict') as f:
-                lines = f.readlines()
-            cleaned_lines = [clean_for_excel(line.rstrip('\n\r')) for line in lines]
+            text = raw.decode(enc)
+            cleaned_lines = [clean_for_excel(line.rstrip('\n\r')) for line in text.splitlines()]
             return cleaned_lines, enc
         except (UnicodeDecodeError, LookupError):
             continue
     # strict 全部失败：中文机台日志常见 UTF-8（含少量非法字节）或 GBK。
     # 用忽略模式分别解码，比较 UTF-8 丢失的字节比例：丢失少说明是 UTF-8，否则按 GBK 处理。
-    with open(file_path, 'rb') as f:
-        raw = f.read()
     utf8_text = raw.decode('utf-8', errors='ignore')
     total = len(raw)
     dropped = total - len(utf8_text.encode('utf-8', errors='ignore'))

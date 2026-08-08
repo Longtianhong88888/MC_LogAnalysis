@@ -1,0 +1,179 @@
+{
+  "deck": {
+    "title": "MC Log Analysis 机台日志分析工具 · 使用说明",
+    "material_state": "有旧 PPT",
+    "scene": "新用户培训与日常使用参考",
+    "audience": "现场工程师 / 主管",
+    "page_count": 13,
+    "aspect_ratio": "16:9",
+    "style_direction": {
+      "density": "balanced_brief——公式页和表格页信息密集但分区清晰，封面和结尾页信息密度低",
+      "tone": "克制、清晰、可信——技术文档气质，不是营销材料",
+      "palette": "深蓝 #083C63（结构/标题）、红橙 #EF5149（强调/封面标题）、浅蓝灰 #DEEBF7（卡片底/表格交替行）、白色 #FFFFFF（背景）、中性灰（正文）",
+      "texture": "纯白底，无纹理、无渐变、无整页背景图",
+      "avoid": ["文字裁切", "封面海报感", "空洞大字报", "油亮塑料感", "过度磨皮感", "假 3D", "糖果渐变", "无意义贴纸装饰"]
+    },
+    "style_lock": {
+      "confirmed_sample_pages": [],
+      "must_remain_consistent": ["宋体+Times New Roman字体气质和标题层级", "深蓝主色/红橙强调/浅蓝灰辅助/白底", "纯白背景无纹理", "线性图标+直角卡片+细线分隔", "页码右下角 n/13 格式", "约0.8in统一页边距和充分留白"],
+      "can_vary_by_page": ["具体构图（居中/左对齐/横向/表格为主）", "主视觉位置", "信息密度", "卡片数量（3-6个不等）"],
+      "inheritance_note": "后续页面必须继承已确认样张的视觉系统；可以改变内容结构，但不能切换成另一套模板或另一种图标插图系统"
+    },
+    "footer_rule": "页码右下角 n/13（9pt 灰色）；必要时加简短来源说明（9pt 灰色）"
+  },
+  "slides": [
+    {
+      "page": 1,
+      "title": "MC Log Analysis · 机台日志分析工具使用说明",
+      "role": "封面",
+      "audience_question": "这是什么文档、覆盖哪些内容",
+      "message": "一份使用说明，覆盖功能亮点、操作步骤、制程口径与注意事项",
+      "notes": "封面用深蓝大标题+细线分隔+四章导航点+版本信息——纯排版，建立专业可信的开场气质",
+      "source_status": "来自用户材料",
+      "content_relationship_brief": {
+        "audience_question": "这是什么文档、覆盖哪些内容",
+        "one_sentence_conclusion": "MC Log Analysis 机台日志分析工具 · 使用说明——覆盖功能亮点、操作教学、制程口径与输出注意事项",
+        "core_content_relation": "标题陈述",
+        "information_priority": ["主标题 MC Log Analysis", "副标题 机台日志分析工具 · 使用说明", "四章导航行", "版本信息 v1.0 · 内部使用"],
+        "evidence_and_source_responsibility": "全部内容来自工具定义，无外部引用",
+        "layout_freedom": "封面居中布局，由设计师决定标题字号、间距和导航行排版"
+      },
+      "visual_director_decision": {
+        "page_intent": "让读者一眼建立专业信任——这是一份正式的技术使用说明文档",
+        "expression_strategy": "用大标题+细线的经典封面构图建立正式感；深蓝主色传递技术可信度；四章导航行预告内容范围",
+        "visual_metaphor": "不使用隐喻，使用信息结构表达",
+        "focus_decision": "主视觉焦点是深蓝大标题 MC Log Analysis——字号最大、颜色最重",
+        "aesthetic_risk_focus": ["封面不要做成海报或营销主视觉", "深蓝标题与白底的对比不要过于生硬", "导航行文字不要太密或太散——用间隔点自然分隔"],
+        "layout_boundary": "封面居中排版，不规定具体坐标"
+      },
+      "graphic_language_hint": {
+        "suggested_graphic_language": "纯排版——大标题+细线+导航行+版本信息",
+        "decision_source": "从内容关系简报继承——封面只有标题陈述，不需要图形",
+        "design_freedom": "由设计师决定字号比例、间距和整体节奏"
+      },
+      "content_blocks": [
+        {
+          "name": "主标题",
+          "function": "定义",
+          "relationship_to_core": "这是整份文档的标题陈述核心",
+          "content": ["MC Log Analysis"],
+          "visual": "深蓝 #083C63 大号粗体，居中"
+        },
+        {
+          "name": "副标题",
+          "function": "定义",
+          "relationship_to_core": "补充说明文档性质",
+          "content": ["机台日志分析工具 · 使用说明"],
+          "visual": "小于主标题，深蓝或深灰，居中"
+        },
+        {
+          "name": "四章导航",
+          "function": "解释",
+          "relationship_to_core": "预告整份文档的内容范围",
+          "content": ["功能与亮点  ·  操作教学  ·  制程与口径  ·  输出与注意"],
+          "visual": "一行居中，灰色正文，用间隔点分隔"
+        },
+        {
+          "name": "版本信息",
+          "function": "来源",
+          "relationship_to_core": "标注文档版本和使用范围",
+          "content": ["v1.0  ·  内部使用"],
+          "visual": "小号灰色，居中或右下"
+        }
+      ],
+      "image_prompt_constraints": {
+        "must_keep": ["主标题 MC Log Analysis", "副标题 机台日志分析工具 · 使用说明", "四章导航行", "版本信息 v1.0 · 内部使用"],
+        "hard_boundaries": ["单页 16:9", "锁定内容不改写", "中文完整可读", "纯白背景无纹理"],
+        "quality": "像设备技术手册的封面——专业、克制、可信，不像营销海报或模板封面"
+      },
+      "background_image": "页面图片/第01页.png"
+    },
+    {
+      "page": 8,
+      "title": "UPH 口径：实际、Pure、Derated M1/M2 与有效 UPH",
+      "role": "计算逻辑——解释五个 UPH 口径的定义和计算方式",
+      "audience_question": "Excel 里几个 UPH 分别是什么意思",
+      "message": "实际 UPH 看真实产出，Pure 看理想节拍，Derated 剔离群点，有效 UPH 把换盘时间摊进单颗",
+      "notes": "这是全 deck 信息密度最高的页面之一，含五条公式+周期分类规则+换盘示例——需要清晰的信息层级和充分留白来避免过载",
+      "source_status": "来自用户材料（CoreTech AME 口径）；换盘示例数值为说明用途",
+      "content_relationship_brief": {
+        "audience_question": "Excel 里几个 UPH 分别是什么意思、怎么算的",
+        "one_sentence_conclusion": "实际 UPH 看真实产出，Pure 看理想节拍，Derated 剔离群点，有效 UPH 把换盘时间摊进单颗",
+        "core_content_relation": "指标解释——五条并行公式的定义与对比",
+        "information_priority": ["五条 UPH 公式——这是读者查阅本页的主要目的", "周期分类规则——解释公式中的分类逻辑", "换盘分摊示例——用具体数值帮助理解有效 UPH"],
+        "evidence_and_source_responsibility": "公式定义来自工具计算逻辑（CoreTech AME 口径）；换盘示例数值为说明口径的模拟数据，不代表特定批次",
+        "layout_freedom": "公式区用左对齐文本行+细线分隔；换盘示例可用分区卡片——由设计师决定具体排版"
+      },
+      "visual_director_decision": {
+        "page_intent": "让读者能快速查找和理解五个 UPH 口径的定义——页面像技术手册中的公式参考页",
+        "expression_strategy": "用统一的公式排版格式（公式名深蓝加粗+等号右端灰色正文）建立五条口径的并列关系；周期分类规则作为注释放在公式区下方；换盘示例用独立分区卡片展示具体计算过程",
+        "visual_metaphor": "不使用隐喻，使用信息结构表达——公式页接近教科书或技术手册的公式排版",
+        "focus_decision": "主视觉焦点是五条左对齐的 UPH 公式行——读者视线从上到下扫描",
+        "aesthetic_risk_focus": ["五条公式+规则+示例同页可能导致信息过载——用充分行距和分区留白来区分", "公式文字不要被挤瘦或压缩——中文公式至少 12pt", "换盘示例卡片不要比公式区更抢眼——它是辅助理解的证据，不是主信息"],
+        "layout_boundary": "公式区建议左对齐排列；换盘示例可用分区卡片——不规定具体坐标或比例"
+      },
+      "graphic_language_hint": {
+        "suggested_graphic_language": "公式文本行+细线分隔+分区示例卡片",
+        "decision_source": "从内容关系简报继承——五条并行指标定义",
+        "design_freedom": "由设计师决定公式区间距、示例卡片大小和整体比例"
+      },
+      "content_blocks": [
+        {
+          "name": "实际 UPH",
+          "function": "定义+变量",
+          "relationship_to_core": "五条核心公式之一——最直观的产出效率指标",
+          "content": ["实际 UPH = 产出数 ÷ 统计时长 × 3600", "按真实产出与统计时长计算"],
+          "visual": "公式行左对齐"
+        },
+        {
+          "name": "Pure UPH",
+          "function": "定义+变量",
+          "relationship_to_core": "五条核心公式之一——理想节拍下的理论上限",
+          "content": ["Pure UPH = 3600 × 每周期产出 ÷ 理想周期CT", "未填理想 CT 时取正常周期平均"],
+          "visual": "公式行左对齐"
+        },
+        {
+          "name": "Derated UPH M2",
+          "function": "定义+变量",
+          "relationship_to_core": "五条核心公式之一——剔除离群点后的稳健估计",
+          "content": ["Derated UPH M2 = 3600 × 每周期产出 ÷ 有效平均周期", "剔除 <0.9×理想CT、>1.1×最大理论CT 的离群点；多模组整机 = 各模组 M2 之和"],
+          "visual": "公式行左对齐"
+        },
+        {
+          "name": "Derated UPH M1",
+          "function": "定义+变量",
+          "relationship_to_core": "五条核心公式之一——基于投入数的设备效率",
+          "content": ["Derated UPH M1 = EM 投入数 ÷ RUN 时长", "多模组整机 = 各模组 M1 之和"],
+          "visual": "公式行左对齐"
+        },
+        {
+          "name": "有效 UPH",
+          "function": "定义+变量",
+          "relationship_to_core": "五条核心公式之一——摊入换盘时间后的综合效率",
+          "content": ["有效 UPH = 3600 × 每周期产出 ÷（基础周期 + 每颗换盘开销）", "每颗换盘开销 = 单次换盘时间 ÷ 每盘颗数"],
+          "visual": "公式行左对齐"
+        },
+        {
+          "name": "周期分类规则",
+          "function": "解释",
+          "relationship_to_core": "解释公式中"正常周期""异常周期""计划性停机"的分类逻辑",
+          "content": ["周期分类：间隔 > 计划性停机阈值 → 计划性停机；> 正常周期阈值 → 异常周期；其余为正常周期"],
+          "visual": "公式区下方的注释文字"
+        },
+        {
+          "name": "换盘分摊示例（LM）",
+          "function": "证据",
+          "relationship_to_core": "用具体数值示例帮助理解有效 UPH 的计算",
+          "content": ["换盘分摊示例（LM）", "单次换盘（下料 → 新盘上料）：15.46 秒", "每盘颗数：24 颗", "每颗换盘开销：15.46 ÷ 24 ≈ 0.64 秒", "有效周期 = 1.65 + 0.64 ≈ 2.29 秒", "Pure UPH ≈ 1570 / 小时"],
+          "visual": "分区示例卡片，用浅蓝灰底色与公式区区分"
+        }
+      ],
+      "image_prompt_constraints": {
+        "must_keep": ["页面标题", "五条 UPH 公式完整文字", "周期分类规则", "换盘分摊示例（LM）完整数值", "页脚来源说明"],
+        "hard_boundaries": ["单页 16:9", "锁定公式文字和示例数值不改写", "中文完整可读", "不编造数据——示例数值必须与锁定内容一致"],
+        "quality": "像技术手册中的公式参考页——公式清晰对齐、分区明确、可直接查阅"
+      },
+      "background_image": "页面图片/第08页.png"
+    }
+  ]
+}

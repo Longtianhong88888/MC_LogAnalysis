@@ -10,7 +10,7 @@ from functools import lru_cache
 import pandas as pd
 
 from models.exceptions import OperationCancelled
-from models.reason_codes import reason_info
+from models.reason_codes import is_planned, reason_info
 
 _TIME_RE = re.compile(
     r'^(?:\[(?P<brackettime>\d{2}:\d{2}:\d{2}(?:[.]\d{1,3}|\s\d{3})?)\]|'
@@ -347,7 +347,6 @@ def detect_units_per_tray(rows, batch_keywords, unit_keywords, tray_keywords=Non
     返回 {'units_per_batch', 'batches_per_tray', 'units_per_tray', 'batch_count', 'tray_count'}；
     任一步骤无有效计数时对应字段为 None。
     """
-    from collections import Counter
     batch_kws = split_phrases(batch_keywords)
     unit_kws = split_phrases(unit_keywords)
     tray_kws = split_phrases(tray_keywords or '')
@@ -425,6 +424,27 @@ def fmt_duration(seconds, with_ms=True):
 fmt_hms = fmt_duration
 
 
+def _step_stat_row(unit, step, durs, anomalies, median, total_sec):
+    """步骤统计行（中位/平均/P90/最长/异常指标），analyze_steps / sa / 点胶头复用。"""
+    excess = sum(d - median for d in anomalies)
+    total_dur = sum(durs)
+    n = len(durs)
+    freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
+    return {
+        '单元': unit,
+        '步骤': step,
+        '循环数': n,
+        '中位时长': fmt_hms(median),
+        '平均时长': fmt_hms(statistics.mean(durs)),
+        'P90时长': fmt_hms(sorted(durs)[int(n * 0.9) - 1] if n else ''),
+        '最长时长': fmt_hms(max(durs)),
+        '异常次数': len(anomalies),
+        '异常影响时长': fmt_hms(excess),
+        '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
+        '异常频率(次/小时)': round(freq, 2),
+    }
+
+
 def _match_kws(content, kws):
     """按关键词列表匹配行内容（与 UPH 周期判定一致：纯英文数字关键词按词边界匹配，
     避免 MarkEnd1 误命中 MarkEnd1_0）。"""
@@ -459,8 +479,6 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
     - 输出指标：循环数、中位时长、异常次数、异常影响时长（超额时长）、
       异常时间占比、异常频率（次/小时）。时长列格式：<60 秒按秒、>=60 秒按 h:mm:ss。
     """
-    import statistics
-    from collections import Counter
     rows_by_unit = {}
     for unit in units:
         module = unit.get('module') or {}
@@ -584,23 +602,9 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
             if anomalies:
                 anom_set = set(anomalies)
                 anomaly_lines.update(c for d, c in per_step[i] if d in anom_set)
-            excess = sum(d - median for d in anomalies)
-            total_dur = sum(durs)
-            n = len(durs)
-            freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
-            all_rows.append({
-                '单元': unit_name,
-                '步骤': st.get('name', '步骤%d' % (i + 1)),
-                '循环数': n,
-                '中位时长': fmt_hms(median),
-                '平均时长': fmt_hms(statistics.mean(durs)),
-                'P90时长': fmt_hms(sorted(durs)[int(n * 0.9) - 1] if n else ''),
-                '最长时长': fmt_hms(max(durs)),
-                '异常次数': len(anomalies),
-                '异常影响时长': fmt_hms(excess),
-                '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
-                '异常频率(次/小时)': round(freq, 2),
-            })
+            all_rows.append(_step_stat_row(
+                unit_name, st.get('name', '步骤%d' % (i + 1)),
+                durs, anomalies, median, total_sec))
     df = pd.DataFrame(all_rows)
     df.attrs['anomaly_lines'] = anomaly_lines
     return df
@@ -617,7 +621,6 @@ def build_gantt_rows(rows, units, max_step_seconds=None, merge_gap=0.05,
       供批次/盘级动作与循环级步骤对照）。
     返回 DataFrame：单元/步骤/开始秒/结束秒/时长秒/层级(循环|批次|盘)。
     """
-    import statistics
     rows_by_unit = {}
     for unit in units:
         module = unit.get('module') or {}
@@ -738,7 +741,6 @@ def build_gantt_rows_sa(rows, max_step_seconds=None, cancel_event=None):
     （视觉对位→探针对位→点胶轮廓，相对该头行周期起点的中位偏移）。
     返回与 build_gantt_rows 相同的列结构。
     """
-    import statistics
     gantt_rows = []
     stations = [
         ("点胶", "DispOneChipProfileWorkCycle"),
@@ -901,24 +903,11 @@ def analyze_steps_sa(rows, coefficient=1.5, min_step_median=0.01,
             continue
         anomalies = [(d, c) for d, c in intervals if d > median * coefficient]
         anomaly_lines.update(c for _d, c in anomalies)
-        excess = sum(d - median for d, _c in anomalies)
-        total_dur = sum(d for d, _c in intervals)
-        n = len(intervals)
         total_sec = (tlist[-1][0] - tlist[0][0]).total_seconds()
-        freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
-        all_rows.append({
-            '单元': '整机',
-            '步骤': name,
-            '循环数': n,
-            '中位时长': fmt_hms(median),
-            '平均时长': fmt_hms(statistics.mean(d for d, _c in intervals)),
-            'P90时长': fmt_hms(sorted(d for d, _c in intervals)[int(n * 0.9) - 1] if n else ''),
-            '最长时长': fmt_hms(max(d for d, _c in intervals)),
-            '异常次数': len(anomalies),
-            '异常影响时长': fmt_hms(excess),
-            '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
-            '异常频率(次/小时)': round(freq, 2),
-        })
+        all_rows.append(_step_stat_row(
+            '整机', name,
+            [d for d, _c in intervals], [d for d, _c in anomalies],
+            median, total_sec))
     # 左右点胶头内部动作（毫秒级 Sequence 日志，可细分）
     phase_rows, phase_anomalies = _sa_dispense_phases(
         rows, coefficient, min_step_median, max_step_seconds, cancel_event)
@@ -938,7 +927,6 @@ def _sa_dispense_phases(rows, coefficient=1.5, min_step_median=0.01,
     段和 ≈ 该头每排周期（左头≈13.4s、右头≈19.3s，实测与行 CT 差<1%）。
     返回 (行列表, 异常触发行集合)；供 analyze_steps_sa 追加输出。
     """
-    import statistics
     heads = [
         ("左头", "SeqCycle003_LeftDispenserPart.cs"),
         ("右头", "SeqCycle005_RightDispenserPart.cs"),
@@ -990,23 +978,10 @@ def _sa_dispense_phases(rows, coefficient=1.5, min_step_median=0.01,
                 continue
             anomalies = [(d, c) for d, c in durs if d > median * coefficient]
             anomaly_lines.update(c for _d, c in anomalies)
-            excess = sum(d - median for d, _c in anomalies)
-            total_dur = sum(d for d, _c in durs)
-            n = len(durs)
-            freq = (len(anomalies) / total_sec * 3600.0) if total_sec > 0 else 0.0
-            all_rows.append({
-                '单元': head,
-                '步骤': phase,
-                '循环数': n,
-                '中位时长': fmt_hms(median),
-                '平均时长': fmt_hms(statistics.mean(d for d, _c in durs)),
-                'P90时长': fmt_hms(sorted(d for d, _c in durs)[int(n * 0.9) - 1] if n else ''),
-                '最长时长': fmt_hms(max(d for d, _c in durs)),
-                '异常次数': len(anomalies),
-                '异常影响时长': fmt_hms(excess),
-                '异常时间占比(%)': round(excess / total_dur * 100, 2) if total_dur > 0 else '',
-                '异常频率(次/小时)': round(freq, 2),
-            })
+            all_rows.append(_step_stat_row(
+                head, phase,
+                [d for d, _c in durs], [d for d, _c in anomalies],
+                median, total_sec))
     return all_rows, anomaly_lines
 
 
@@ -1020,7 +995,6 @@ def analyze_bottleneck_machines(rows, machines, cancel_event=None):
     parallel_units：机台并行单元数（如上料机 2 取料轴、焊接机 2 焊接头），
     单颗CT = 周期中位 ÷ (每周期颗数 × 并行单元数)。
     """
-    import statistics
     results = []
     cycle_records = []
     for m in machines:
@@ -1225,7 +1199,6 @@ def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pd
     # pDT 判定：EReason 清单匹配优先（Planned/Routine Downtime），手动计划停机码补充
     planned_mask = pd.Series(False, index=down_rows.index)
     if reason_map:
-        from models.reason_codes import is_planned
         planned_mask |= down_rows['ReasonID'].apply(lambda rid: is_planned(reason_map, rid))
     if pdt_reason_ids:
         manual_set = set(split_keywords(pdt_reason_ids))
@@ -1265,7 +1238,6 @@ def down_pareto(status_detail, reason_map=None):
     g = g.sort_values('总时长(秒)', ascending=False).reset_index(drop=True)
     g['占比(%)'] = (g['总时长(秒)'] / g['总时长(秒)'].sum() * 100).round(2)
     if reason_map:
-        from models.reason_codes import is_planned, reason_info
         g['原因名称'] = g['ReasonID'].apply(
             lambda rid: (reason_info(reason_map, rid) or {}).get('name', '')
         )
@@ -1667,7 +1639,13 @@ def _station_inspect(rows, ref_rows, cancel_event=None):
     """SA 检测工位：UDP Module - Good 每排 k 次（k = round(事件数/参考排数) 自动估算）。"""
     count, _, _, tlist = _station_cycle(rows, "UDP Module - Good", 1, cancel_event)
     k = max(1, round(count / ref_rows)) if ref_rows else 1
-    _, _, med, _ = _station_cycle(rows, "UDP Module - Good", k, cancel_event)
+    # 复用同一次收集的事件时间戳，用自动估算的 k 计算每排周期中位（避免双重收集口径不一致）
+    intervals = [
+        (tlist[i + k] - tlist[i]).total_seconds()
+        for i in range(len(tlist) - k)
+        if 0 < (tlist[i + k] - tlist[i]).total_seconds() < 3600
+    ]
+    med = statistics.median(intervals) if intervals else None
     return count, k, med, tlist
 
 

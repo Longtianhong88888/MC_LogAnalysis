@@ -112,6 +112,16 @@
 - 修复：① `calendar.timegm(t.utctimetuple())` 替代 timestamp()（统一 UTC，差值不变，微秒级）；② 周期循环改用 bisect 二分定位区间事件；③ `parse_ts`/关键词正则 lru_cache；周期循环每 500 次检查 cancel_event。
 - 效果：analyze_steps 84.5→13.6s、build_gantt_rows 84→11s、换盘测量 153→2.5s；LM 全量 UPH 339→38s；FR 28s/CAW 2.4s/SA 0.2s/ACF 2.7s 冒烟通过。
 
+## 代码质量优化（2026-08-08，依据 project review.md）
+
+- CI：`.github/workflows/build.yml` 打包前新增 unittest 测试步骤；修复 `.gitignore` 与 `.vscode/` 追踪矛盾（移除 gitignore 条目，保留 settings.json 追踪）。
+- `analyze_uph`（271 行 God Method）拆为 4 个私有方法：`_analyze_uph_machines`（CAW 双机台）/ `_analyze_uph_parts`（ACF）/ `_analyze_uph_stations`（SA）/ `_analyze_uph_basic`（LM/FR），分发器只负责读取+步骤/甘特+分发。
+- `_station_inspect` 双重收集统一：复用同一次事件时间戳，用自动估算的 k 计算中位（消除两次过滤口径不一致）。
+- 重复代码抽取：步骤统计行 `_step_stat_row`（3 处）、EReason 映射加载 `LogModel._load_reason_map`（3 处）。
+- 内联 import 清理：`OperationCancelled`/`load_reason_codes`/`analyze_bottleneck`/`is_planned` 全部移至模块顶部；analysis.py 函数体内 `import statistics`/`Counter` 删除。
+- `reason_codes.load_reason_codes`：仅解析成功才缓存，损坏文件不再永久缓存空映射。
+- `read_file_with_fallback`：单次读盘（原每个候选编码各读一次全文），编码回退仍保持 UTF-8/GBK 字节比例判定。
+
 ## 最近的提交
 
 - `5a96a21 assets: 更新启动画面图片`
