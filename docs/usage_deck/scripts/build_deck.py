@@ -304,6 +304,7 @@ def build_process_table(prs):
         c.fill.solid()
         c.fill.fore_color.rgb = NAVY
     for i, row in enumerate(rows, start=1):
+        row_fill = GRAY_LIGHT if i % 2 == 0 else WHITE
         for j, val in enumerate(row):
             c = tbl.cell(i, j)
             c.text = str(val)
@@ -313,9 +314,8 @@ def build_process_table(prs):
                 p.line_spacing = 1.0
                 for r in p.runs:
                     _set_run(r, 10.5, False, BLACK)
-            if i % 2 == 0:
-                c.fill.solid()
-                c.fill.fore_color.rgb = GRAY_LIGHT
+            c.fill.solid()
+            c.fill.fore_color.rgb = row_fill
     add_text(slide, 0.7, 5.05, 12.0, 0.4,
              "另有“通用（手动配置）”与“自定义”模板，不套用固定逻辑。", size=12, color=GRAY)
 
@@ -402,6 +402,7 @@ def build_output_table(prs):
         c.fill.solid()
         c.fill.fore_color.rgb = NAVY
     for i, row in enumerate(rows, start=1):
+        row_fill = GRAY_LIGHT if i % 2 == 0 else WHITE
         for j, val in enumerate(row):
             c = tbl.cell(i, j)
             c.text = str(val)
@@ -411,9 +412,8 @@ def build_output_table(prs):
                 p.line_spacing = 1.0
                 for r in p.runs:
                     _set_run(r, 10.5, False, BLACK)
-            if i % 2 == 0:
-                c.fill.solid()
-                c.fill.fore_color.rgb = GRAY_LIGHT
+            c.fill.solid()
+            c.fill.fore_color.rgb = row_fill
     add_text(slide, 0.7, 5.25, 12.0, 0.4,
              "时间格式约定：低于 60 秒按秒显示，超过 60 秒按 h:mm:ss；PPT 汇总时间显示到秒。",
              size=12, color=GRAY)
@@ -494,6 +494,12 @@ def main():
     build_output_table(prs)
     build_tips(prs)
     build_closing(prs)
+
+    # 模板 SLIDE_NUMBER 占位符在 add_slide 时未实例化（PowerPoint 渲染无页码），
+    # 统一在每页右下角补页码（模板页码色 083C63）。
+    for i, slide in enumerate(prs.slides, 1):
+        add_text(slide, 11.35, 7.05, 0.72, 0.3, "%d / %d" % (i, TOTAL_SLIDES),
+                 size=10, color=NAVY, align=PP_ALIGN.RIGHT)
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(OUT_PATH))

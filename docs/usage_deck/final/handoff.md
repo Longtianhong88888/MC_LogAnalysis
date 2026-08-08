@@ -2,7 +2,7 @@
 
 ## 交付物
 - 可编辑 PPTX：`final/机台log分析使用说明.pptx`（16:9，13 页，基于 `PPT模板.pptx` 的 master-first 继承，python-pptx 原生文本/形状/表格/图片）
-- 逐页预览（结构近似渲染）：`build/rendered/structure_preview/`
+- 逐页预览（PowerPoint 高保真，144dpi + contact sheet）：`build/rendered/ppt_preview/`
 - 验证证据：`validation/package_preflight/`、`validation/structure_precheck/`、`validation/visual/review_log.md`
 - 源文档：`brief.md`、`deck_narrative.md`、`build/generated/slide_specs.yaml`、`scripts/build_deck.py`
 
@@ -14,7 +14,8 @@
 ## 验证结论
 - package_preflight：通过（0 error）
 - structure_precheck：通过（0 error；封面 54pt 为模板字号例外记 warning；甘特 PNG 内部文字 not_checked）
-- render_review：未执行（环境无法导出高保真成图，见 review_log）
+- render_review：通过（0 error / 0 warning）
+- 已修复：页码缺失（模板占位未实例化，改为每页补页码）、表格红色条纹（默认表格样式，改为显式填充）
 
 ## 后续可继续
 - 在 PowerPoint 中打开复核成图效果
