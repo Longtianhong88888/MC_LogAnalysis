@@ -5,10 +5,14 @@
 """
 
 import copy
+import io
+import math
 import os
 from datetime import datetime
+from collections import Counter
 
 import pandas as pd
+from PIL import Image, ImageDraw, ImageFont
 from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
@@ -208,6 +212,118 @@ def _metrics_table(df):
         except (TypeError, ValueError):
             pass
     return out
+
+
+def _find_cn_font():
+    """查找系统中文字体（macOS 苹方/黑体、Windows 微软雅黑/黑体）。"""
+    candidates = [
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "C:/Windows/Fonts/msyh.ttc",
+        "C:/Windows/Fonts/simhei.ttf",
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def _gantt_page_rows(uph_path):
+    """
+    从 UPH Excel 的「步骤甘特图」sheet 筛选瓶颈工序的甘特行：
+    - CAW（瓶颈机台=焊接机）：取表现居中的滑台（4 个滑台按周期中位排序取中间），
+      返回该滑台的 左+右 工位步骤行，标题含滑台号；
+    - SA（瓶颈工位）：返回全部工位轨道行（并行对比，标题标瓶颈工位）；
+    - 其他制程：返回全部行。
+    """
+    gantt = _read_sheet(uph_path, "步骤甘特图")
+    if gantt.empty or '单元' not in gantt.columns:
+        return pd.DataFrame(), ''
+    for col in ('开始秒', '结束秒', '时长秒'):
+        if col in gantt.columns:
+            gantt[col] = pd.to_numeric(gantt[col], errors='coerce')
+    ame = _read_sheet(uph_path, "AMESummary")
+    if not ame.empty and "瓶颈机台" in ame.columns:
+        b_name = str(ame.iloc[0].get("瓶颈机台") or "")
+        if b_name and b_name in "焊接机":
+            # 收集瓶颈机台的滑台工位单元，按滑台聚合周期（左右结束秒最大值）
+            prefix = "焊接机-滑台"
+            units = [u for u in gantt['单元'].unique()
+                     if str(u).startswith(prefix)]
+            slide_rows = {}
+            for u in units:
+                m = str(u)[len(prefix):]
+                if m[:-1].isdigit():
+                    n = int(m[:-1])
+                    sub = gantt[gantt['单元'] == u]
+                    cyc = sub['结束秒'].max() if not sub.empty else 0.0
+                    slide_rows.setdefault(n, []).append(cyc)
+            if slide_rows:
+                # 滑台周期 = 左右工位中较慢者；取周期中位对应的滑台
+                order = sorted(slide_rows, key=lambda n: max(slide_rows[n]))
+                sel = order[len(order) // 2]
+                sel_rows = gantt[gantt['单元'].isin(
+                    ["焊接机-滑台%d左" % sel, "焊接机-滑台%d右" % sel])].copy()
+                title = f"瓶颈机台：{b_name}（居中滑台：滑台{sel}，左右工位）"
+                return sel_rows, title
+    if not ame.empty and "瓶颈工位" in ame.columns:
+        b_name = str(ame.iloc[0].get("瓶颈工位") or "")
+        title = f"瓶颈工位：{b_name}（四工位并行甘特）" if b_name else "工位甘特图"
+        return gantt, title
+    return gantt, "步骤甘特图（整机）"
+
+
+def _gantt_png(rows_df, title, out_path):
+    """PIL 绘制步骤甘特图 PNG：每行一个步骤横条，x 轴为相对周期秒。"""
+    if rows_df is None or rows_df.empty:
+        return False
+    font_path = _find_cn_font()
+    def font(size):
+        return ImageFont.truetype(font_path, size) if font_path else ImageFont.load_default()
+    f_title = font(26)
+    f_label = font(17)
+    f_axis = font(14)
+    colors = {
+        '循环': (91, 155, 213),    # 蓝
+        '批次': (237, 125, 49),    # 橙
+        '盘': (112, 173, 71),      # 绿
+    }
+    n = len(rows_df)
+    left_pad, right_pad, top_pad, bottom_pad = 280, 40, 78, 46
+    row_h = 30
+    max_end = max(float(rows_df['结束秒'].max()), 1.0)
+    plot_w = 1180
+    px_per_sec = plot_w / max_end
+    img_h = top_pad + n * row_h + bottom_pad
+    img = Image.new("RGB", (left_pad + plot_w + right_pad, img_h), "white")
+    d = ImageDraw.Draw(img)
+    d.text((20, 18), title, fill="black", font=f_title)
+    # 网格与刻度
+    step = 1.0
+    while max_end / step > 24:
+        step *= 2
+    for s in range(0, int(math.ceil(max_end / step)) + 1):
+        x = left_pad + s * step * px_per_sec
+        d.line([(x, top_pad - 14), (x, top_pad + n * row_h)], fill=(220, 220, 220))
+        d.text((x - 8, top_pad - 34), str(int(s * step)), fill="gray", font=f_axis)
+    d.line([(left_pad, top_pad + n * row_h), (left_pad + plot_w, top_pad + n * row_h)],
+           fill="black", width=2)
+    # 步骤横条
+    for i, (_, r) in enumerate(rows_df.iterrows()):
+        y = top_pad + i * row_h
+        label = "%s · %s" % (r['单元'], r['步骤'])
+        d.text((8, y + 4), label, fill="black", font=f_label)
+        start = float(r['开始秒'])
+        end = float(r['结束秒'])
+        x0 = left_pad + start * px_per_sec
+        x1 = left_pad + end * px_per_sec
+        if x1 - x0 < 3:
+            x1 = x0 + 3
+        color = colors.get(str(r['层级']), colors['循环'])
+        d.rectangle([x0, y + 2, x1, y + row_h - 4], fill=color, outline=(40, 40, 40))
+    img.save(out_path)
+    return True
 
 
 def _report_title(process_name):
@@ -474,6 +590,26 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
             vals = [_to_float(ame.iloc[0].get(c)) for c in labels]
             _build_section(prs, "UPH 分析", "CoreTech AME：Pure UPH / Derated UPH M1 / M2",
                            XL_CHART_TYPE.COLUMN_CLUSTERED, "UPH 对比", labels, vals, _metrics_table(ame))
+
+    # ---------- 瓶颈工序甘特图 ----------
+    gantt_rows, gantt_title = _gantt_page_rows(os.path.join(output_dir, "UPH_Analysis.xlsx"))
+    if not gantt_rows.empty:
+        png_path = os.path.join(output_dir, "_gantt_bottleneck.png")
+        try:
+            if _gantt_png(gantt_rows, gantt_title, png_path):
+                slide = _add_slide(prs, "瓶颈工序甘特图", gantt_title)
+                img = Image.open(png_path)
+                ratio = img.width / img.height
+                w = Inches(12.3)
+                h = Inches(12.3 / ratio)
+                if h > Inches(5.7):
+                    h = Inches(5.7)
+                    w = Inches(5.7 * ratio)
+                slide.shapes.add_picture(png_path, Inches(0.4), Inches(1.75),
+                                         width=w, height=h)
+        finally:
+            if os.path.exists(png_path):
+                os.remove(png_path)
 
     # ---------- EFF 分析 ----------
     eff = _read_sheet(os.path.join(output_dir, "EFF_Analysis.xlsx"), "Summary")

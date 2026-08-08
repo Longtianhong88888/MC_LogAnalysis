@@ -81,7 +81,7 @@
 
 ## 测试
 
-- `venv/bin/python -m unittest discover -s tests`，72 个用例全绿。
+- `venv/bin/python -m unittest discover -s tests`，73 个用例全绿。
 
 ## 合并分析异常标红
 
@@ -95,6 +95,7 @@
 - 方案：每行一个步骤、每列一个时间块（默认 0.1s/列，数据超 120 列自动放大到 0.2/0.5/1/2/5/10…），颜色填充列数 = 步骤时长，直观看出步骤先后与并行（同一时间区间的多行并排）。
 - 数据：`build_gantt_rows`（通用 units，逐周期计算每步相对周期起点的中位起止偏移；B 模式=链式段、A 模式=start/end、standalone 独立绘制）与 `build_gantt_rows_sa`（四工位行周期轨道 0→中位 + 左右点胶头三段 视觉对位→探针对位→点胶轮廓）。
 - 绘制：`LogModel._format_gantt_sheet`（openpyxl 块填充），层级颜色 循环=浅蓝 DDEBF7 / 批次=浅橙 FCE4D6 / 盘=浅绿 E2EFDA，时间块列宽 2.5、冻结 F2；UPH_Analysis.xlsx 新增 sheet，各制程（LM/FR/CAW/ACF 通用、SA 专用）自动生成。
+- PPT 报告新增「瓶颈工序甘特图」页：`_gantt_page_rows` 从 UPH Excel 筛选瓶颈工序（CAW 瓶颈机台=焊接机时按滑台周期排序取表现居中的滑台左右工位；SA 瓶颈工位截四工位并行全图；其余制程截整机），`_gantt_png` 用 PIL 渲染 PNG 后插入（中文字体自动查找苹方/微软雅黑；临时 PNG 用完即删）。甘特 sheet 时间块刻度从 G 列起（F 列保留“层级”表头）。
 - 已验证：SA（analyze_steps_sa 模式）530 行步骤超时标红；ACF（4.8M 行 per-file 路径）上料機每时文件约 320 行标红。ACF 全量合并+标红约 6-7 分钟（480 万行 openpyxl 逐行检查），属正常开销。
 - 注意：环境需装 pptx / xlsxwriter / PyQt5，否则相关用例报错（不是代码问题）。
 

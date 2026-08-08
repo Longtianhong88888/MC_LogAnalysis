@@ -374,6 +374,32 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(prof["开始秒"], 12.0)
         self.assertEqual(prof["结束秒"], 30.0)
 
+    def test_gantt_page_rows_picks_median_slide(self):
+        # CAW 瓶颈=焊接机、4 个滑台：按周期排序取表现居中的滑台（周期 10/20/30/40 → 滑台3）
+        import os
+        import tempfile
+        from models.report import _gantt_page_rows
+        fd, path = tempfile.mkstemp(suffix=".xlsx")
+        os.close(fd)
+        try:
+            rows = []
+            for n, cyc in ((1, 10.0), (2, 20.0), (3, 30.0), (4, 40.0)):
+                for side in ("左", "右"):
+                    rows.append({"单元": "焊接机-滑台%d%s" % (n, side),
+                                 "步骤": "下熟料", "开始秒": 0.0,
+                                 "结束秒": cyc, "时长秒": cyc, "层级": "循环"})
+            with pd.ExcelWriter(path, engine="xlsxwriter") as w:
+                pd.DataFrame(rows).to_excel(w, sheet_name="步骤甘特图", index=False)
+                pd.DataFrame({"瓶颈机台": ["焊接机"], "瓶颈CT(秒)": [2.88],
+                              "UPH(个/小时)": [1250]}).to_excel(
+                    w, sheet_name="AMESummary", index=False)
+            sel, title = _gantt_page_rows(path)
+            self.assertIn("滑台3", title)
+            self.assertEqual(set(sel["单元"]), {"焊接机-滑台3左", "焊接机-滑台3右"})
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
+
     def test_analyze_bottleneck_machines(self):
         def mk(rows, ts, tag):
             h = int(ts // 3600); m = int(ts % 3600 // 60)

@@ -182,11 +182,11 @@ class LogModel:
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = center
-        # 时间块刻度表头（F 列起）
+        # 时间块刻度表头（G 列起，F 列保留“层级”）
         for c in range(n_cols):
             t = (c + 1) * col_sec
             label = int(t) if col_sec >= 1 or abs(t - round(t)) < 1e-9 else round(t, 1)
-            cell = ws.cell(row=1, column=6 + c, value=label)
+            cell = ws.cell(row=1, column=7 + c, value=label)
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = center
@@ -201,7 +201,7 @@ class LogModel:
             for c in range(c0, c1):
                 if c >= n_cols:
                     break
-                cell = ws.cell(row=i, column=6 + c)
+                cell = ws.cell(row=i, column=7 + c)
                 cell.fill = fill
                 cell.border = border
             # 左侧数据单元格样式
