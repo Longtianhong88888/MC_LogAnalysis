@@ -573,13 +573,13 @@ class LogModel:
 
         file_names = sorted({r.get('FileName', '') for r in all_data})
         n = len(file_names)
+        used_names = set()
         for idx, fname in enumerate(file_names):
             if cancel_event is not None and cancel_event.is_set():
                 raise OperationCancelled()
             sub = pd.DataFrame([r for r in all_data if r.get('FileName') == fname])
             sheets = self._build_merge_sheets(sub, keywords, separator, cancel_event)
-            stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
-            out_path = os.path.join(sub_dir, f'{stem}.xlsx')
+            out_path = os.path.join(sub_dir, self._per_file_output_name(fname, used_names))
             hl = self._sheet_highlights(sheets, abnormal_keywords, step_lines, cancel_event)
             applied = self._write_sheets(out_path, sheets, cancel_event=cancel_event, sheet_highlights=hl)
             if not applied:
@@ -596,7 +596,6 @@ class LogModel:
         """无筛选时按日志文件流式写入 Excel（xlsxwriter 常量内存模式），写表同时按行标红。返回文件数。"""
         import xlsxwriter
         max_rows = 1048575
-        file_names = sorted({r.get('FileName', '') for r in all_data})
         # 预计算需标红的内容集合（pandas 向量化，避免写表时逐行 Python 正则）
         hl_set = set()
         pat = LogModel._keyword_pattern(abnormal_keywords)
@@ -609,50 +608,63 @@ class LogModel:
             if lines:
                 mask |= s.isin(lines)
             hl_set = set(s[mask].tolist())
-        wbs = {}
-        sheets = {}
-        rows_written = {}
-        sheet_no = {}
-        red_fmts = {}
-        try:
-            for fname in file_names:
-                stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
-                wb = xlsxwriter.Workbook(
-                    os.path.join(sub_dir, f'{stem}.xlsx'),
-                    {'nan_inf_to_errors': True, 'constant_memory': True},
-                )
-                ws = wb.add_worksheet('AllLogs')
-                ws.write_string(0, 0, 'FileName')
-                ws.write_string(0, 1, 'Content')
-                wbs[fname] = wb
-                sheets[fname] = ws
-                rows_written[fname] = 1
-                sheet_no[fname] = 1
-                red_fmts[fname] = wb.add_format({'bg_color': 'FFC7CE'})
-            for row in all_data:
+        # 按文件分组（一次遍历）。随后每个文件独立建表、写完即关，
+        # 避免同时打开几百个 workbook 的临时文件句柄（Windows 默认约 512 个上限）。
+        by_file = {}
+        for row in all_data:
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            by_file.setdefault(row.get('FileName', ''), []).append(row)
+        n = 0
+        used_names = set()
+        for fname in sorted(by_file):
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            out_name = LogModel._per_file_output_name(fname, used_names)
+            wb = xlsxwriter.Workbook(
+                os.path.join(sub_dir, out_name),
+                {'nan_inf_to_errors': True, 'constant_memory': True},
+            )
+            ws = wb.add_worksheet('AllLogs')
+            ws.write_string(0, 0, 'FileName')
+            ws.write_string(0, 1, 'Content')
+            red = wb.add_format({'bg_color': 'FFC7CE'}) if hl_set else None
+            r = 1
+            sheet_no = 1
+            for row in by_file[fname]:
                 if cancel_event is not None and cancel_event.is_set():
                     raise OperationCancelled()
-                fname = row.get('FileName', '')
-                ws = sheets[fname]
-                r = rows_written[fname]
                 if r > max_rows:
-                    sheet_no[fname] += 1
-                    ws = wbs[fname].add_worksheet(f'AllLogs_{sheet_no[fname]}'[:31])
+                    sheet_no += 1
+                    ws = wb.add_worksheet(f'AllLogs_{sheet_no}'[:31])
                     ws.write_string(0, 0, 'FileName')
                     ws.write_string(0, 1, 'Content')
-                    sheets[fname] = ws
                     r = 1
                 content = str(row.get('Content', ''))
                 if hl_set and content in hl_set:
                     # xlsxwriter 常量内存模式：行格式必须在写该行之前设置
-                    ws.set_row(r, None, red_fmts[fname])
+                    ws.set_row(r, None, red)
                 ws.write_string(r, 0, str(fname))
                 ws.write_string(r, 1, content)
-                rows_written[fname] = r + 1
-        finally:
-            for wb in wbs.values():
-                wb.close()
-        return len(file_names)
+                r += 1
+            wb.close()
+            n += 1
+        return n
+
+    @staticmethod
+    def _per_file_output_name(fname, used_names):
+        """按日志文件名生成导出 Excel 文件名。
+
+        同名不同扩展名的日志（如 SA 的 xxx.log 与 xxx.txt 是同一数据两种格式）
+        会映射到同一 xlsx 路径导致互相覆盖；撞车时追加原扩展名区分。
+        """
+        stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
+        name = f'{stem}.xlsx'
+        if name in used_names:
+            ext = os.path.splitext(fname)[1].lstrip('.') or 'log'
+            name = f'{stem}_{ext}.xlsx'
+        used_names.add(name)
+        return name
 
     # ---------- 功能二：UPH 分析 ----------
     def analyze_uph(self, source_dir, output_dir, trigger_keywords="MarkEnd1", units_per_cycle=1,
