@@ -1,0 +1,6860 @@
+{
+  "pptx": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx",
+  "shape_inventory": [
+    {
+      "slide_number": 1,
+      "shape_id": 2,
+      "shape_name": "TextBox 1",
+      "shape_type": "TEXT_BOX",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 79.2,
+        "top": 162.0,
+        "width": 799.2,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 1,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 241.2,
+        "width": 792.0,
+        "height": 39.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 1,
+      "shape_id": 4,
+      "shape_name": "Connector 3",
+      "shape_type": "LINE",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 298.8,
+        "width": 259.2,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 1,
+      "shape_id": 5,
+      "shape_name": "TextBox 4",
+      "shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 320.4,
+        "width": 792.0,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 1,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 482.4,
+        "width": 792.0,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 5,
+      "shape_name": "TextBox 4",
+      "shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 97.2,
+        "width": 842.4,
+        "height": 36.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 7,
+      "shape_name": "TextBox 6",
+      "shape_type": "TEXT_BOX",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 59.76,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 8,
+      "shape_name": "TextBox 7",
+      "shape_type": "TEXT_BOX",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 59.76,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 9,
+      "shape_name": "Connector 8",
+      "shape_type": "LINE",
+      "z_order": 8,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 322.56,
+        "top": 180.0,
+        "width": 0.0,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 10,
+      "shape_name": "TextBox 9",
+      "shape_type": "TEXT_BOX",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 347.76,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 11,
+      "shape_name": "TextBox 10",
+      "shape_type": "TEXT_BOX",
+      "z_order": 10,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 351.36,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 12,
+      "shape_name": "TextBox 11",
+      "shape_type": "TEXT_BOX",
+      "z_order": 11,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 351.36,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 13,
+      "shape_name": "Connector 12",
+      "shape_type": "LINE",
+      "z_order": 12,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 614.16,
+        "top": 180.0,
+        "width": 0.0,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 14,
+      "shape_name": "TextBox 13",
+      "shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 639.36,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 15,
+      "shape_name": "TextBox 14",
+      "shape_type": "TEXT_BOX",
+      "z_order": 14,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 642.96,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 16,
+      "shape_name": "TextBox 15",
+      "shape_type": "TEXT_BOX",
+      "z_order": 15,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 642.96,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 2,
+      "shape_id": 17,
+      "shape_name": "Rectangle 16",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 16,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 399.6,
+        "width": 847.44,
+        "height": 54.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 5,
+      "shape_name": "Rectangle 4",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 6,
+      "shape_name": "Rectangle 5",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 342.72,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 629.28,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 8,
+      "shape_name": "Rectangle 7",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 9,
+      "shape_name": "Rectangle 8",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 342.72,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 10,
+      "shape_name": "Rectangle 9",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 629.28,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 5,
+      "shape_name": "Rectangle 4",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 6,
+      "shape_name": "Rectangle 5",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 342.72,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 629.28,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 8,
+      "shape_name": "Rectangle 7",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 9,
+      "shape_name": "Rectangle 8",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 342.72,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 10,
+      "shape_name": "Rectangle 9",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 629.28,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 5,
+      "shape_name": "Rounded Rectangle 4",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 50.4,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 7,
+      "shape_name": "Connector 6",
+      "shape_type": "LINE",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 207.36,
+        "top": 185.4,
+        "width": 34.56,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 8,
+      "shape_name": "Isosceles Triangle 7",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 237.6,
+        "top": 180.36,
+        "width": 10.08,
+        "height": 10.08
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 9,
+      "shape_name": "Rounded Rectangle 8",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 239.04,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 10,
+      "shape_name": "TextBox 9",
+      "shape_type": "TEXT_BOX",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 233.28,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 11,
+      "shape_name": "Connector 10",
+      "shape_type": "LINE",
+      "z_order": 10,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 390.24,
+        "top": 185.4,
+        "width": 34.56,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 12,
+      "shape_name": "Isosceles Triangle 11",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 11,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 420.48,
+        "top": 180.36,
+        "width": 10.08,
+        "height": 10.08
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 13,
+      "shape_name": "Rounded Rectangle 12",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 12,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 421.92,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 14,
+      "shape_name": "TextBox 13",
+      "shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 416.16,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 15,
+      "shape_name": "Connector 14",
+      "shape_type": "LINE",
+      "z_order": 14,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 573.12,
+        "top": 185.4,
+        "width": 34.56,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 16,
+      "shape_name": "Isosceles Triangle 15",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 15,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 603.36,
+        "top": 180.36,
+        "width": 10.08,
+        "height": 10.08
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 17,
+      "shape_name": "Rounded Rectangle 16",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 16,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 604.8,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 18,
+      "shape_name": "TextBox 17",
+      "shape_type": "TEXT_BOX",
+      "z_order": 17,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 599.04,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 19,
+      "shape_name": "Connector 18",
+      "shape_type": "LINE",
+      "z_order": 18,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 756.0,
+        "top": 185.4,
+        "width": 34.56,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 20,
+      "shape_name": "Isosceles Triangle 19",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 19,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 786.24,
+        "top": 180.36,
+        "width": 10.08,
+        "height": 10.08
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 21,
+      "shape_name": "Rounded Rectangle 20",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 20,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 787.68,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 22,
+      "shape_name": "TextBox 21",
+      "shape_type": "TEXT_BOX",
+      "z_order": 21,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 781.92,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 5,
+      "shape_id": 23,
+      "shape_name": "TextBox 22",
+      "shape_type": "TEXT_BOX",
+      "z_order": 22,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 403.2,
+        "width": 847.44,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 5,
+      "shape_name": "TextBox 4",
+      "shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 90.0,
+        "width": 842.4,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 6,
+      "shape_name": "Rectangle 5",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 136.8,
+        "width": 208.8,
+        "height": 313.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 7,
+      "shape_name": "TextBox 6",
+      "shape_type": "TEXT_BOX",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 72.0,
+        "top": 174.24,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 8,
+      "shape_name": "TextBox 7",
+      "shape_type": "TEXT_BOX",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 72.0,
+        "top": 216.0,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 9,
+      "shape_name": "TextBox 8",
+      "shape_type": "TEXT_BOX",
+      "z_order": 8,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 72.0,
+        "top": 257.76,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 10,
+      "shape_name": "TextBox 9",
+      "shape_type": "TEXT_BOX",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 72.0,
+        "top": 299.52,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 11,
+      "shape_name": "TextBox 10",
+      "shape_type": "TEXT_BOX",
+      "z_order": 10,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 72.0,
+        "top": 341.28,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 12,
+      "shape_name": "TextBox 11",
+      "shape_type": "TEXT_BOX",
+      "z_order": 11,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 72.0,
+        "top": 383.04,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 13,
+      "shape_name": "Rectangle 12",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 12,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 282.24,
+        "top": 136.8,
+        "width": 621.36,
+        "height": 187.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 14,
+      "shape_name": "TextBox 13",
+      "shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 298.8,
+        "top": 183.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 15,
+      "shape_name": "TextBox 14",
+      "shape_type": "TEXT_BOX",
+      "z_order": 14,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 298.8,
+        "top": 219.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 16,
+      "shape_name": "TextBox 15",
+      "shape_type": "TEXT_BOX",
+      "z_order": 15,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 298.8,
+        "top": 255.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 17,
+      "shape_name": "Rectangle 16",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 16,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 282.24,
+        "top": 342.0,
+        "width": 621.36,
+        "height": 108.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 6,
+      "shape_id": 18,
+      "shape_name": "TextBox 17",
+      "shape_type": "TEXT_BOX",
+      "z_order": 17,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 298.8,
+        "top": 385.2,
+        "width": 590.4,
+        "height": 50.4
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 7,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 7,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 7,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 7,
+      "shape_id": 5,
+      "shape_name": "Table 4",
+      "shape_type": "TABLE",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 115.2,
+        "width": 847.44,
+        "height": 195.84
+      },
+      "has_text": false,
+      "has_table": true,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 7,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 471.6,
+        "width": 847.44,
+        "height": 36.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 5,
+      "shape_name": "TextBox 4",
+      "shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 111.6,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 141.84,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 7,
+      "shape_name": "Connector 6",
+      "shape_type": "LINE",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 174.24,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 8,
+      "shape_name": "TextBox 7",
+      "shape_type": "TEXT_BOX",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 187.2,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 9,
+      "shape_name": "TextBox 8",
+      "shape_type": "TEXT_BOX",
+      "z_order": 8,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 217.44,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 10,
+      "shape_name": "Connector 9",
+      "shape_type": "LINE",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 249.84,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 11,
+      "shape_name": "TextBox 10",
+      "shape_type": "TEXT_BOX",
+      "z_order": 10,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 262.8,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 12,
+      "shape_name": "TextBox 11",
+      "shape_type": "TEXT_BOX",
+      "z_order": 11,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 293.04,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 13,
+      "shape_name": "Connector 12",
+      "shape_type": "LINE",
+      "z_order": 12,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 325.44,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 14,
+      "shape_name": "TextBox 13",
+      "shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 338.4,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 15,
+      "shape_name": "TextBox 14",
+      "shape_type": "TEXT_BOX",
+      "z_order": 14,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 368.64,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 16,
+      "shape_name": "Connector 15",
+      "shape_type": "LINE",
+      "z_order": 15,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 401.04,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 17,
+      "shape_name": "TextBox 16",
+      "shape_type": "TEXT_BOX",
+      "z_order": 16,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 414.0,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 18,
+      "shape_name": "TextBox 17",
+      "shape_type": "TEXT_BOX",
+      "z_order": 17,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 444.24,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 19,
+      "shape_name": "Connector 18",
+      "shape_type": "LINE",
+      "z_order": 18,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 476.64,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 8,
+      "shape_id": 20,
+      "shape_name": "TextBox 19",
+      "shape_type": "TEXT_BOX",
+      "z_order": 19,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 493.2,
+        "width": 648.0,
+        "height": 36.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 5,
+      "shape_name": "TextBox 4",
+      "shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 93.6,
+        "width": 374.4,
+        "height": 36.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 133.2,
+        "width": 374.4,
+        "height": 172.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 7,
+      "shape_name": "TextBox 6",
+      "shape_type": "TEXT_BOX",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 331.2,
+        "width": 374.4,
+        "height": 115.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 8,
+      "shape_name": "Picture 7",
+      "shape_type": "PICTURE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 450.0,
+        "top": 97.2,
+        "width": 468.0,
+        "height": 94.85
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 9,
+      "shape_id": 9,
+      "shape_name": "TextBox 8",
+      "shape_type": "TEXT_BOX",
+      "z_order": 8,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 450.0,
+        "top": 457.2,
+        "width": 468.0,
+        "height": 25.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 5,
+      "shape_name": "Rectangle 4",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 6,
+      "shape_name": "Rectangle 5",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 342.72,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 629.28,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 11,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 11,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 11,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 11,
+      "shape_id": 5,
+      "shape_name": "Table 4",
+      "shape_type": "TABLE",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 115.2,
+        "width": 847.44,
+        "height": 226.08
+      },
+      "has_text": false,
+      "has_table": true,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 11,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 471.6,
+        "width": 847.44,
+        "height": 36.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 2,
+      "shape_name": "Connector 1",
+      "shape_type": "LINE",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 76.32,
+        "width": 847.44,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 4,
+      "shape_name": "TextBox 3",
+      "shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 5,
+      "shape_name": "Rectangle 4",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 111.6,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 6,
+      "shape_name": "Rectangle 5",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 486.72,
+        "top": 111.6,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 56.16,
+        "top": 298.8,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 8,
+      "shape_name": "Rectangle 7",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 486.72,
+        "top": 298.8,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 13,
+      "shape_id": 2,
+      "shape_name": "TextBox 1",
+      "shape_type": "TEXT_BOX",
+      "z_order": 1,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 79.2,
+        "top": 187.2,
+        "width": 799.2,
+        "height": 64.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 13,
+      "shape_id": 3,
+      "shape_name": "TextBox 2",
+      "shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 266.4,
+        "width": 792.0,
+        "height": 36.0
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 13,
+      "shape_id": 4,
+      "shape_name": "Connector 3",
+      "shape_type": "LINE",
+      "z_order": 3,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 324.0,
+        "width": 259.2,
+        "height": 0.0
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 13,
+      "shape_id": 5,
+      "shape_name": "TextBox 4",
+      "shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 345.6,
+        "width": 792.0,
+        "height": 28.8
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    },
+    {
+      "slide_number": 13,
+      "shape_id": 6,
+      "shape_name": "TextBox 5",
+      "shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 80.64,
+        "top": 482.4,
+        "width": 792.0,
+        "height": 21.6
+      },
+      "has_text": true,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": false,
+      "source_kind": "shape"
+    }
+  ],
+  "text_items": [
+    {
+      "slide_number": 1,
+      "owner_shape_id": 2,
+      "owner_shape_name": "TextBox 1",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 1,
+      "source_kind": "shape_text",
+      "text": "MC Log Analysis",
+      "rect_pt": {
+        "left": 79.2,
+        "top": 162.0,
+        "width": 799.2,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 79.2,
+        "top": 162.0,
+        "width": 799.2,
+        "height": 72.0
+      },
+      "font_size_pt": 40.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 1,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "机台日志分析工具 · 使用说明",
+      "rect_pt": {
+        "left": 80.64,
+        "top": 241.2,
+        "width": 792.0,
+        "height": 39.6
+      },
+      "inner_rect_pt": {
+        "left": 80.64,
+        "top": 241.2,
+        "width": 792.0,
+        "height": 39.6
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 1,
+      "owner_shape_id": 5,
+      "owner_shape_name": "TextBox 4",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "功能与亮点 · 操作教学 · 制程与口径 · 输出与注意",
+      "rect_pt": {
+        "left": 80.64,
+        "top": 320.4,
+        "width": 792.0,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 80.64,
+        "top": 320.4,
+        "width": 792.0,
+        "height": 28.8
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 1,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "v1.0 · 内部使用",
+      "rect_pt": {
+        "left": 80.64,
+        "top": 482.4,
+        "width": 792.0,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 80.64,
+        "top": 482.4,
+        "width": 792.0,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "一个工具，完成机台日志的六类分析与报告",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "2 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 5,
+      "owner_shape_name": "TextBox 4",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "把机台日志的“读、算、查、报”一次做完：选择日志文件夹与制程，一键输出 Excel 与 PPT 报告。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 97.2,
+        "width": 842.4,
+        "height": 36.0
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 97.2,
+        "width": 842.4,
+        "height": 36.0
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "6",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "font_size_pt": 40.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 7,
+      "owner_shape_name": "TextBox 6",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 6,
+      "source_kind": "shape_text",
+      "text": "类分析功能",
+      "rect_pt": {
+        "left": 59.76,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 59.76,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 8,
+      "owner_shape_name": "TextBox 7",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 7,
+      "source_kind": "shape_text",
+      "text": "合并拆分 · UPH · EFF · 报警 · 状态 · 一键",
+      "rect_pt": {
+        "left": 59.76,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 59.76,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 10,
+      "owner_shape_name": "TextBox 9",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 9,
+      "source_kind": "shape_text",
+      "text": "5",
+      "rect_pt": {
+        "left": 347.76,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 347.76,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "font_size_pt": 40.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 11,
+      "owner_shape_name": "TextBox 10",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 10,
+      "source_kind": "shape_text",
+      "text": "种制程模板",
+      "rect_pt": {
+        "left": 351.36,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 351.36,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 12,
+      "owner_shape_name": "TextBox 11",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 11,
+      "source_kind": "shape_text",
+      "text": "LM / CAW / FR / SA / ACF，参数自动预填",
+      "rect_pt": {
+        "left": 351.36,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 351.36,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 14,
+      "owner_shape_name": "TextBox 13",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "source_kind": "shape_text",
+      "text": "4+1",
+      "rect_pt": {
+        "left": 639.36,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 639.36,
+        "top": 169.2,
+        "width": 266.4,
+        "height": 72.0
+      },
+      "font_size_pt": 40.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 15,
+      "owner_shape_name": "TextBox 14",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 14,
+      "source_kind": "shape_text",
+      "text": "类输出",
+      "rect_pt": {
+        "left": 642.96,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 642.96,
+        "top": 248.4,
+        "width": 259.2,
+        "height": 28.8
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 16,
+      "owner_shape_name": "TextBox 15",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 15,
+      "source_kind": "shape_text",
+      "text": "UPH / EFF / 报警 / 状态 Excel + 自动 PPT 报告",
+      "rect_pt": {
+        "left": 642.96,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 642.96,
+        "top": 284.4,
+        "width": 262.8,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 2,
+      "owner_shape_id": 17,
+      "owner_shape_name": "Rectangle 16",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 16,
+      "source_kind": "shape_text",
+      "text": "支持“一键分析”：一次运行完成全部功能，结果在界面显示，并自动导出 4 个分析 Excel 与 PPT 报告。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 399.6,
+        "width": 847.44,
+        "height": 54.0
+      },
+      "inner_rect_pt": {
+        "left": 64.8,
+        "top": 403.92,
+        "width": 830.1600000000001,
+        "height": 45.36
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "六大功能，覆盖日志分析的完整链路",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "3 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Rectangle 4",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "文档合并与内容拆分\n按关键词 / 分隔符提取指定行，支持按 PLC 分组导出，异常行自动标红。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 66.24,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 6,
+      "owner_shape_name": "Rectangle 5",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "UPH 分析\n按 CoreTech AME 口径输出实际 / Pure / Derated M1/M2 / 有效 UPH，自动判定瓶颈。",
+      "rect_pt": {
+        "left": 342.72,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 352.8,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 7,
+      "owner_shape_name": "Rectangle 6",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "source_kind": "shape_text",
+      "text": "EFF 分析\n操作时间 ÷ 计划生产时间；停机按 EReason 清单区分 pDT / uDT。",
+      "rect_pt": {
+        "left": 629.28,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 639.36,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 8,
+      "owner_shape_name": "Rectangle 7",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 7,
+      "source_kind": "shape_text",
+      "text": "报警分析\n按关键词统计报警，EReason 中文名映射。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 66.24,
+        "top": 292.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 9,
+      "owner_shape_name": "Rectangle 8",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "source_kind": "shape_text",
+      "text": "机台状态分析\nstatus 行或活动 / 停机关键词推导 RUN / IDLE / DOWN 时间线。",
+      "rect_pt": {
+        "left": 342.72,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 352.8,
+        "top": 292.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 10,
+      "owner_shape_name": "Rectangle 9",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 9,
+      "source_kind": "shape_text",
+      "text": "一键分析\n一次运行完成全部功能，导出 4 个 Excel 并自动生成 PPT 报告。",
+      "rect_pt": {
+        "left": 629.28,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 639.36,
+        "top": 292.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "亮点：自动模板、瓶颈判定、换盘分摊、步骤甘特、异常标红、自动报告",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "4 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Rectangle 4",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "制程模板一键预填\n选 LM / CAW / FR / SA / ACF，自动带入触发词、报警关键词与计算逻辑。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 66.24,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 6,
+      "owner_shape_name": "Rectangle 5",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "瓶颈自动判定\nSA 四工位、CAW 双机台自动取最慢环节，UPH 口径与客户定义一致。",
+      "rect_pt": {
+        "left": 342.72,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 352.8,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 7,
+      "owner_shape_name": "Rectangle 6",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "source_kind": "shape_text",
+      "text": "换盘时间平摊\n整盘结束后的下料-上料时间按每盘颗数摊入单颗 CT。",
+      "rect_pt": {
+        "left": 629.28,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 639.36,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 8,
+      "owner_shape_name": "Rectangle 7",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 7,
+      "source_kind": "shape_text",
+      "text": "步骤深度分析 + 甘特图\n按轴 / 平台运动节拍拆步骤，Excel 甘特图直接看出先后与并行。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 66.24,
+        "top": 292.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 9,
+      "owner_shape_name": "Rectangle 8",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "source_kind": "shape_text",
+      "text": "异常日志自动标红\n报警 / 停机 / 步骤超时行标红，剔除产品码中的 NG 误报。",
+      "rect_pt": {
+        "left": 342.72,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 352.8,
+        "top": 292.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 10,
+      "owner_shape_name": "Rectangle 9",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 9,
+      "source_kind": "shape_text",
+      "text": "自动 PPT 报告\n汇总 + 图表 + 瓶颈工序甘特图，时间格式统一、可编辑。",
+      "rect_pt": {
+        "left": 629.28,
+        "top": 288.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 639.36,
+        "top": 292.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "5 步完成一次机台日志分析",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "5 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Rounded Rectangle 4",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "1 选择源文件夹",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "inner_rect_pt": {
+        "left": 64.8,
+        "top": 148.32,
+        "width": 135.36,
+        "height": 74.16
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "机台日志所在目录，支持子文件夹",
+      "rect_pt": {
+        "left": 50.4,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 50.4,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 9,
+      "owner_shape_name": "Rounded Rectangle 8",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "source_kind": "shape_text",
+      "text": "2 选择输出文件夹",
+      "rect_pt": {
+        "left": 239.04,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "inner_rect_pt": {
+        "left": 247.68,
+        "top": 148.32,
+        "width": 135.36,
+        "height": 74.16
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 10,
+      "owner_shape_name": "TextBox 9",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 9,
+      "source_kind": "shape_text",
+      "text": "Excel / PPT 报告输出位置",
+      "rect_pt": {
+        "left": 233.28,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 233.28,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 13,
+      "owner_shape_name": "Rounded Rectangle 12",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 12,
+      "source_kind": "shape_text",
+      "text": "3 选择制程模板",
+      "rect_pt": {
+        "left": 421.92,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "inner_rect_pt": {
+        "left": 430.56,
+        "top": 148.32,
+        "width": 135.36,
+        "height": 74.16
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 14,
+      "owner_shape_name": "TextBox 13",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "source_kind": "shape_text",
+      "text": "自动预填 UPH 触发词、报警关键词等参数",
+      "rect_pt": {
+        "left": 416.16,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 416.16,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 17,
+      "owner_shape_name": "Rounded Rectangle 16",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 16,
+      "source_kind": "shape_text",
+      "text": "4 选择功能",
+      "rect_pt": {
+        "left": 604.8,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "inner_rect_pt": {
+        "left": 613.4399999999999,
+        "top": 148.32,
+        "width": 135.36,
+        "height": 74.16
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 18,
+      "owner_shape_name": "TextBox 17",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 17,
+      "source_kind": "shape_text",
+      "text": "合并 / UPH / EFF / 报警 / 状态 / 一键",
+      "rect_pt": {
+        "left": 599.04,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 599.04,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 21,
+      "owner_shape_name": "Rounded Rectangle 20",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 20,
+      "source_kind": "shape_text",
+      "text": "5 自动报告",
+      "rect_pt": {
+        "left": 787.68,
+        "top": 144.0,
+        "width": 152.64,
+        "height": 82.8
+      },
+      "inner_rect_pt": {
+        "left": 796.3199999999999,
+        "top": 148.32,
+        "width": 135.36,
+        "height": 74.16
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 22,
+      "owner_shape_name": "TextBox 21",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 21,
+      "source_kind": "shape_text",
+      "text": "界面显示结果，并导出 Excel / PPT",
+      "rect_pt": {
+        "left": 781.92,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "inner_rect_pt": {
+        "left": 781.92,
+        "top": 239.76,
+        "width": 164.16,
+        "height": 72.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 5,
+      "owner_shape_id": 23,
+      "owner_shape_name": "TextBox 22",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 22,
+      "source_kind": "shape_text",
+      "text": "提示：日志文件筛选框会自动填充与制程匹配的内容，有特殊需求也可手动输入。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 403.2,
+        "width": 847.44,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 403.2,
+        "width": 847.44,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "界面一看就懂：左边选功能，右边筛日志，下方看结果",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "6 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 5,
+      "owner_shape_name": "TextBox 4",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "界面示意（非截图）：三块区域各司其职。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 90.0,
+        "width": 842.4,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 90.0,
+        "width": 842.4,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 6,
+      "owner_shape_name": "Rectangle 5",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "功能选择",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 136.8,
+        "width": 208.8,
+        "height": 313.2
+      },
+      "inner_rect_pt": {
+        "left": 66.24,
+        "top": 141.12,
+        "width": 188.64,
+        "height": 304.56
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 7,
+      "owner_shape_name": "TextBox 6",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 6,
+      "source_kind": "shape_text",
+      "text": "· 文档合并与内容拆分",
+      "rect_pt": {
+        "left": 72.0,
+        "top": 174.24,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 72.0,
+        "top": 174.24,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 8,
+      "owner_shape_name": "TextBox 7",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 7,
+      "source_kind": "shape_text",
+      "text": "· UPH 分析",
+      "rect_pt": {
+        "left": 72.0,
+        "top": 216.0,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 72.0,
+        "top": 216.0,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 9,
+      "owner_shape_name": "TextBox 8",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 8,
+      "source_kind": "shape_text",
+      "text": "· EFF 分析",
+      "rect_pt": {
+        "left": 72.0,
+        "top": 257.76,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 72.0,
+        "top": 257.76,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 10,
+      "owner_shape_name": "TextBox 9",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 9,
+      "source_kind": "shape_text",
+      "text": "· 报警分析",
+      "rect_pt": {
+        "left": 72.0,
+        "top": 299.52,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 72.0,
+        "top": 299.52,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 11,
+      "owner_shape_name": "TextBox 10",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 10,
+      "source_kind": "shape_text",
+      "text": "· 机台状态分析",
+      "rect_pt": {
+        "left": 72.0,
+        "top": 341.28,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 72.0,
+        "top": 341.28,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 12,
+      "owner_shape_name": "TextBox 11",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 11,
+      "source_kind": "shape_text",
+      "text": "· 一键分析",
+      "rect_pt": {
+        "left": 72.0,
+        "top": 383.04,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 72.0,
+        "top": 383.04,
+        "width": 183.6,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 13,
+      "owner_shape_name": "Rectangle 12",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 12,
+      "source_kind": "shape_text",
+      "text": "制程模板 · 日志文件筛选 · 解析参数",
+      "rect_pt": {
+        "left": 282.24,
+        "top": 136.8,
+        "width": 621.36,
+        "height": 187.2
+      },
+      "inner_rect_pt": {
+        "left": 292.32,
+        "top": 141.12,
+        "width": 601.1999999999999,
+        "height": 178.56
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 14,
+      "owner_shape_name": "TextBox 13",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "source_kind": "shape_text",
+      "text": "制程下拉：LM / CAW / FR / SA / ACF / 通用 / 自定义",
+      "rect_pt": {
+        "left": 298.8,
+        "top": 183.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 298.8,
+        "top": 183.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 15,
+      "owner_shape_name": "TextBox 14",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 14,
+      "source_kind": "shape_text",
+      "text": "日志文件筛选：自动填充与制程匹配的内容，可手动修改",
+      "rect_pt": {
+        "left": 298.8,
+        "top": 219.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 298.8,
+        "top": 219.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 16,
+      "owner_shape_name": "TextBox 15",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 15,
+      "source_kind": "shape_text",
+      "text": "解析参数：关键词、分隔符（默认左对齐）",
+      "rect_pt": {
+        "left": 298.8,
+        "top": 255.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 298.8,
+        "top": 255.6,
+        "width": 590.4,
+        "height": 28.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 17,
+      "owner_shape_name": "Rectangle 16",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 16,
+      "source_kind": "shape_text",
+      "text": "解析结果",
+      "rect_pt": {
+        "left": 282.24,
+        "top": 342.0,
+        "width": 621.36,
+        "height": 108.0
+      },
+      "inner_rect_pt": {
+        "left": 292.32,
+        "top": 346.32,
+        "width": 601.1999999999999,
+        "height": 99.36000000000001
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 6,
+      "owner_shape_id": 18,
+      "owner_shape_name": "TextBox 17",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 17,
+      "source_kind": "shape_text",
+      "text": "分析结果表格与进度显示；顶部“使用说明”按钮可查看各制程说明与计算逻辑，右下角为版权信息。",
+      "rect_pt": {
+        "left": 298.8,
+        "top": 385.2,
+        "width": 590.4,
+        "height": 50.4
+      },
+      "inner_rect_pt": {
+        "left": 298.8,
+        "top": 385.2,
+        "width": 590.4,
+        "height": 50.4
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "五种制程模板，参数与算法已按机台配好",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "7 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[0,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "制程",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 115.2,
+        "width": 151.2,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 118.2,
+        "width": 143.2,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[0,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "周期完成事件",
+      "rect_pt": {
+        "left": 207.35999999999999,
+        "top": 115.2,
+        "width": 237.6,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 211.35999999999999,
+        "top": 118.2,
+        "width": 229.6,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[0,2]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "结构",
+      "rect_pt": {
+        "left": 444.96,
+        "top": 115.2,
+        "width": 252.0,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 448.96,
+        "top": 118.2,
+        "width": 244.0,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[0,3]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "UPH 口径要点",
+      "rect_pt": {
+        "left": 696.96,
+        "top": 115.2,
+        "width": 206.64,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 700.96,
+        "top": 118.2,
+        "width": 198.64,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[1,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "LM 激光打标",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 147.84,
+        "width": 151.2,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 150.84,
+        "width": 143.2,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[1,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "MarkEnd1",
+      "rect_pt": {
+        "left": 207.35999999999999,
+        "top": 147.84,
+        "width": 237.6,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 211.35999999999999,
+        "top": 150.84,
+        "width": 229.6,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[1,2]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "单机台；每盘 4 批 × 6 颗",
+      "rect_pt": {
+        "left": 444.96,
+        "top": 147.84,
+        "width": 252.0,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 448.96,
+        "top": 150.84,
+        "width": 244.0,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[1,3]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "换盘时间按 24 颗平摊",
+      "rect_pt": {
+        "left": 696.96,
+        "top": 147.84,
+        "width": 206.64,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 700.96,
+        "top": 150.84,
+        "width": 198.64,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[2,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "CAW 组装",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 180.48000000000002,
+        "width": 151.2,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 183.48000000000002,
+        "width": 143.2,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[2,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "放熟料完成 / 去交换位",
+      "rect_pt": {
+        "left": 207.35999999999999,
+        "top": 180.48000000000002,
+        "width": 237.6,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 211.35999999999999,
+        "top": 183.48000000000002,
+        "width": 229.6,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[2,2]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "PLC1 焊接机 + PLC2 上料机（左右并行）",
+      "rect_pt": {
+        "left": 444.96,
+        "top": 180.48000000000002,
+        "width": 252.0,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 448.96,
+        "top": 183.48000000000002,
+        "width": 244.0,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[2,3]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "双机台瓶颈，取 CT 长者",
+      "rect_pt": {
+        "left": 696.96,
+        "top": 180.48000000000002,
+        "width": 206.64,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 700.96,
+        "top": 183.48000000000002,
+        "width": 198.64,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[3,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "FR 点胶",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 213.12,
+        "width": 151.2,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 216.12,
+        "width": 143.2,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[3,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "轴点胶完成",
+      "rect_pt": {
+        "left": 207.35999999999999,
+        "top": 213.12,
+        "width": 237.6,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 211.35999999999999,
+        "top": 216.12,
+        "width": 229.6,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[3,2]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "左轴 / 右轴并行",
+      "rect_pt": {
+        "left": 444.96,
+        "top": 213.12,
+        "width": 252.0,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 448.96,
+        "top": 216.12,
+        "width": 244.0,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[3,3]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "Pure UPH ×0.5（单轴）；整机 M1/M2 = 左 + 右",
+      "rect_pt": {
+        "left": 696.96,
+        "top": 213.12,
+        "width": 206.64,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 700.96,
+        "top": 216.12,
+        "width": 198.64,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[4,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "SA 四工位",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 245.76,
+        "width": 151.2,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 248.76,
+        "width": 143.2,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[4,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "各工位完成事件",
+      "rect_pt": {
+        "left": 207.35999999999999,
+        "top": 245.76,
+        "width": 237.6,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 211.35999999999999,
+        "top": 248.76,
+        "width": 229.6,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[4,2]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "点胶 / 贴附 / 热压 / 检测并行",
+      "rect_pt": {
+        "left": 444.96,
+        "top": 245.76,
+        "width": 252.0,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 448.96,
+        "top": 248.76,
+        "width": 244.0,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[4,3]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "自动判定瓶颈工位",
+      "rect_pt": {
+        "left": 696.96,
+        "top": 245.76,
+        "width": 206.64,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 700.96,
+        "top": 248.76,
+        "width": 198.64,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[5,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "ACF 三機",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 278.4,
+        "width": 151.2,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 281.4,
+        "width": 143.2,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[5,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "更新Carrier盘 / Cavity cnt:1 / UnloadDuts Finish",
+      "rect_pt": {
+        "left": 207.35999999999999,
+        "top": 278.4,
+        "width": 237.6,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 211.35999999999999,
+        "top": 281.4,
+        "width": 229.6,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[5,2]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "上料機 / 主機 / 下料機 分文件夹",
+      "rect_pt": {
+        "left": 444.96,
+        "top": 278.4,
+        "width": 252.0,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 448.96,
+        "top": 281.4,
+        "width": 244.0,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[5,3]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "每盘颗数按 Tray ID 动态统计",
+      "rect_pt": {
+        "left": 696.96,
+        "top": 278.4,
+        "width": 206.64,
+        "height": 32.64
+      },
+      "inner_rect_pt": {
+        "left": 700.96,
+        "top": 281.4,
+        "width": 198.64,
+        "height": 26.64
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "另有“通用（手动配置）”与“自定义”模板，不套用固定逻辑。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 471.6,
+        "width": 847.44,
+        "height": 36.0
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 471.6,
+        "width": 847.44,
+        "height": 36.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "UPH 口径：实际、Pure、Derated M1/M2 与有效 UPH",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "8 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 5,
+      "owner_shape_name": "TextBox 4",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "实际 UPH = 产出数 ÷ 统计时长 × 3600",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 111.6,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 111.6,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "按真实产出与统计时长计算。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 141.84,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 141.84,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 8,
+      "owner_shape_name": "TextBox 7",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 7,
+      "source_kind": "shape_text",
+      "text": "Pure UPH = 3600 × 每周期产出 ÷ 理想周期CT",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 187.2,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 187.2,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 9,
+      "owner_shape_name": "TextBox 8",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 8,
+      "source_kind": "shape_text",
+      "text": "未填理想 CT 时取正常周期平均。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 217.44,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 217.44,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 11,
+      "owner_shape_name": "TextBox 10",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 10,
+      "source_kind": "shape_text",
+      "text": "Derated UPH M2 = 3600 × 每周期产出 ÷ 有效平均周期",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 262.8,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 262.8,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 12,
+      "owner_shape_name": "TextBox 11",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 11,
+      "source_kind": "shape_text",
+      "text": "剔除 <0.9×理想CT、>1.1×最大理论CT 的离群点；多模组整机 = 各模组 M2 之和。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 293.04,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 293.04,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 14,
+      "owner_shape_name": "TextBox 13",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 13,
+      "source_kind": "shape_text",
+      "text": "Derated UPH M1 = EM 投入数 ÷ RUN 时长",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 338.4,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 338.4,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 15,
+      "owner_shape_name": "TextBox 14",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 14,
+      "source_kind": "shape_text",
+      "text": "多模组整机 = 各模组 M1 之和。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 368.64,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 368.64,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 17,
+      "owner_shape_name": "TextBox 16",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 16,
+      "source_kind": "shape_text",
+      "text": "有效 UPH = 3600 × 每周期产出 ÷（基础周期 + 每颗换盘开销）",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 414.0,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 414.0,
+        "width": 847.44,
+        "height": 30.24
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 18,
+      "owner_shape_name": "TextBox 17",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 17,
+      "source_kind": "shape_text",
+      "text": "每颗换盘开销 = 单次换盘时间 ÷ 每盘颗数。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 444.24,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 444.24,
+        "width": 847.44,
+        "height": 25.92
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 8,
+      "owner_shape_id": 20,
+      "owner_shape_name": "TextBox 19",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 19,
+      "source_kind": "shape_text",
+      "text": "周期分类：间隔 > 计划性停机阈值 → 计划性停机；> 正常周期阈值 → 异常周期；其余为正常周期。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 493.2,
+        "width": 648.0,
+        "height": 36.0
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 493.2,
+        "width": 648.0,
+        "height": 36.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 9,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "步骤拆到运动节拍，甘特图一眼看出先后与并行",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 9,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "9 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 9,
+      "owner_shape_id": 5,
+      "owner_shape_name": "TextBox 4",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "每个区块的步骤时间总和 ≈ CT（周期中位）。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 93.6,
+        "width": 374.4,
+        "height": 36.0
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 93.6,
+        "width": 374.4,
+        "height": 36.0
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 9,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "步骤按轴 / 平台运动节拍拆分，例如 LM 单颗循环：\n打标前间隔 → Z 轴焦距定位 → 激光打标（振镜扫描）\n批次级：读码 GetSN、CCD 轴移动定位（每批 6 颗）\n盘级：平台下料、平台上料（每盘 24 颗）",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 133.2,
+        "width": 374.4,
+        "height": 172.8
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 133.2,
+        "width": 374.4,
+        "height": 172.8
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 4
+    },
+    {
+      "slide_number": 9,
+      "owner_shape_id": 7,
+      "owner_shape_name": "TextBox 6",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 6,
+      "source_kind": "shape_text",
+      "text": "异常判定 = 中位时长 + 超时秒数；超时/报警/停机行在日志 Excel 中自动标红。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 331.2,
+        "width": 374.4,
+        "height": 115.2
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 331.2,
+        "width": 374.4,
+        "height": 115.2
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 9,
+      "owner_shape_id": 9,
+      "owner_shape_name": "TextBox 8",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 8,
+      "source_kind": "shape_text",
+      "text": "甘特示例：来自工具对 LM 示例日志的分析输出（示意）",
+      "rect_pt": {
+        "left": 450.0,
+        "top": 457.2,
+        "width": 468.0,
+        "height": 25.2
+      },
+      "inner_rect_pt": {
+        "left": 450.0,
+        "top": 457.2,
+        "width": 468.0,
+        "height": 25.2
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 10,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "EFF、状态与报警：三张表讲清设备效率与异常",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 10,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "10 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 10,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Rectangle 4",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "EFF 分析\nEFF = 操作时间（运行 + 待机）÷ 计划生产时间；停机按 ReasonID 拆 pDT / uDT（EReason 清单优先）。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 66.24,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 10,
+      "owner_shape_id": 6,
+      "owner_shape_name": "Rectangle 5",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "机台状态分析\n优先读 status:RUN/IDLE/DOWN 行；无 status 时按“活动 + 停机关键词”推导时间线，输出各状态时长 / 占比 / 小时分布。",
+      "rect_pt": {
+        "left": 342.72,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 352.8,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 10,
+      "owner_shape_id": 7,
+      "owner_shape_name": "Rectangle 6",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "source_kind": "shape_text",
+      "text": "报警分析\n按关键词命中计数，按机台 / 模组汇总；EReason 清单映射中文原因名称。",
+      "rect_pt": {
+        "left": 629.28,
+        "top": 108.0,
+        "width": 275.04,
+        "height": 164.16
+      },
+      "inner_rect_pt": {
+        "left": 639.36,
+        "top": 112.32,
+        "width": 254.88000000000002,
+        "height": 155.52
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "一次分析，输出可编辑的 Excel 与 PPT 报告",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "11 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[0,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "文件",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 115.2,
+        "width": 237.6,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 118.2,
+        "width": 229.6,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[0,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "内容",
+      "rect_pt": {
+        "left": 293.76,
+        "top": 115.2,
+        "width": 609.84,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 297.76,
+        "top": 118.2,
+        "width": 601.84,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[1,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "UPH_Analysis.xlsx",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 147.5,
+        "width": 237.6,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 150.5,
+        "width": 229.6,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[1,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "Summary / AMESummary / CycleDetail / EMProduction / 步骤分析 / 步骤甘特图",
+      "rect_pt": {
+        "left": 293.76,
+        "top": 147.5,
+        "width": 609.84,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 297.76,
+        "top": 150.5,
+        "width": 601.84,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[2,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "EFF_Analysis.xlsx",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 179.8,
+        "width": 237.6,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 182.8,
+        "width": 229.6,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[2,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "EFF 汇总与停机 Pareto（含 pDT / uDT）",
+      "rect_pt": {
+        "left": 293.76,
+        "top": 179.8,
+        "width": 609.84,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 297.76,
+        "top": 182.8,
+        "width": 601.84,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[3,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "Alarm_Analysis.xlsx",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 212.10000000000002,
+        "width": 237.6,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 215.10000000000002,
+        "width": 229.6,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[3,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "报警汇总、关键词分布、明细（EReason 中文名）",
+      "rect_pt": {
+        "left": 293.76,
+        "top": 212.10000000000002,
+        "width": 609.84,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 297.76,
+        "top": 215.10000000000002,
+        "width": 601.84,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[4,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "Status_Analysis.xlsx",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 244.40000000000003,
+        "width": 237.6,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 247.40000000000003,
+        "width": 229.6,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[4,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "状态汇总与小时分布",
+      "rect_pt": {
+        "left": 293.76,
+        "top": 244.40000000000003,
+        "width": 609.84,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 297.76,
+        "top": 247.40000000000003,
+        "width": 601.84,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[5,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "LogAnalysis.xlsx",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 276.70000000000005,
+        "width": 237.6,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 279.70000000000005,
+        "width": 229.6,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[5,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "合并日志（异常行标红）；大文件按日志逐个导出",
+      "rect_pt": {
+        "left": 293.76,
+        "top": 276.70000000000005,
+        "width": 609.84,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 297.76,
+        "top": 279.70000000000005,
+        "width": 601.84,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[6,0]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "Analysis_Report.pptx",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 309.00000000000006,
+        "width": 237.6,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 60.16,
+        "top": 312.00000000000006,
+        "width": 229.6,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4[6,1]",
+      "owner_shape_type": "TABLE",
+      "z_order": 4,
+      "source_kind": "table_cell",
+      "text": "自动报告：UPH / EFF / 停机 Pareto / 报警 / 状态 + 瓶颈工序甘特图",
+      "rect_pt": {
+        "left": 293.76,
+        "top": 309.00000000000006,
+        "width": 609.84,
+        "height": 32.3
+      },
+      "inner_rect_pt": {
+        "left": 297.76,
+        "top": 312.00000000000006,
+        "width": 601.84,
+        "height": 26.299999999999997
+      },
+      "font_size_pt": 10.5,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "时间格式约定：低于 60 秒按秒显示，超过 60 秒按 h:mm:ss；PPT 汇总时间显示到秒。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 471.6,
+        "width": 847.44,
+        "height": 36.0
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 471.6,
+        "width": 847.44,
+        "height": 36.0
+      },
+      "font_size_pt": 12.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 12,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "使用前注意这几点，避免踩坑",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "inner_rect_pt": {
+        "left": 56.16,
+        "top": 23.04,
+        "width": 792.0,
+        "height": 44.64
+      },
+      "font_size_pt": 24.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 12,
+      "owner_shape_id": 4,
+      "owner_shape_name": "TextBox 3",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 3,
+      "source_kind": "shape_text",
+      "text": "12 / 13 · v1.0 内部使用",
+      "rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 734.4,
+        "top": 509.76,
+        "width": 187.2,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 12,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Rectangle 4",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "大日志保护\n原始日志超过约 100 万行时，自动放弃合并、按日志文件逐个导出 Excel，避免卡死。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 111.6,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "inner_rect_pt": {
+        "left": 67.67999999999999,
+        "top": 115.91999999999999,
+        "width": 396.00000000000006,
+        "height": 160.56
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 12,
+      "owner_shape_id": 6,
+      "owner_shape_name": "Rectangle 5",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "EReasonlist\n根目录保留 EReasonlist 文件夹，新制程按文件名放入自己的清单，用于状态推导与报警映射。",
+      "rect_pt": {
+        "left": 486.72,
+        "top": 111.6,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "inner_rect_pt": {
+        "left": 498.24,
+        "top": 115.91999999999999,
+        "width": 396.00000000000006,
+        "height": 160.56
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 12,
+      "owner_shape_id": 7,
+      "owner_shape_name": "Rectangle 6",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 6,
+      "source_kind": "shape_text",
+      "text": "PPT 模板\nAnalysis_Report.pptx 放到程序同目录即可正常生成报告；模板含内部数据，仅限内部传送。",
+      "rect_pt": {
+        "left": 56.16,
+        "top": 298.8,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "inner_rect_pt": {
+        "left": 67.67999999999999,
+        "top": 303.12,
+        "width": 396.00000000000006,
+        "height": 160.56
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 12,
+      "owner_shape_id": 8,
+      "owner_shape_name": "Rectangle 7",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 7,
+      "source_kind": "shape_text",
+      "text": "灵活覆盖\n日志文件筛选框自动填充与制程匹配的内容，用户有特殊需求可手动输入。",
+      "rect_pt": {
+        "left": 486.72,
+        "top": 298.8,
+        "width": 419.04,
+        "height": 169.2
+      },
+      "inner_rect_pt": {
+        "left": 498.24,
+        "top": 303.12,
+        "width": 396.00000000000006,
+        "height": 160.56
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 13,
+      "owner_shape_id": 2,
+      "owner_shape_name": "TextBox 1",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 1,
+      "source_kind": "shape_text",
+      "text": "现在就可以开始第一次分析",
+      "rect_pt": {
+        "left": 79.2,
+        "top": 187.2,
+        "width": 799.2,
+        "height": 64.8
+      },
+      "inner_rect_pt": {
+        "left": 79.2,
+        "top": 187.2,
+        "width": 799.2,
+        "height": 64.8
+      },
+      "font_size_pt": 40.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 13,
+      "owner_shape_id": 3,
+      "owner_shape_name": "TextBox 2",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 2,
+      "source_kind": "shape_text",
+      "text": "选日志文件夹 → 选制程模板 → 点“自动报告”",
+      "rect_pt": {
+        "left": 80.64,
+        "top": 266.4,
+        "width": 792.0,
+        "height": 36.0
+      },
+      "inner_rect_pt": {
+        "left": 80.64,
+        "top": 266.4,
+        "width": 792.0,
+        "height": 36.0
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 13,
+      "owner_shape_id": 5,
+      "owner_shape_name": "TextBox 4",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 4,
+      "source_kind": "shape_text",
+      "text": "功能与亮点 · 操作教学 · 制程与口径 · 输出与注意",
+      "rect_pt": {
+        "left": 80.64,
+        "top": 345.6,
+        "width": 792.0,
+        "height": 28.8
+      },
+      "inner_rect_pt": {
+        "left": 80.64,
+        "top": 345.6,
+        "width": 792.0,
+        "height": 28.8
+      },
+      "font_size_pt": 14.0,
+      "paragraph_count": 1
+    },
+    {
+      "slide_number": 13,
+      "owner_shape_id": 6,
+      "owner_shape_name": "TextBox 5",
+      "owner_shape_type": "TEXT_BOX",
+      "z_order": 5,
+      "source_kind": "shape_text",
+      "text": "v1.0 · 内部使用",
+      "rect_pt": {
+        "left": 80.64,
+        "top": 482.4,
+        "width": 792.0,
+        "height": 21.6
+      },
+      "inner_rect_pt": {
+        "left": 80.64,
+        "top": 482.4,
+        "width": 792.0,
+        "height": 21.6
+      },
+      "font_size_pt": 9.0,
+      "paragraph_count": 1
+    }
+  ],
+  "table_cell_formats": [
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "制程",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "周期完成事件",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 3,
+      "vertical_anchor": "middle",
+      "text_preview": "结构",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 4,
+      "vertical_anchor": "middle",
+      "text_preview": "UPH 口径要点",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "LM 激光打标",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "MarkEnd1",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 3,
+      "vertical_anchor": "middle",
+      "text_preview": "单机台；每盘 4 批 × 6 颗",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 4,
+      "vertical_anchor": "middle",
+      "text_preview": "换盘时间按 24 颗平摊",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "CAW 组装",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "放熟料完成 / 去交换位",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 3,
+      "vertical_anchor": "middle",
+      "text_preview": "PLC1 焊接机 + PLC2 上料机（左右并行）",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 4,
+      "vertical_anchor": "middle",
+      "text_preview": "双机台瓶颈，取 CT 长者",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "FR 点胶",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "轴点胶完成",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 3,
+      "vertical_anchor": "middle",
+      "text_preview": "左轴 / 右轴并行",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 4,
+      "vertical_anchor": "middle",
+      "text_preview": "Pure UPH ×0.5（单轴）；整机 M1/M2 = 左 + 右",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "SA 四工位",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "各工位完成事件",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 3,
+      "vertical_anchor": "middle",
+      "text_preview": "点胶 / 贴附 / 热压 / 检测并行",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 4,
+      "vertical_anchor": "middle",
+      "text_preview": "自动判定瓶颈工位",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "ACF 三機",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "更新Carrier盘 / Cavity cnt:1 / UnloadDuts Finish",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 3,
+      "vertical_anchor": "middle",
+      "text_preview": "上料機 / 主機 / 下料機 分文件夹",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 4,
+      "vertical_anchor": "middle",
+      "text_preview": "每盘颗数按 Tray ID 动态统计",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "文件",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "内容",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "UPH_Analysis.xlsx",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "Summary / AMESummary / CycleDetail / EMProduction / 步骤分析 / 步骤甘特图",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "EFF_Analysis.xlsx",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "EFF 汇总与停机 Pareto（含 pDT / uDT）",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "Alarm_Analysis.xlsx",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "报警汇总、关键词分布、明细（EReason 中文名）",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "Status_Analysis.xlsx",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "状态汇总与小时分布",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "LogAnalysis.xlsx",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "合并日志（异常行标红）；大文件按日志逐个导出",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 7,
+      "col": 1,
+      "vertical_anchor": "middle",
+      "text_preview": "Analysis_Report.pptx",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 7,
+      "col": 2,
+      "vertical_anchor": "middle",
+      "text_preview": "自动报告：UPH / EFF / 停机 Pareto / 报警 / 状态 + 瓶颈工序甘特图",
+      "is_merge_origin": false,
+      "is_spanned": false,
+      "span_width": 1,
+      "span_height": 1
+    }
+  ],
+  "table_paragraph_formats": [
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "制程",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "周期完成事件",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 3,
+      "paragraph": 1,
+      "text_preview": "结构",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 4,
+      "paragraph": 1,
+      "text_preview": "UPH 口径要点",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "LM 激光打标",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "MarkEnd1",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 3,
+      "paragraph": 1,
+      "text_preview": "单机台；每盘 4 批 × 6 颗",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 4,
+      "paragraph": 1,
+      "text_preview": "换盘时间按 24 颗平摊",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "CAW 组装",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "放熟料完成 / 去交换位",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 3,
+      "paragraph": 1,
+      "text_preview": "PLC1 焊接机 + PLC2 上料机（左右并行）",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 4,
+      "paragraph": 1,
+      "text_preview": "双机台瓶颈，取 CT 长者",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "FR 点胶",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "轴点胶完成",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 3,
+      "paragraph": 1,
+      "text_preview": "左轴 / 右轴并行",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 4,
+      "paragraph": 1,
+      "text_preview": "Pure UPH ×0.5（单轴）；整机 M1/M2 = 左 + 右",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "SA 四工位",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "各工位完成事件",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 3,
+      "paragraph": 1,
+      "text_preview": "点胶 / 贴附 / 热压 / 检测并行",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 4,
+      "paragraph": 1,
+      "text_preview": "自动判定瓶颈工位",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "ACF 三機",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "更新Carrier盘 / Cavity cnt:1 / UnloadDuts Finish",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 3,
+      "paragraph": 1,
+      "text_preview": "上料機 / 主機 / 下料機 分文件夹",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 7,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 4,
+      "paragraph": 1,
+      "text_preview": "每盘颗数按 Tray ID 动态统计",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "文件",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 1,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "内容",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "UPH_Analysis.xlsx",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 2,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "Summary / AMESummary / CycleDetail / EMProduction / 步骤分析 / 步骤甘特图",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "EFF_Analysis.xlsx",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 3,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "EFF 汇总与停机 Pareto（含 pDT / uDT）",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "Alarm_Analysis.xlsx",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 4,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "报警汇总、关键词分布、明细（EReason 中文名）",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "Status_Analysis.xlsx",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 5,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "状态汇总与小时分布",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "LogAnalysis.xlsx",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 6,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "合并日志（异常行标红）；大文件按日志逐个导出",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 7,
+      "col": 1,
+      "paragraph": 1,
+      "text_preview": "Analysis_Report.pptx",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    },
+    {
+      "slide_number": 11,
+      "owner_shape_id": 5,
+      "owner_shape_name": "Table 4",
+      "table_index_on_slide": 1,
+      "row": 7,
+      "col": 2,
+      "paragraph": 1,
+      "text_preview": "自动报告：UPH / EFF / 停机 Pareto / 报警 / 状态 + 瓶颈工序甘特图",
+      "paragraph_level": 0,
+      "paragraph_margin_left_pt": 0.0,
+      "paragraph_margin_right_pt": 0.0,
+      "paragraph_indent_pt": 0.0,
+      "nonzero_indents": {}
+    }
+  ]
+}

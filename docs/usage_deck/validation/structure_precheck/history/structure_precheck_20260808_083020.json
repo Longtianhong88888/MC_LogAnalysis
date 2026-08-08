@@ -1,0 +1,179 @@
+{
+  "pptx": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx",
+  "generated_at": "20260808_083020",
+  "summary": {
+    "error": 4,
+    "warning": 0,
+    "not_checked": 1
+  },
+  "issues": [
+    {
+      "severity": "error",
+      "issue_type": "text_occluded_by_shape",
+      "message": "文本估计边界与更高层对象发生显著重叠，存在相邻对象压字风险。",
+      "slide_number": 8,
+      "shape_id": 8,
+      "source_kind": "shape_text",
+      "details": {
+        "text": "周期分类：间隔 > 计划性停机阈值 → 计划性停机；> 正常周期阈值 → 异常周期；其余为正常周期。",
+        "text_bounds_pt": {
+          "left": 56.16,
+          "top": 190.8,
+          "width": 303.63,
+          "height": 12.96
+        },
+        "occluding_shape_id": 9,
+        "occluding_shape_name": "TextBox 8",
+        "occluding_shape_type": "TEXT_BOX",
+        "occluding_rect_pt": {
+          "left": 56.16,
+          "top": 187.2,
+          "width": 847.44,
+          "height": 30.24
+        },
+        "overlap_area_pt2": 3935.04,
+        "overlap_ratio": 1.0
+      },
+      "suggested_fix": "移动遮挡对象、增加留白，或重排文本框与卡片边界。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "text_occluded_by_shape",
+      "message": "文本估计边界与更高层对象发生显著重叠，存在相邻对象压字风险。",
+      "slide_number": 8,
+      "shape_id": 12,
+      "source_kind": "shape_text",
+      "details": {
+        "text": "周期分类：间隔 > 计划性停机阈值 → 计划性停机；> 正常周期阈值 → 异常周期；其余为正常周期。",
+        "text_bounds_pt": {
+          "left": 56.16,
+          "top": 266.4,
+          "width": 303.63,
+          "height": 12.96
+        },
+        "occluding_shape_id": 13,
+        "occluding_shape_name": "TextBox 12",
+        "occluding_shape_type": "TEXT_BOX",
+        "occluding_rect_pt": {
+          "left": 56.16,
+          "top": 262.8,
+          "width": 847.44,
+          "height": 30.24
+        },
+        "overlap_area_pt2": 3935.04,
+        "overlap_ratio": 1.0
+      },
+      "suggested_fix": "移动遮挡对象、增加留白，或重排文本框与卡片边界。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "text_occluded_by_shape",
+      "message": "文本估计边界与更高层对象发生显著重叠，存在相邻对象压字风险。",
+      "slide_number": 8,
+      "shape_id": 16,
+      "source_kind": "shape_text",
+      "details": {
+        "text": "周期分类：间隔 > 计划性停机阈值 → 计划性停机；> 正常周期阈值 → 异常周期；其余为正常周期。",
+        "text_bounds_pt": {
+          "left": 56.16,
+          "top": 342.0,
+          "width": 303.63,
+          "height": 12.96
+        },
+        "occluding_shape_id": 17,
+        "occluding_shape_name": "TextBox 16",
+        "occluding_shape_type": "TEXT_BOX",
+        "occluding_rect_pt": {
+          "left": 56.16,
+          "top": 338.4,
+          "width": 847.44,
+          "height": 30.24
+        },
+        "overlap_area_pt2": 3935.04,
+        "overlap_ratio": 1.0
+      },
+      "suggested_fix": "移动遮挡对象、增加留白，或重排文本框与卡片边界。"
+    },
+    {
+      "severity": "error",
+      "issue_type": "text_occluded_by_shape",
+      "message": "文本估计边界与更高层对象发生显著重叠，存在相邻对象压字风险。",
+      "slide_number": 8,
+      "shape_id": 20,
+      "source_kind": "shape_text",
+      "details": {
+        "text": "周期分类：间隔 > 计划性停机阈值 → 计划性停机；> 正常周期阈值 → 异常周期；其余为正常周期。",
+        "text_bounds_pt": {
+          "left": 56.16,
+          "top": 417.6,
+          "width": 303.63,
+          "height": 12.96
+        },
+        "occluding_shape_id": 21,
+        "occluding_shape_name": "TextBox 20",
+        "occluding_shape_type": "TEXT_BOX",
+        "occluding_rect_pt": {
+          "left": 56.16,
+          "top": 414.0,
+          "width": 847.44,
+          "height": 30.24
+        },
+        "overlap_area_pt2": 3935.04,
+        "overlap_ratio": 1.0
+      },
+      "suggested_fix": "移动遮挡对象、增加留白，或重排文本框与卡片边界。"
+    },
+    {
+      "severity": "not_checked",
+      "issue_type": "flattened_graphic_requires_render_review",
+      "message": "该图片对象可能承载内部文字或图表标签，但结构预检无法看到图片内部对象边界，需要交给 render review。",
+      "slide_number": 9,
+      "shape_id": 8,
+      "source_kind": "picture",
+      "details": {
+        "shape_name": "Picture 7",
+        "shape_type": "PICTURE",
+        "rect_pt": {
+          "left": 450.0,
+          "top": 97.2,
+          "width": 468.0,
+          "height": 94.85
+        }
+      },
+      "suggested_fix": "若该图片内部含文字、刻度或标签，请在预览导出后执行 render review，而不是把 `not_checked` 当成通过。"
+    }
+  ],
+  "counts": {
+    "shape_count": 137,
+    "text_item_count": 144,
+    "explicit_font_size_occurrence_count": 166,
+    "table_cell_format_record_count": 38,
+    "table_paragraph_format_record_count": 38
+  },
+  "font_size_policy": {
+    "typography_profile": "zh_formal",
+    "latin_font_name": "Times New Roman",
+    "east_asia_font_name": "宋体",
+    "hero_title_font_pt": 40.0,
+    "section_title_font_pt": 30.0,
+    "page_title_font_pt": 24.0,
+    "subtitle_font_pt": 16.0,
+    "minor_title_font_pt": 14.0,
+    "body_font_pt": 12.0,
+    "label_font_pt": 10.5,
+    "caption_font_pt": 9.0,
+    "table_font_pt": 10.5,
+    "source": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/generated/slide_specs.yaml",
+    "_field_sources": {
+      "hero_title_font_pt": "theme_tokens",
+      "section_title_font_pt": "theme_tokens",
+      "page_title_font_pt": "theme_tokens",
+      "subtitle_font_pt": "theme_tokens",
+      "minor_title_font_pt": "theme_tokens",
+      "body_font_pt": "theme_tokens",
+      "label_font_pt": "theme_tokens",
+      "caption_font_pt": "theme_tokens",
+      "table_font_pt": "theme_tokens"
+    }
+  }
+}

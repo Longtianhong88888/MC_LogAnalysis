@@ -1,0 +1,19 @@
+{
+  "pptx": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx",
+  "generated_at": "20260808_083020",
+  "summary": {
+    "error": 0,
+    "warning": 0,
+    "not_checked": 0
+  },
+  "issues": [],
+  "checks": {
+    "actual_slide_count": 13,
+    "presentation_slide_count": 13,
+    "docprops_slide_count": 13,
+    "section_slide_id_count": 0,
+    "slide_relationship_count": 13,
+    "slide_xml_count": 13,
+    "embedded_object_count": 0
+  }
+}

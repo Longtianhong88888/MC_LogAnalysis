@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "taxonomy_version": "1.0",
+  "policy_version": "1.0",
+  "source": {
+    "skill": "ppt-polished-deck-collab",
+    "gate": "package_preflight"
+  },
+  "artifact": {
+    "path": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx"
+  },
+  "target_milestone": "final",
+  "decision": {
+    "state": "hard_blocked",
+    "target_milestone": "final",
+    "hard_group_count": 1,
+    "soft_group_count": 0,
+    "advisory_group_count": 0
+  },
+  "summary": {
+    "group_count": 1,
+    "occurrence_count": 1,
+    "evidence_count": 1,
+    "by_action": {
+      "hard_block": 1
+    },
+    "by_domain": {
+      "artifact_integrity": 1
+    }
+  },
+  "groups": [
+    {
+      "group_id": "group_55f76388f93f",
+      "agent_action": "hard_block",
+      "severity": "error",
+      "status": "detected",
+      "domain": "artifact_integrity",
+      "family": "package",
+      "problem_class": "artifact_integrity.package.slide_count_mismatch",
+      "code": "docprops_slide_count_mismatch",
+      "fix_strategy_id": "repair_package_metadata",
+      "resolution": {
+        "policy_id": "rerun_clear",
+        "conditions": [
+          "rerun_clear"
+        ],
+        "requires_human": false,
+        "continue_when": "修复、重建并重跑 gate 后该 finding 清除。"
+      },
+      "enforcement": {
+        "block_before": "final",
+        "allowed_resolution_actions": [
+          "edit_source",
+          "rebuild",
+          "rerun"
+        ]
+      },
+      "recommendation": {
+        "status": "unresolved",
+        "source": null,
+        "token": null,
+        "value_pt": null,
+        "language": null,
+        "role": null,
+        "nearest_half_point_pt": null
+      },
+      "occurrence_count": 1,
+      "evidence_count": 1,
+      "actual_value_counts": {},
+      "message": "`docProps/app.xml` 中的 `Slides` 统计与实际 slide 数不一致，这对移动端解析器是高风险信号。",
+      "suggested_fix": "在最终打包前重写 `docProps/app.xml` 的 slide 统计，保证和真实 deck 一致。",
+      "sample_locations": [
+        "ppt"
+      ],
+      "omitted_location_count": 0,
+      "related_codes": [],
+      "suppressed_finding_count": 0,
+      "superseded_finding_count": 0
+    }
+  ],
+  "full_report_ref": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/validation/package_preflight/history/package_preflight_20260808_082832.json"
+}

@@ -1,0 +1,63 @@
+{
+  "pptx": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx",
+  "generated_at": "20260808_083125",
+  "summary": {
+    "error": 0,
+    "warning": 0,
+    "not_checked": 1
+  },
+  "issues": [
+    {
+      "severity": "not_checked",
+      "issue_type": "flattened_graphic_requires_render_review",
+      "message": "该图片对象可能承载内部文字或图表标签，但结构预检无法看到图片内部对象边界，需要交给 render review。",
+      "slide_number": 9,
+      "shape_id": 8,
+      "source_kind": "picture",
+      "details": {
+        "shape_name": "Picture 7",
+        "shape_type": "PICTURE",
+        "rect_pt": {
+          "left": 450.0,
+          "top": 97.2,
+          "width": 468.0,
+          "height": 94.85
+        }
+      },
+      "suggested_fix": "若该图片内部含文字、刻度或标签，请在预览导出后执行 render review，而不是把 `not_checked` 当成通过。"
+    }
+  ],
+  "counts": {
+    "shape_count": 133,
+    "text_item_count": 140,
+    "explicit_font_size_occurrence_count": 162,
+    "table_cell_format_record_count": 38,
+    "table_paragraph_format_record_count": 38
+  },
+  "font_size_policy": {
+    "typography_profile": "zh_formal",
+    "latin_font_name": "Times New Roman",
+    "east_asia_font_name": "宋体",
+    "hero_title_font_pt": 40.0,
+    "section_title_font_pt": 30.0,
+    "page_title_font_pt": 24.0,
+    "subtitle_font_pt": 16.0,
+    "minor_title_font_pt": 14.0,
+    "body_font_pt": 12.0,
+    "label_font_pt": 10.5,
+    "caption_font_pt": 9.0,
+    "table_font_pt": 10.5,
+    "source": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/generated/slide_specs.yaml",
+    "_field_sources": {
+      "hero_title_font_pt": "theme_tokens",
+      "section_title_font_pt": "theme_tokens",
+      "page_title_font_pt": "theme_tokens",
+      "subtitle_font_pt": "theme_tokens",
+      "minor_title_font_pt": "theme_tokens",
+      "body_font_pt": "theme_tokens",
+      "label_font_pt": "theme_tokens",
+      "caption_font_pt": "theme_tokens",
+      "table_font_pt": "theme_tokens"
+    }
+  }
+}

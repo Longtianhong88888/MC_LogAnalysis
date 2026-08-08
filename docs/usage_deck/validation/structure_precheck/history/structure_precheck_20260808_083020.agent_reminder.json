@@ -1,0 +1,135 @@
+{
+  "schema_version": "1.0",
+  "taxonomy_version": "1.0",
+  "policy_version": "1.0",
+  "source": {
+    "skill": "ppt-polished-deck-collab",
+    "gate": "structure_precheck"
+  },
+  "artifact": {
+    "path": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/build/pptx/usage_deck.pptx"
+  },
+  "target_milestone": "final",
+  "decision": {
+    "state": "hard_blocked",
+    "target_milestone": "final",
+    "hard_group_count": 1,
+    "soft_group_count": 1,
+    "advisory_group_count": 0
+  },
+  "summary": {
+    "group_count": 2,
+    "occurrence_count": 5,
+    "evidence_count": 5,
+    "by_action": {
+      "hard_block": 1,
+      "soft_block": 1
+    },
+    "by_domain": {
+      "layout": 1,
+      "validation_coverage": 1
+    }
+  },
+  "groups": [
+    {
+      "group_id": "group_d893f3fc33cb",
+      "agent_action": "hard_block",
+      "severity": "error",
+      "status": "detected",
+      "domain": "layout",
+      "family": "overlap",
+      "problem_class": "layout.overlap.object_overlap",
+      "code": "text_occluded_by_shape",
+      "fix_strategy_id": "repair_overlap",
+      "resolution": {
+        "policy_id": "rerun_clear",
+        "conditions": [
+          "rerun_clear"
+        ],
+        "requires_human": false,
+        "continue_when": "修复、重建并重跑 gate 后该 finding 清除。"
+      },
+      "enforcement": {
+        "block_before": "final",
+        "allowed_resolution_actions": [
+          "edit_source",
+          "rebuild",
+          "rerun"
+        ]
+      },
+      "recommendation": {
+        "status": "unresolved",
+        "source": null,
+        "token": null,
+        "value_pt": null,
+        "language": null,
+        "role": null,
+        "nearest_half_point_pt": null
+      },
+      "occurrence_count": 4,
+      "evidence_count": 4,
+      "actual_value_counts": {},
+      "message": "文本估计边界与更高层对象发生显著重叠，存在相邻对象压字风险。",
+      "suggested_fix": "移动遮挡对象、增加留白，或重排文本框与卡片边界。",
+      "sample_locations": [
+        "slide 8 | shape 12 | shape_text",
+        "slide 8 | shape 16 | shape_text",
+        "slide 8 | shape 20 | shape_text"
+      ],
+      "omitted_location_count": 1,
+      "related_codes": [],
+      "suppressed_finding_count": 0,
+      "superseded_finding_count": 0
+    },
+    {
+      "group_id": "group_7e6df2b4e0b4",
+      "agent_action": "soft_block",
+      "severity": "not_checked",
+      "status": "not_checked",
+      "domain": "validation_coverage",
+      "family": "raster_graphic",
+      "problem_class": "validation_coverage.detector.flattened_graphic_internal_text",
+      "code": "flattened_graphic_requires_render_review",
+      "fix_strategy_id": "complete_render_review",
+      "resolution": {
+        "policy_id": "complete_evidence",
+        "conditions": [
+          "evidence_exists",
+          "exception_recorded"
+        ],
+        "requires_human": true,
+        "continue_when": "补齐检测证据或登记完整例外后继续。"
+      },
+      "enforcement": {
+        "block_before": "final",
+        "allowed_resolution_actions": [
+          "rerun",
+          "manual_review",
+          "document_exception"
+        ]
+      },
+      "recommendation": {
+        "status": "unresolved",
+        "source": null,
+        "token": null,
+        "value_pt": null,
+        "language": null,
+        "role": null,
+        "nearest_half_point_pt": null
+      },
+      "occurrence_count": 1,
+      "evidence_count": 1,
+      "actual_value_counts": {},
+      "message": "该图片对象可能承载内部文字或图表标签，但结构预检无法看到图片内部对象边界，需要交给 render review。",
+      "suggested_fix": "若该图片内部含文字、刻度或标签，请在预览导出后执行 render review，而不是把 `not_checked` 当成通过。",
+      "sample_locations": [
+        "slide 9 | shape 8 | picture"
+      ],
+      "omitted_location_count": 0,
+      "related_codes": [],
+      "suppressed_finding_count": 0,
+      "superseded_finding_count": 0
+    }
+  ],
+  "full_report_ref": "/Users/user/Desktop/PY/MC_LogAnalysis/docs/usage_deck/validation/structure_precheck/history/structure_precheck_20260808_083020.json"
+}
