@@ -214,7 +214,8 @@ def build_overview(prs):
                   fill=RGBColor(0xFD, 0xEF, 0xEE), size=14, bold=True, color=ACCENT)
 
 
-def build_grid_page(prs, eyebrow, title, cards, cols=3, page_anchor=None):
+def build_grid_page(prs, eyebrow, title, cards, cols=3, fill=NAVY,
+                    title_color=WHITE, body_color=RGBColor(0xDD, 0xE6, 0xEF)):
     slide = content_slide(prs, eyebrow, title)
     cw = 3.9 if cols == 3 else 5.95
     ch = 2.25
@@ -223,14 +224,14 @@ def build_grid_page(prs, eyebrow, title, cards, cols=3, page_anchor=None):
         row, col = divmod(i, cols)
         x = 0.7 + col * (cw + gap)
         y = 1.75 + row * (ch + 0.2)
-        shp = add_rect_text(slide, x, y, cw, ch, t, fill=GRAY_LIGHT, size=14, bold=True,
-                            color=NAVY, anchor=MSO_ANCHOR.TOP, margin=0.14)
+        shp = add_rect_text(slide, x, y, cw, ch, t, fill=fill, size=14, bold=True,
+                            color=title_color, anchor=MSO_ANCHOR.TOP, margin=0.14)
         p = shp.text_frame.add_paragraph()
         p.line_spacing = 1.25
         p.space_before = Pt(6)
         r = p.add_run()
         r.text = body
-        _set_run(r, 12, False, GRAY)
+        _set_run(r, 12, False, body_color)
     return slide
 
 
@@ -373,7 +374,7 @@ def build_eff_page(prs):
         ("报警分析", "按关键词命中计数，按机台 / 模组汇总；EReason 清单映射中文原因名称。"),
     ]
     return build_grid_page(prs, "第3章 制程与口径", "EFF、状态与报警：三张表讲清设备效率与异常",
-                           cards, cols=3)
+                           cards, cols=3, fill=NAVY)
 
 
 def build_output_table(prs):
@@ -426,7 +427,8 @@ def build_tips(prs):
         ("PPT 模板", "Analysis_Report.pptx 放到程序同目录即可正常生成报告；模板含内部数据，仅限内部传送。"),
         ("灵活覆盖", "日志文件筛选框自动填充与制程匹配的内容，用户有特殊需求可手动输入。"),
     ]
-    return build_grid_page(prs, "第4章 输出与注意", "使用前注意这几点，避免踩坑", cards, cols=2)
+    return build_grid_page(prs, "第4章 输出与注意", "使用前注意这几点，避免踩坑",
+                           cards, cols=2, fill=NAVY)
 
 
 def build_closing(prs):
@@ -475,7 +477,7 @@ def main():
         ("报警分析", "按关键词统计报警，EReason 中文名映射。"),
         ("机台状态分析", "status 行或活动 / 停机关键词推导 RUN / IDLE / DOWN 时间线。"),
         ("一键分析", "一次运行完成全部功能，导出 4 个 Excel 并自动生成 PPT 报告。"),
-    ])
+    ], fill=NAVY)
     build_grid_page(prs, "第1章 功能与亮点",
                     "亮点：自动模板、瓶颈判定、换盘分摊、步骤甘特、异常标红、自动报告", [
         ("制程模板一键预填", "选 LM / CAW / FR / SA / ACF，自动带入触发词、报警关键词与计算逻辑。"),
@@ -484,7 +486,7 @@ def main():
         ("步骤深度分析 + 甘特图", "按轴 / 平台运动节拍拆步骤，Excel 甘特图直接看出先后与并行。"),
         ("异常日志自动标红", "报警 / 停机 / 步骤超时行标红，剔除产品码中的 NG 误报。"),
         ("自动 PPT 报告", "汇总 + 图表 + 瓶颈工序甘特图，时间格式统一、可编辑。"),
-    ])
+    ], fill=ACCENT, body_color=RGBColor(0xFF, 0xEF, 0xED))
     build_flow(prs)
     build_ui_map(prs)
     build_process_table(prs)
@@ -499,7 +501,7 @@ def main():
     # 统一在每页右下角补页码（模板页码色 083C63）。
     for i, slide in enumerate(prs.slides, 1):
         add_text(slide, 11.35, 7.05, 0.72, 0.3, "%d / %d" % (i, TOTAL_SLIDES),
-                 size=10, color=NAVY, align=PP_ALIGN.RIGHT)
+                 size=9, color=NAVY, align=PP_ALIGN.RIGHT)
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(OUT_PATH))
