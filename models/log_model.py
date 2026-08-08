@@ -65,7 +65,12 @@ class LogModel:
                               cancel_event=cancel_event)
 
     @staticmethod
-    def _write_sheets(out_path, sheets, cancel_event=None):
+    def _write_sheets(out_path, sheets, cancel_event=None, sheet_highlights=None):
+        """写多 sheet Excel；sheet_highlights: {表名: [DataFrame 0-based 行号]}。
+
+        xlsxwriter 引擎下直接在写表阶段用 set_row 标红（避免 openpyxl 二次加载大表），
+        返回是否已应用标红；未应用时（如 openpyxl 引擎）由调用方走 _apply_highlights 兜底。
+        """
         max_rows = 1048575  # Excel 单表最大行数（含表头行）
         heavy = False  # 是否包含超大表（>20万行）：跳过整体格式化，避免重新加载保存拖慢导出
         writer_kwargs = {}
@@ -74,14 +79,19 @@ class LogModel:
                 'engine': 'xlsxwriter',
                 'engine_kwargs': {'options': {'nan_inf_to_errors': True}},
             }
+        applied = False
         with pd.ExcelWriter(out_path, **writer_kwargs) as writer:
             for sheet_name, df in sheets.items():
                 if cancel_event is not None and cancel_event.is_set():
                     raise OperationCancelled()
+                hl = (sheet_highlights or {}).get(sheet_name) or []
                 if len(df) <= max_rows:
                     if len(df) > LogModel.MAX_FORMAT_ROWS:
                         heavy = True
                     df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    if hl and _HAS_XLSXWRITER:
+                        LogModel._apply_row_fills(writer, sheet_name, hl, offset=0, n_rows=len(df))
+                        applied = True
                 else:
                     # 超限自动拆分：AllLogs → AllLogs_1, AllLogs_2 ...
                     heavy = True
@@ -92,8 +102,27 @@ class LogModel:
                         chunk = df.iloc[i * max_rows:(i + 1) * max_rows]
                         name = f"{sheet_name}_{i + 1}"[:31]
                         chunk.to_excel(writer, sheet_name=name, index=False)
+                        if hl and _HAS_XLSXWRITER:
+                            chunk_hl = [r for r in hl if i * max_rows <= r < (i + 1) * max_rows]
+                            if chunk_hl:
+                                LogModel._apply_row_fills(writer, name, chunk_hl,
+                                                          offset=i * max_rows, n_rows=len(chunk))
+                                applied = True
         if not heavy:
             LogModel._format_workbook(out_path)
+        return applied
+
+    @staticmethod
+    def _apply_row_fills(writer, sheet_name, df_rows, offset=0, n_rows=None):
+        """xlsxwriter 阶段按整行标红：df_rows 为 DataFrame 0-based 行号，offset 为当前块起点。"""
+        ws = writer.sheets[sheet_name]
+        red = writer.book.add_format({'bg_color': 'FFC7CE'})
+        if n_rows is None:
+            n_rows = len(df_rows) + offset
+        for r in df_rows:
+            excel_row = (r - offset) + 2  # 表头占第 1 行
+            if 1 <= excel_row <= n_rows + 1:
+                ws.set_row(excel_row - 1, None, red)  # xlsxwriter 行号从 0 开始
 
     # 超大表逐格样式上限（超过则只做表头/列宽，避免卡死）
     MAX_FORMAT_ROWS = 200000
@@ -248,13 +277,21 @@ class LogModel:
         step_lines = set()
         if step_units or step_mode == 'sa':
             cutoff = step_max_seconds if step_max_seconds is not None else 900.0
-            if step_mode == 'sa':
-                sdf = analyze_steps_sa(all_data, step_coefficient,
-                                       max_step_seconds=cutoff, cancel_event=cancel_event)
-            elif step_units:
-                sdf = analyze_steps(all_data, step_units, step_coefficient,
-                                    max_step_seconds=cutoff, cancel_event=cancel_event)
-            step_lines = getattr(sdf, 'attrs', {}).get('anomaly_lines') or set()
+            cached = getattr(self, '_step_lines_cache', None)
+            if (cached and cached[0] == id(all_data)
+                    and cached[1] == step_mode
+                    and cached[2] == float(step_coefficient)
+                    and cached[3] == cutoff):
+                # 一键分析中 UPH 步骤分析已算出异常行，直接复用避免重复扫描大日志
+                step_lines = cached[4]
+            else:
+                if step_mode == 'sa':
+                    sdf = analyze_steps_sa(all_data, step_coefficient,
+                                           max_step_seconds=cutoff, cancel_event=cancel_event)
+                elif step_units:
+                    sdf = analyze_steps(all_data, step_units, step_coefficient,
+                                        max_step_seconds=cutoff, cancel_event=cancel_event)
+                step_lines = getattr(sdf, 'attrs', {}).get('anomaly_lines') or set()
 
         if merge_groups:
             # 按文件分组（如 PLC1/PLC2）分别导出 Excel
@@ -277,8 +314,10 @@ class LogModel:
             progress_callback(70)
 
         out_path = os.path.join(output_dir, 'LogAnalysis.xlsx')
-        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-        self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
+        hl = self._sheet_highlights(sheets, abnormal_keywords, step_lines, cancel_event)
+        applied = self._write_sheets(out_path, sheets, cancel_event=cancel_event, sheet_highlights=hl)
+        if not applied:
+            self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
 
         if progress_callback:
             progress_callback(100)
@@ -304,8 +343,10 @@ class LogModel:
                 continue
             sheets = self._build_merge_sheets(pd.DataFrame(sub), keywords, separator, cancel_event)
             out_path = _os.path.join(output_dir, 'LogAnalysis_%s.xlsx' % name)
-            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
+            hl = self._sheet_highlights(sheets, abnormal_keywords, step_lines, cancel_event)
+            applied = self._write_sheets(out_path, sheets, cancel_event=cancel_event, sheet_highlights=hl)
+            if not applied:
+                self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
             written.append(out_path)
             matched_ids.update(id(r) for r in sub)
             if progress_callback:
@@ -314,8 +355,10 @@ class LogModel:
         if others:
             sheets = self._build_merge_sheets(pd.DataFrame(others), keywords, separator, cancel_event)
             out_path = _os.path.join(output_dir, 'LogAnalysis_其他.xlsx')
-            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
+            hl = self._sheet_highlights(sheets, abnormal_keywords, step_lines, cancel_event)
+            applied = self._write_sheets(out_path, sheets, cancel_event=cancel_event, sheet_highlights=hl)
+            if not applied:
+                self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
             written.append(out_path)
         if progress_callback:
             progress_callback(100)
@@ -354,11 +397,80 @@ class LogModel:
         wb.save(path)
 
     def _apply_highlights(self, path, abnormal_keywords, step_lines, cancel_event=None):
-        """合并输出统一标红：报警/停机关键词行 + UPH 步骤超时触发行。"""
+        """合并输出统一标红：报警/停机关键词行 + UPH 步骤超时触发行。
+
+        openpyxl 引擎兜底：单次加载、单次扫描、单次保存（xlsxwriter 引擎下
+        写表阶段已用 set_row 完成标红，不再走到这里）。
+        """
+        if not abnormal_keywords and not step_lines:
+            return
+        pat = self._keyword_pattern(abnormal_keywords)
+        if pat is None and not step_lines:
+            return
+        try:
+            wb = load_workbook(path)
+        except Exception:
+            return
+        red = PatternFill('solid', fgColor='FFC7CE')
+        lines = set(step_lines or ())
+        for ws in wb.worksheets:
+            if ws.max_row < 2:
+                continue
+            header = {c.value: idx for idx, c in enumerate(ws[1], start=1)}
+            content_col = header.get('Content') or header.get('OriginalContent')
+            if not content_col:
+                continue
+            for row in ws.iter_rows(min_row=2):
+                if cancel_event is not None and cancel_event.is_set():
+                    break
+                cell = row[content_col - 1]
+                val = cell.value
+                if val is None:
+                    continue
+                if (pat is not None and pat.search(str(val))) or (lines and val in lines):
+                    for c in row:
+                        c.fill = red
+        wb.save(path)
+
+    @staticmethod
+    def _keyword_pattern(abnormal_keywords):
+        """异常关键词 → 单条编译正则（IGNORECASE），供写表/兜底标红共用。"""
+        if not abnormal_keywords:
+            return None
+        kws = [k for k in re.split(r'[,，、;；\s]+', str(abnormal_keywords)) if k]
+        if not kws:
+            return None
+        return re.compile('|'.join(re.escape(k) for k in kws), re.IGNORECASE)
+
+    @staticmethod
+    def _compute_highlight_rows(df, abnormal_keywords, step_lines, cancel_event=None):
+        """返回 DataFrame 中需标红的 0-based 行索引（异常关键词或步骤超时触发行）。
+
+        用 pandas 向量化匹配（str.contains + isin），避免 openpyxl 逐格扫描大表。
+        """
+        if cancel_event is not None and cancel_event.is_set():
+            raise OperationCancelled()
+        col = 'Content' if 'Content' in df.columns else (
+            'OriginalContent' if 'OriginalContent' in df.columns else None)
+        if col is None or df.empty:
+            return []
+        mask = pd.Series(False, index=df.index)
         if abnormal_keywords:
-            self._highlight_abnormal_rows(path, abnormal_keywords, cancel_event)
+            pat = LogModel._keyword_pattern(abnormal_keywords)
+            if pat is not None:
+                mask |= df[col].astype(str).str.contains(pat, na=False)
         if step_lines:
-            self._highlight_step_lines(path, step_lines, cancel_event)
+            mask |= df[col].isin(set(step_lines))
+        return df.index[mask].tolist()
+
+    def _sheet_highlights(self, sheets, abnormal_keywords, step_lines, cancel_event=None):
+        """批量计算各 sheet 需标红的行索引；无关键词/无异常行时返回 None。"""
+        if not abnormal_keywords and not step_lines:
+            return None
+        return {
+            name: self._compute_highlight_rows(df, abnormal_keywords, step_lines, cancel_event)
+            for name, df in sheets.items()
+        }
 
     @staticmethod
     def _highlight_step_lines(path, lines, cancel_event=None):
@@ -451,10 +563,10 @@ class LogModel:
         has_separator = separator is not None and separator != ''
         if not has_keywords and not has_separator:
             # 无筛选：直接流式写入，避免构建大 DataFrame（最快、内存最低）
-            n = self._stream_per_file(sub_dir, all_data, cancel_event)
-            for f in sorted(os.listdir(sub_dir)):
-                if f.endswith('.xlsx'):
-                    self._apply_highlights(os.path.join(sub_dir, f), abnormal_keywords, step_lines, cancel_event)
+            n = self._stream_per_file(
+                sub_dir, all_data, cancel_event,
+                abnormal_keywords=abnormal_keywords, step_lines=step_lines,
+            )
             if progress_callback:
                 progress_callback(100)
             return f"{sub_dir}（日志过大，已按文件分别导出 {n} 个 Excel）"
@@ -468,8 +580,10 @@ class LogModel:
             sheets = self._build_merge_sheets(sub, keywords, separator, cancel_event)
             stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
             out_path = os.path.join(sub_dir, f'{stem}.xlsx')
-            self._write_sheets(out_path, sheets, cancel_event=cancel_event)
-            self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
+            hl = self._sheet_highlights(sheets, abnormal_keywords, step_lines, cancel_event)
+            applied = self._write_sheets(out_path, sheets, cancel_event=cancel_event, sheet_highlights=hl)
+            if not applied:
+                self._apply_highlights(out_path, abnormal_keywords, step_lines, cancel_event)
             if progress_callback:
                 progress_callback(30 + int(60 * (idx + 1) / n))
         if progress_callback:
@@ -477,15 +591,29 @@ class LogModel:
         return f"{sub_dir}（日志过大，已按文件分别导出 {n} 个 Excel）"
 
     @staticmethod
-    def _stream_per_file(sub_dir, all_data, cancel_event=None):
-        """无筛选时按日志文件流式写入 Excel（xlsxwriter 常量内存模式）。返回文件数。"""
+    def _stream_per_file(sub_dir, all_data, cancel_event=None,
+                         abnormal_keywords=None, step_lines=None):
+        """无筛选时按日志文件流式写入 Excel（xlsxwriter 常量内存模式），写表同时按行标红。返回文件数。"""
         import xlsxwriter
         max_rows = 1048575
         file_names = sorted({r.get('FileName', '') for r in all_data})
+        # 预计算需标红的内容集合（pandas 向量化，避免写表时逐行 Python 正则）
+        hl_set = set()
+        pat = LogModel._keyword_pattern(abnormal_keywords)
+        lines = set(step_lines or ())
+        if pat is not None or lines:
+            s = pd.Series([str(r.get('Content', '')) for r in all_data])
+            mask = pd.Series(False, index=s.index)
+            if pat is not None:
+                mask |= s.str.contains(pat, na=False)
+            if lines:
+                mask |= s.isin(lines)
+            hl_set = set(s[mask].tolist())
         wbs = {}
         sheets = {}
         rows_written = {}
         sheet_no = {}
+        red_fmts = {}
         try:
             for fname in file_names:
                 stem = os.path.splitext(fname)[0].replace('/', '_').replace('\\', '_')
@@ -500,6 +628,7 @@ class LogModel:
                 sheets[fname] = ws
                 rows_written[fname] = 1
                 sheet_no[fname] = 1
+                red_fmts[fname] = wb.add_format({'bg_color': 'FFC7CE'})
             for row in all_data:
                 if cancel_event is not None and cancel_event.is_set():
                     raise OperationCancelled()
@@ -513,8 +642,12 @@ class LogModel:
                     ws.write_string(0, 1, 'Content')
                     sheets[fname] = ws
                     r = 1
+                content = str(row.get('Content', ''))
+                if hl_set and content in hl_set:
+                    # xlsxwriter 常量内存模式：行格式必须在写该行之前设置
+                    ws.set_row(r, None, red_fmts[fname])
                 ws.write_string(r, 0, str(fname))
-                ws.write_string(r, 1, str(row.get('Content', '')))
+                ws.write_string(r, 1, content)
                 rows_written[fname] = r + 1
         finally:
             for wb in wbs.values():
@@ -550,6 +683,12 @@ class LogModel:
                     rows, step_units, step_coefficient,
                     max_step_seconds=cutoff, cancel_event=cancel_event,
                 )
+            # 缓存步骤超时异常行：一键分析的“文档合并与内容拆分”标红时直接复用，
+            # 避免对 400 万行级日志重复跑一遍步骤分析
+            self._step_lines_cache = (
+                id(rows), step_mode, float(step_coefficient), cutoff,
+                getattr(steps_df, 'attrs', {}).get('anomaly_lines') or set(),
+            )
         if step_mode == 'sa':
             gantt_df = build_gantt_rows_sa(
                 rows, max_step_seconds=cutoff, cancel_event=cancel_event)
