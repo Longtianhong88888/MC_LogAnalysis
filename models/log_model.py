@@ -282,7 +282,7 @@ class LogModel:
                     and cached[1] == step_mode
                     and cached[2] == float(step_coefficient)
                     and cached[3] == cutoff):
-                # 一键分析中 UPH 步骤分析已算出异常行，直接复用避免重复扫描大日志
+                # 同一次运行中 UPH 步骤分析已算出异常行，直接复用避免重复扫描大日志
                 step_lines = cached[4]
             else:
                 if step_mode == 'sa':
@@ -695,7 +695,7 @@ class LogModel:
                     rows, step_units, step_coefficient,
                     max_step_seconds=cutoff, cancel_event=cancel_event,
                 )
-            # 缓存步骤超时异常行：一键分析的“文档合并与内容拆分”标红时直接复用，
+            # 缓存步骤超时异常行：同一运行内后续“文档合并与内容拆分”标红时直接复用，
             # 避免对 400 万行级日志重复跑一遍步骤分析
             self._step_lines_cache = (
                 id(rows), step_mode, float(step_coefficient), cutoff,

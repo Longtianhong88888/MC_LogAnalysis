@@ -31,7 +31,7 @@ from models.reason_codes import available_reason_lists
 from utils.resource_utils import resource_path
 from views.user_guide import USER_GUIDE_HTML
 
-ONE_CLICK_FEATURE = "一键分析（全部）"
+ONE_CLICK_FEATURE = "一键分析（自动报告）"
 FEATURES = ["文档合并与内容拆分", "UPH分析", "EFF分析", "报警分析", "机台状态分析", ONE_CLICK_FEATURE]
 WINDOW_DEFAULT_SIZE = (980, 880)
 WINDOW_SCREEN_RATIO = 0.8  # 主窗口占屏幕可用区域的百分比

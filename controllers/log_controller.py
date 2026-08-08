@@ -11,7 +11,9 @@ from models.log_model import LogModel
 from models.process_templates import get_template, save_custom_template
 from views.main_window import ONE_CLICK_FEATURE
 
-ONE_CLICK_FEATURES = ["UPH分析", "EFF分析", "报警分析", "机台状态分析", "文档合并与内容拆分"]
+# 一键分析（自动报告）只跑 4 项分析；文档合并与内容拆分保留为独立功能，
+# 避免大日志（FR/ACF 400万+行）在合并步骤耗时拖慢整体运行
+ONE_CLICK_FEATURES = ["UPH分析", "EFF分析", "报警分析", "机台状态分析"]
 
 FEATURE_METHODS = {
     "文档合并与内容拆分": "process",

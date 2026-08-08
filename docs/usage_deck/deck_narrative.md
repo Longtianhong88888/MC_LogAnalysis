@@ -123,7 +123,7 @@ required_assets: []
 - EFF 分析：操作时间 ÷ 计划生产时间，停机按 EReason 清单区分 pDT / uDT
 - 报警分析：按关键词统计报警，EReason 中文名映射
 - 机台状态分析：status 行或活动/停机关键词推导 RUN / IDLE / DOWN 时间线
-- 一键分析：一次运行完成全部功能，导出 4 个 Excel 并自动生成 PPT 报告
+- 一键分析（自动报告）：一次运行完成 UPH/EFF/报警/状态 4 项分析，导出 4 个 Excel 并自动生成 PPT 报告；文档合并与内容拆分单独执行（大日志制程提速）
 
 **Layout Notes.** 六格 3×2 直角卡片，格内文字直接写入卡片 shape。
 

@@ -889,10 +889,15 @@ class AnalysisTest(unittest.TestCase):
         self.assertEqual(fr["UPH分析"]["module_pattern"], "(左轴|右轴)")
         self.assertEqual(fr["UPH分析"]["pure_uph_factor"], 0.5)
 
-    def test_one_click_includes_merge(self):
-        from controllers.log_controller import ONE_CLICK_FEATURES
-        self.assertIn("文档合并与内容拆分", ONE_CLICK_FEATURES)
-        self.assertEqual(ONE_CLICK_FEATURES[-1], "文档合并与内容拆分")  # 合并最后执行，先出分析结果
+    def test_one_click_excludes_merge(self):
+        from controllers.log_controller import ONE_CLICK_FEATURES, FEATURE_METHODS
+        # 一键分析只跑 4 项分析，合并保留为独立功能（提速大日志制程）
+        self.assertEqual(
+            ONE_CLICK_FEATURES,
+            ["UPH分析", "EFF分析", "报警分析", "机台状态分析"],
+        )
+        self.assertNotIn("文档合并与内容拆分", ONE_CLICK_FEATURES)
+        self.assertIn("文档合并与内容拆分", FEATURE_METHODS)
 
     def test_analyze_uph_with_shared_rows(self):
         # 共享已读日志：提供 rows 时不读目录，正常出结果

@@ -4,7 +4,7 @@
 
 ## 项目概况
 
-- 机台日志分析工具（PyQt5 桌面应用），支持 文档合并与内容拆分 / UPH 分析 / EFF 分析 / 报警分析 / 机台状态分析 / 一键分析（全部）。
+- 机台日志分析工具（PyQt5 桌面应用），支持 文档合并与内容拆分 / UPH 分析 / EFF 分析 / 报警分析 / 机台状态分析 / 一键分析（自动报告，仅跑 4 项分析；合并单独执行）。
 - 仓库：`https://github.com/Longtianhong88888/MC_LogAnalysis`（分支 main）
 - 本地路径：`/Users/user/Desktop/PY/MC_LogAnalysis`，venv 在 `venv/`
 - 开发环境依赖：PyQt5、pandas、openpyxl、chardet、python-pptx、xlsxwriter（均已装入 venv）
