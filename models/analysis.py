@@ -1,9 +1,11 @@
 import re
 import os
 import bisect
+import calendar
 import statistics
 from datetime import datetime
 from collections import Counter
+from functools import lru_cache
 
 import pandas as pd
 
@@ -22,6 +24,7 @@ def _module_label(module):
     return module.strip() if module and module.strip() else _UNKNOWN_MODULE
 
 
+@lru_cache(maxsize=1_000_000)
 def parse_ts(content):
     """解析日志行开头的时间，支持 'YYYY-MM-DD HH:MM:SS(.mmm)'、'HH:MM:SS(.mmm)' 与 '[HH:MM:SS(.mmm)]'。"""
     m = _TIME_RE.match(content)
@@ -291,7 +294,9 @@ def _iter_monotonic(rows, cancel_event=None):
             prev_sec = sec
             mono = sec + offset
         else:
-            mono = t.timestamp()
+            # datetime.timestamp() 涉及本地时区转换，42 万行日志逐行调用极慢（77s+）；
+            # 统一按 UTC 计算 epoch 秒（相对差值不变），微秒级完成。
+            mono = calendar.timegm(t.utctimetuple()) + t.microsecond / 1e6
         yield mono, content
 
 
@@ -425,8 +430,14 @@ def _match_kws(content, kws):
     避免 MarkEnd1 误命中 MarkEnd1_0）。"""
     if not kws:
         return False
-    pat = keyword_pattern(kws, allow_trailing_digit=False)
+    pat = _keyword_pattern_cached(tuple(kws), False)
     return bool(re.search(pat, content, re.IGNORECASE))
+
+
+@lru_cache(maxsize=512)
+def _keyword_pattern_cached(kws_tuple, allow_trailing_digit):
+    """缓存关键词组合的正则，避免大日志逐行调用时反复编译（LM 42 万行 × 多步骤）。"""
+    return keyword_pattern(list(kws_tuple), allow_trailing_digit)
 
 
 def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
@@ -490,20 +501,32 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
         if not cycle_ts:
             continue
         cycle_ts.sort()
+        for i in range(len(steps)):
+            step_events[i].sort(key=lambda x: x[0])
+            step_end_events[i].sort(key=lambda x: x[0])
+        # 时间索引（bisect 用，避免对 tuple 列表二分）
+        step_ts = {i: [t for t, _c in step_events[i]] for i in range(len(steps))}
+        step_end_ts = {i: [t for t, _c in step_end_events[i]] for i in range(len(steps))}
         # 每个循环内组装各步骤时长
         per_step = {i: [] for i in range(len(steps))}
         for ci in range(len(cycle_ts)):
+            if ci % 500 == 0 and cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
             c_start = cycle_ts[ci]
             c_end = cycle_ts[ci + 1] if ci + 1 < len(cycle_ts) else float('inf')
             # A 模式（事件对）：时长 = End − Start，互不依赖
             for i, st in enumerate(steps):
                 if st.get('start'):
-                    for start_ts, _sc in [e for e in step_events[i] if c_start < e[0] <= c_end]:
-                        end_evs = [e for e in step_end_events[i] if e[0] >= start_ts and e[0] <= c_end]
-                        if end_evs:
-                            dur = end_evs[0][0] - start_ts
+                    lo = bisect.bisect_right(step_ts[i], c_start)
+                    hi = bisect.bisect_right(step_ts[i], c_end)
+                    for k in range(lo, hi):
+                        start_ts = step_events[i][k][0]
+                        e_lo = bisect.bisect_left(step_end_ts[i], start_ts)
+                        e_hi = bisect.bisect_right(step_end_ts[i], c_end)
+                        if e_lo < e_hi:
+                            dur = step_end_events[i][e_lo][0] - start_ts
                             if dur >= 0:
-                                per_step[i].append((dur, end_evs[0][1]))
+                                per_step[i].append((dur, step_end_events[i][e_lo][1]))
             # 链上事件：A 模式的 end 事件 + B 模式的完成事件，按时间排序
             # 段长 = 本事件 − 上一事件（并行工位/多吸嘴事件可能交叉，按时间切分避免负时长）
             chain = []
@@ -511,13 +534,17 @@ def analyze_steps(rows, units, coefficient=1.5, min_step_median=0.01,
                 if st.get('standalone'):
                     continue
                 if st.get('start'):
-                    for t, cc in step_end_events[i]:
-                        if c_start < t <= c_end:
-                            chain.append((t, i, cc))
+                    lo = bisect.bisect_right(step_end_ts[i], c_start)
+                    hi = bisect.bisect_right(step_end_ts[i], c_end)
+                    for k in range(lo, hi):
+                        t, cc = step_end_events[i][k]
+                        chain.append((t, i, cc))
                 else:
-                    for t, cc in step_events[i]:
-                        if c_start < t <= c_end:
-                            chain.append((t, i, cc))
+                    lo = bisect.bisect_right(step_ts[i], c_start)
+                    hi = bisect.bisect_right(step_ts[i], c_end)
+                    for k in range(lo, hi):
+                        t, cc = step_events[i][k]
+                        chain.append((t, i, cc))
             chain.sort()
             prev_ts = c_start
             prev_i = None
@@ -627,31 +654,45 @@ def build_gantt_rows(rows, units, max_step_seconds=None, merge_gap=0.05,
         if not cycle_ts:
             continue
         cycle_ts.sort()
+        for i in range(len(steps)):
+            step_events[i].sort(key=lambda x: x[0])
+            step_end_events[i].sort(key=lambda x: x[0])
+        step_ts = {i: [t for t, _c in step_events[i]] for i in range(len(steps))}
+        step_end_ts = {i: [t for t, _c in step_end_events[i]] for i in range(len(steps))}
         # 每步收集 (开始偏移, 结束偏移)
         offsets = {i: [] for i in range(len(steps))}
         for ci in range(len(cycle_ts)):
+            if ci % 500 == 0 and cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
             c_start = cycle_ts[ci]
             c_end = cycle_ts[ci + 1] if ci + 1 < len(cycle_ts) else float('inf')
             # A 模式（含 standalone）：start → end
             for i, st in enumerate(steps):
                 if st.get('start'):
-                    for start_ts, _sc in [e for e in step_events[i] if c_start < e[0] <= c_end]:
-                        end_evs = [e for e in step_end_events[i] if e[0] >= start_ts and e[0] <= c_end]
-                        if end_evs:
-                            offsets[i].append((start_ts - c_start, end_evs[0][0] - c_start))
+                    lo = bisect.bisect_right(step_ts[i], c_start)
+                    hi = bisect.bisect_right(step_ts[i], c_end)
+                    for k in range(lo, hi):
+                        start_ts = step_events[i][k][0]
+                        e_lo = bisect.bisect_left(step_end_ts[i], start_ts)
+                        e_hi = bisect.bisect_right(step_end_ts[i], c_end)
+                        if e_lo < e_hi:
+                            offsets[i].append((start_ts - c_start,
+                                               step_end_events[i][e_lo][0] - c_start))
             # 链式切分（非 standalone）
             chain = []
             for i, st in enumerate(steps):
                 if st.get('standalone'):
                     continue
                 if st.get('start'):
-                    for t, cc in step_end_events[i]:
-                        if c_start < t <= c_end:
-                            chain.append((t, i))
+                    lo = bisect.bisect_right(step_end_ts[i], c_start)
+                    hi = bisect.bisect_right(step_end_ts[i], c_end)
+                    for k in range(lo, hi):
+                        chain.append((step_end_events[i][k][0], i))
                 else:
-                    for t, cc in step_events[i]:
-                        if c_start < t <= c_end:
-                            chain.append((t, i))
+                    lo = bisect.bisect_right(step_ts[i], c_start)
+                    hi = bisect.bisect_right(step_ts[i], c_end)
+                    for k in range(lo, hi):
+                        chain.append((step_events[i][k][0], i))
             chain.sort()
             prev = c_start
             prev_i = None

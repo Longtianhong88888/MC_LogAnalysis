@@ -106,6 +106,12 @@
 - PPT 报告的 EFF/状态页依赖 EFF/状态分析结果（ACF 已配活动+停机关键词）。
 - PPT 的 UPH 页支持机台瓶颈模式（AMESummary 含「瓶颈机台」列时）：副标题=瓶颈机台+单颗CT+整机UPH，柱状图=各机台单颗CT（CAW 用；SA 工位模式、通用模式照旧）。
 
+## 性能优化（2026-08-08，LM UPH 600s+ → 38s）
+
+- 根因：① `_iter_monotonic` 对 42 万行日志逐行调用 `datetime.timestamp()`（本地时区转换，77s/次扫描），且一键分析里被多次调用；② `analyze_steps`/`build_gantt_rows` 周期循环对每周期线性扫描全部步骤事件（O(周期×事件)，LM 2.8 万×2.8 万）；③ `_match_kws` 每次调用重复编译正则。
+- 修复：① `calendar.timegm(t.utctimetuple())` 替代 timestamp()（统一 UTC，差值不变，微秒级）；② 周期循环改用 bisect 二分定位区间事件；③ `parse_ts`/关键词正则 lru_cache；周期循环每 500 次检查 cancel_event。
+- 效果：analyze_steps 84.5→13.6s、build_gantt_rows 84→11s、换盘测量 153→2.5s；LM 全量 UPH 339→38s；FR 28s/CAW 2.4s/SA 0.2s/ACF 2.7s 冒烟通过。
+
 ## 最近的提交
 
 - `5a96a21 assets: 更新启动画面图片`
