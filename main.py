@@ -9,7 +9,7 @@ from app import App
 from utils.resource_utils import resource_path
 from views.main_window import window_target_size
 
-SPLASH_MIN_MS = 500  # 启动画面最短展示时间
+SPLASH_MIN_MS = 1000  # 启动画面最短展示时间
 FADE_MS = 300        # 淡入淡出过渡时长
 _ANIMS = set()       # 持有运行中的动画引用，防止被提前回收
 
