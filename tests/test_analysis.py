@@ -666,6 +666,8 @@ class AnalysisTest(unittest.TestCase):
     def test_reason_code_mapping(self):
         from models.reason_codes import is_planned, load_reason_codes, reason_info
         lm = load_reason_codes("LM")
+        if not lm:
+            self.skipTest("外部 EReasonList 内部数据未入库（CI 环境缺失），跳过")
         self.assertIn("411", lm)
         self.assertEqual(lm["411"]["name"], "打標位建真空")
         self.assertEqual(lm["411"]["category"], "Unplanned Downtime")
@@ -999,6 +1001,9 @@ class AnalysisTest(unittest.TestCase):
 
     def test_ppt_report_nan_values(self):
         # 回归：AMESummary 存在 NaN（如 FR 无周期时 Pure/M2 为空）不应导致图表写入报错
+        from utils.resource_utils import find_external_resource
+        if not find_external_resource("Analysis_Report.pptx"):
+            self.skipTest("Analysis_Report.pptx 模板为内部数据未入库（CI 环境缺失），跳过")
         from models.report import build_ppt_report
         from pptx import Presentation
         out = tempfile.mkdtemp()
@@ -1016,6 +1021,9 @@ class AnalysisTest(unittest.TestCase):
         self.assertTrue(any(shape.has_chart for s in prs.slides for shape in s.shapes))
 
     def test_ppt_report_bottleneck_mode(self):
+        from utils.resource_utils import find_external_resource
+        if not find_external_resource("Analysis_Report.pptx"):
+            self.skipTest("Analysis_Report.pptx 模板为内部数据未入库（CI 环境缺失），跳过")
         from models.report import build_ppt_report
         from pptx import Presentation
         out = tempfile.mkdtemp()
