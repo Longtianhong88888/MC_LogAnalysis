@@ -83,7 +83,8 @@ def add_text(slide, x, y, w, h, text, size=12, bold=False, color=BLACK,
 def add_rect_text(slide, x, y, w, h, text, fill=WHITE, line_color=None, radius=None,
                   transparency=None,
                   size=12, bold=False, color=BLACK, align=PP_ALIGN.LEFT,
-                  anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.0, margin=0.14):
+                  anchor=MSO_ANCHOR.MIDDLE, line_spacing=1.0, margin=0.14,
+                  margin_left=None, margin_right=None):
     shp_type = MSO_SHAPE.ROUNDED_RECTANGLE if radius else MSO_SHAPE.RECTANGLE
     shp = slide.shapes.add_shape(shp_type, Inches(x), Inches(y), Inches(w), Inches(h))
     if radius:
@@ -104,7 +105,8 @@ def add_rect_text(slide, x, y, w, h, text, fill=WHITE, line_color=None, radius=N
     tf = shp.text_frame
     tf.word_wrap = True
     tf.vertical_anchor = anchor
-    tf.margin_left = tf.margin_right = Inches(margin)
+    tf.margin_left = Inches(margin_left if margin_left is not None else margin)
+    tf.margin_right = Inches(margin_right if margin_right is not None else margin)
     tf.margin_top = tf.margin_bottom = Inches(0.06)
     for i, line in enumerate(str(text).split("\n")):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
@@ -228,7 +230,10 @@ def build_overview(prs):
                   fill=RGBColor(0xFD, 0xEF, 0xEE), size=16, bold=True, color=ACCENT)
 
 
-def build_grid_page(prs, eyebrow, title, cards, cols=3, start=0, ch=2.45):
+ICON_DIR = ROOT / "assets" / "icons" / "cards"
+
+
+def build_grid_page(prs, eyebrow, title, cards, cols=3, start=0, ch=2.45, icons=None):
     """浅色系磨砂玻璃卡片：页内每卡不同色（pastel 色板轮转），半透明+白描边+深字。"""
     slide = content_slide(prs, eyebrow, title)
     cw = 3.9 if cols == 3 else 5.95
@@ -240,13 +245,19 @@ def build_grid_page(prs, eyebrow, title, cards, cols=3, start=0, ch=2.45):
         fill = PASTEL[(start + i) % len(PASTEL)]
         shp = add_rect_text(slide, x, y, cw, ch, t, fill=fill, line_color=WHITE,
                             transparency=45, size=16, bold=True,
-                            color=CARD_TITLE, anchor=MSO_ANCHOR.TOP, margin=0.14)
+                            color=CARD_TITLE, anchor=MSO_ANCHOR.TOP, margin=0.14,
+                            margin_left=0.66 if icons else 0.14)
         p = shp.text_frame.add_paragraph()
         p.line_spacing = 1.25
         p.space_before = Pt(6)
         r = p.add_run()
         r.text = body
         _set_run(r, 14, False, CARD_BODY)
+        if icons and i < len(icons):
+            ico = ICON_DIR / f"{icons[i]}.png"
+            if ico.exists():
+                slide.shapes.add_picture(str(ico), Inches(x + 0.14), Inches(y + 0.14),
+                                         width=Inches(0.44), height=Inches(0.44))
     return slide
 
 
@@ -402,7 +413,8 @@ def build_eff_page(prs):
         ("报警分析", "按关键词命中计数，按机台 / 模组汇总；EReason 清单映射中文原因名称。"),
     ]
     slide = build_grid_page(prs, "第3章 制程与口径", "EFF、状态与报警：三张表讲清设备效率与异常",
-                            cards, cols=3, start=4, ch=2.9)
+                            cards, cols=3, start=4, ch=2.9,
+                            icons=["percent", "pulse", "alert"])
     add_text(slide, 0.7, 5.35, 12.0, 1.2,
              "停机分类：EReason 清单中的计划停机（Planned / Routine）计入 pDT，其余计入 uDT；\n"
              "未填计划停机 ReasonID 时，全部停机计入可用性损失。\n\n"
@@ -462,7 +474,8 @@ def build_tips(prs):
         ("灵活覆盖", "日志文件筛选框自动填充与制程匹配的内容，用户有特殊需求可手动输入。"),
     ]
     return build_grid_page(prs, "第4章 输出与注意", "使用前注意这几点，避免踩坑",
-                           cards, cols=2, start=1)
+                           cards, cols=2, start=1,
+                           icons=["shield", "folder", "ppt", "settings"])
 
 
 def build_closing(prs):
@@ -511,7 +524,7 @@ def main():
         ("报警分析", "按关键词统计报警，EReason 中文名映射。"),
         ("机台状态分析", "status 行或活动 / 停机关键词推导 RUN / IDLE / DOWN 时间线。"),
         ("一键分析", "一次运行完成全部功能，导出 4 个 Excel 并自动生成 PPT 报告。"),
-    ], start=0)
+    ], start=0, icons=["file", "chart", "percent", "alert", "pulse", "rocket"])
     build_grid_page(prs, "第1章 功能与亮点",
                     "亮点：自动模板、瓶颈判定、换盘分摊、步骤甘特、异常标红、自动报告", [
         ("制程模板一键预填", "选 LM / CAW / FR / SA / ACF，自动带入触发词、报警关键词与计算逻辑。"),
@@ -520,7 +533,7 @@ def main():
         ("步骤深度分析 + 甘特图", "按轴 / 平台运动节拍拆步骤，Excel 甘特图直接看出先后与并行。"),
         ("异常日志自动标红", "报警 / 停机 / 步骤超时行标红，剔除产品码中的 NG 误报。"),
         ("自动 PPT 报告", "汇总 + 图表 + 瓶颈工序甘特图，时间格式统一、可编辑。"),
-    ], start=2)
+    ], start=2, icons=["template", "bottleneck", "swap", "gantt", "mark", "report"])
     build_flow(prs)
     build_ui_map(prs)
     build_process_table(prs)

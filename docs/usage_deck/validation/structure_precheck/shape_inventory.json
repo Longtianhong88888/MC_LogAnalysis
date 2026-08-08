@@ -251,9 +251,28 @@
     {
       "slide_number": 3,
       "shape_id": 6,
-      "shape_name": "Rectangle 5",
-      "shape_type": "AUTO_SHAPE",
+      "shape_name": "Picture 5",
+      "shape_type": "PICTURE",
       "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 60.48,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
       "parent_group_id": null,
       "rect_pt": {
         "left": 341.28,
@@ -269,10 +288,29 @@
     },
     {
       "slide_number": 3,
-      "shape_id": 7,
-      "shape_name": "Rectangle 6",
+      "shape_id": 8,
+      "shape_name": "Picture 7",
+      "shape_type": "PICTURE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 351.36,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 9,
+      "shape_name": "Rectangle 8",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 6,
+      "z_order": 8,
       "parent_group_id": null,
       "rect_pt": {
         "left": 632.16,
@@ -288,10 +326,29 @@
     },
     {
       "slide_number": 3,
-      "shape_id": 8,
-      "shape_name": "Rectangle 7",
+      "shape_id": 10,
+      "shape_name": "Picture 9",
+      "shape_type": "PICTURE",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 642.24,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 11,
+      "shape_name": "Rectangle 10",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 7,
+      "z_order": 10,
       "parent_group_id": null,
       "rect_pt": {
         "left": 50.4,
@@ -307,10 +364,29 @@
     },
     {
       "slide_number": 3,
-      "shape_id": 9,
-      "shape_name": "Rectangle 8",
+      "shape_id": 12,
+      "shape_name": "Picture 11",
+      "shape_type": "PICTURE",
+      "z_order": 11,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 60.48,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 13,
+      "shape_name": "Rectangle 12",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 8,
+      "z_order": 12,
       "parent_group_id": null,
       "rect_pt": {
         "left": 341.28,
@@ -326,10 +402,29 @@
     },
     {
       "slide_number": 3,
-      "shape_id": 10,
-      "shape_name": "Rectangle 9",
+      "shape_id": 14,
+      "shape_name": "Picture 13",
+      "shape_type": "PICTURE",
+      "z_order": 13,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 351.36,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 15,
+      "shape_name": "Rectangle 14",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 9,
+      "z_order": 14,
       "parent_group_id": null,
       "rect_pt": {
         "left": 632.16,
@@ -345,10 +440,29 @@
     },
     {
       "slide_number": 3,
-      "shape_id": 11,
-      "shape_name": "TextBox 10",
+      "shape_id": 16,
+      "shape_name": "Picture 15",
+      "shape_type": "PICTURE",
+      "z_order": 15,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 642.24,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 3,
+      "shape_id": 17,
+      "shape_name": "TextBox 16",
       "shape_type": "TEXT_BOX",
-      "z_order": 10,
+      "z_order": 16,
       "parent_group_id": null,
       "rect_pt": {
         "left": 817.2,
@@ -441,9 +555,28 @@
     {
       "slide_number": 4,
       "shape_id": 6,
-      "shape_name": "Rectangle 5",
-      "shape_type": "AUTO_SHAPE",
+      "shape_name": "Picture 5",
+      "shape_type": "PICTURE",
       "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 60.48,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
       "parent_group_id": null,
       "rect_pt": {
         "left": 341.28,
@@ -459,10 +592,29 @@
     },
     {
       "slide_number": 4,
-      "shape_id": 7,
-      "shape_name": "Rectangle 6",
+      "shape_id": 8,
+      "shape_name": "Picture 7",
+      "shape_type": "PICTURE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 351.36,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 9,
+      "shape_name": "Rectangle 8",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 6,
+      "z_order": 8,
       "parent_group_id": null,
       "rect_pt": {
         "left": 632.16,
@@ -478,10 +630,29 @@
     },
     {
       "slide_number": 4,
-      "shape_id": 8,
-      "shape_name": "Rectangle 7",
+      "shape_id": 10,
+      "shape_name": "Picture 9",
+      "shape_type": "PICTURE",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 642.24,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 11,
+      "shape_name": "Rectangle 10",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 7,
+      "z_order": 10,
       "parent_group_id": null,
       "rect_pt": {
         "left": 50.4,
@@ -497,10 +668,29 @@
     },
     {
       "slide_number": 4,
-      "shape_id": 9,
-      "shape_name": "Rectangle 8",
+      "shape_id": 12,
+      "shape_name": "Picture 11",
+      "shape_type": "PICTURE",
+      "z_order": 11,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 60.48,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 13,
+      "shape_name": "Rectangle 12",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 8,
+      "z_order": 12,
       "parent_group_id": null,
       "rect_pt": {
         "left": 341.28,
@@ -516,10 +706,29 @@
     },
     {
       "slide_number": 4,
-      "shape_id": 10,
-      "shape_name": "Rectangle 9",
+      "shape_id": 14,
+      "shape_name": "Picture 13",
+      "shape_type": "PICTURE",
+      "z_order": 13,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 351.36,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 15,
+      "shape_name": "Rectangle 14",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 9,
+      "z_order": 14,
       "parent_group_id": null,
       "rect_pt": {
         "left": 632.16,
@@ -535,10 +744,29 @@
     },
     {
       "slide_number": 4,
-      "shape_id": 11,
-      "shape_name": "TextBox 10",
+      "shape_id": 16,
+      "shape_name": "Picture 15",
+      "shape_type": "PICTURE",
+      "z_order": 15,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 642.24,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 4,
+      "shape_id": 17,
+      "shape_name": "TextBox 16",
       "shape_type": "TEXT_BOX",
-      "z_order": 10,
+      "z_order": 16,
       "parent_group_id": null,
       "rect_pt": {
         "left": 817.2,
@@ -2113,9 +2341,28 @@
     {
       "slide_number": 10,
       "shape_id": 6,
-      "shape_name": "Rectangle 5",
-      "shape_type": "AUTO_SHAPE",
+      "shape_name": "Picture 5",
+      "shape_type": "PICTURE",
       "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 60.48,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
       "parent_group_id": null,
       "rect_pt": {
         "left": 341.28,
@@ -2131,10 +2378,29 @@
     },
     {
       "slide_number": 10,
-      "shape_id": 7,
-      "shape_name": "Rectangle 6",
+      "shape_id": 8,
+      "shape_name": "Picture 7",
+      "shape_type": "PICTURE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 351.36,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 9,
+      "shape_name": "Rectangle 8",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 6,
+      "z_order": 8,
       "parent_group_id": null,
       "rect_pt": {
         "left": 632.16,
@@ -2150,10 +2416,29 @@
     },
     {
       "slide_number": 10,
-      "shape_id": 8,
-      "shape_name": "TextBox 7",
+      "shape_id": 10,
+      "shape_name": "Picture 9",
+      "shape_type": "PICTURE",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 642.24,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 10,
+      "shape_id": 11,
+      "shape_name": "TextBox 10",
       "shape_type": "TEXT_BOX",
-      "z_order": 7,
+      "z_order": 10,
       "parent_group_id": null,
       "rect_pt": {
         "left": 50.4,
@@ -2169,10 +2454,10 @@
     },
     {
       "slide_number": 10,
-      "shape_id": 9,
-      "shape_name": "TextBox 8",
+      "shape_id": 12,
+      "shape_name": "TextBox 11",
       "shape_type": "TEXT_BOX",
-      "z_order": 8,
+      "z_order": 11,
       "parent_group_id": null,
       "rect_pt": {
         "left": 817.2,
@@ -2379,9 +2664,28 @@
     {
       "slide_number": 12,
       "shape_id": 6,
-      "shape_name": "Rectangle 5",
-      "shape_type": "AUTO_SHAPE",
+      "shape_name": "Picture 5",
+      "shape_type": "PICTURE",
       "z_order": 5,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 60.48,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 7,
+      "shape_name": "Rectangle 6",
+      "shape_type": "AUTO_SHAPE",
+      "z_order": 6,
       "parent_group_id": null,
       "rect_pt": {
         "left": 488.88,
@@ -2397,10 +2701,29 @@
     },
     {
       "slide_number": 12,
-      "shape_id": 7,
-      "shape_name": "Rectangle 6",
+      "shape_id": 8,
+      "shape_name": "Picture 7",
+      "shape_type": "PICTURE",
+      "z_order": 7,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 498.96,
+        "top": 136.08,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 9,
+      "shape_name": "Rectangle 8",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 6,
+      "z_order": 8,
       "parent_group_id": null,
       "rect_pt": {
         "left": 50.4,
@@ -2416,10 +2739,29 @@
     },
     {
       "slide_number": 12,
-      "shape_id": 8,
-      "shape_name": "Rectangle 7",
+      "shape_id": 10,
+      "shape_name": "Picture 9",
+      "shape_type": "PICTURE",
+      "z_order": 9,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 60.48,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 11,
+      "shape_name": "Rectangle 10",
       "shape_type": "AUTO_SHAPE",
-      "z_order": 7,
+      "z_order": 10,
       "parent_group_id": null,
       "rect_pt": {
         "left": 488.88,
@@ -2435,10 +2777,29 @@
     },
     {
       "slide_number": 12,
-      "shape_id": 9,
-      "shape_name": "TextBox 8",
+      "shape_id": 12,
+      "shape_name": "Picture 11",
+      "shape_type": "PICTURE",
+      "z_order": 11,
+      "parent_group_id": null,
+      "rect_pt": {
+        "left": 498.96,
+        "top": 326.88,
+        "width": 31.68,
+        "height": 31.68
+      },
+      "has_text": false,
+      "has_table": false,
+      "has_chart": false,
+      "is_picture": true,
+      "source_kind": "picture"
+    },
+    {
+      "slide_number": 12,
+      "shape_id": 13,
+      "shape_name": "TextBox 12",
       "shape_type": "TEXT_BOX",
-      "z_order": 8,
+      "z_order": 12,
       "parent_group_id": null,
       "rect_pt": {
         "left": 817.2,
@@ -2790,32 +3151,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 60.48,
+        "left": 97.92,
         "top": 130.32,
-        "width": 260.64000000000004,
-        "height": 167.76000000000002
-      },
-      "font_size_pt": 16.0,
-      "paragraph_count": 2
-    },
-    {
-      "slide_number": 3,
-      "owner_shape_id": 6,
-      "owner_shape_name": "Rectangle 5",
-      "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 5,
-      "source_kind": "shape_text",
-      "text": "UPH 分析\n按 CoreTech AME 口径输出实际 / Pure / Derated M1/M2 / 有效 UPH，自动判定瓶颈。",
-      "rect_pt": {
-        "left": 341.28,
-        "top": 126.0,
-        "width": 280.8,
-        "height": 176.4
-      },
-      "inner_rect_pt": {
-        "left": 351.35999999999996,
-        "top": 130.32,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -2828,40 +3166,17 @@
       "owner_shape_type": "AUTO_SHAPE",
       "z_order": 6,
       "source_kind": "shape_text",
-      "text": "EFF 分析\n操作时间 ÷ 计划生产时间；停机按 EReason 清单区分 pDT / uDT。",
+      "text": "UPH 分析\n按 CoreTech AME 口径输出实际 / Pure / Derated M1/M2 / 有效 UPH，自动判定瓶颈。",
       "rect_pt": {
-        "left": 632.16,
+        "left": 341.28,
         "top": 126.0,
         "width": 280.8,
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 642.24,
+        "left": 388.79999999999995,
         "top": 130.32,
-        "width": 260.64000000000004,
-        "height": 167.76000000000002
-      },
-      "font_size_pt": 16.0,
-      "paragraph_count": 2
-    },
-    {
-      "slide_number": 3,
-      "owner_shape_id": 8,
-      "owner_shape_name": "Rectangle 7",
-      "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 7,
-      "source_kind": "shape_text",
-      "text": "报警分析\n按关键词统计报警，EReason 中文名映射。",
-      "rect_pt": {
-        "left": 50.4,
-        "top": 316.8,
-        "width": 280.8,
-        "height": 176.4
-      },
-      "inner_rect_pt": {
-        "left": 60.48,
-        "top": 321.12,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -2874,6 +3189,52 @@
       "owner_shape_type": "AUTO_SHAPE",
       "z_order": 8,
       "source_kind": "shape_text",
+      "text": "EFF 分析\n操作时间 ÷ 计划生产时间；停机按 EReason 清单区分 pDT / uDT。",
+      "rect_pt": {
+        "left": 632.16,
+        "top": 126.0,
+        "width": 280.8,
+        "height": 176.4
+      },
+      "inner_rect_pt": {
+        "left": 679.68,
+        "top": 130.32,
+        "width": 223.2,
+        "height": 167.76000000000002
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 11,
+      "owner_shape_name": "Rectangle 10",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 10,
+      "source_kind": "shape_text",
+      "text": "报警分析\n按关键词统计报警，EReason 中文名映射。",
+      "rect_pt": {
+        "left": 50.4,
+        "top": 316.8,
+        "width": 280.8,
+        "height": 176.4
+      },
+      "inner_rect_pt": {
+        "left": 97.92,
+        "top": 321.12,
+        "width": 223.2,
+        "height": 167.76000000000002
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 3,
+      "owner_shape_id": 13,
+      "owner_shape_name": "Rectangle 12",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 12,
+      "source_kind": "shape_text",
       "text": "机台状态分析\nstatus 行或活动 / 停机关键词推导 RUN / IDLE / DOWN 时间线。",
       "rect_pt": {
         "left": 341.28,
@@ -2882,9 +3243,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 351.35999999999996,
+        "left": 388.79999999999995,
         "top": 321.12,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -2892,10 +3253,10 @@
     },
     {
       "slide_number": 3,
-      "owner_shape_id": 10,
-      "owner_shape_name": "Rectangle 9",
+      "owner_shape_id": 15,
+      "owner_shape_name": "Rectangle 14",
       "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 9,
+      "z_order": 14,
       "source_kind": "shape_text",
       "text": "一键分析\n一次运行完成全部功能，导出 4 个 Excel 并自动生成 PPT 报告。",
       "rect_pt": {
@@ -2905,9 +3266,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 642.24,
+        "left": 679.68,
         "top": 321.12,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -2915,10 +3276,10 @@
     },
     {
       "slide_number": 3,
-      "owner_shape_id": 11,
-      "owner_shape_name": "TextBox 10",
+      "owner_shape_id": 17,
+      "owner_shape_name": "TextBox 16",
       "owner_shape_type": "TEXT_BOX",
-      "z_order": 10,
+      "z_order": 16,
       "source_kind": "shape_text",
       "text": "3 / 13",
       "rect_pt": {
@@ -2974,32 +3335,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 60.48,
+        "left": 97.92,
         "top": 130.32,
-        "width": 260.64000000000004,
-        "height": 167.76000000000002
-      },
-      "font_size_pt": 16.0,
-      "paragraph_count": 2
-    },
-    {
-      "slide_number": 4,
-      "owner_shape_id": 6,
-      "owner_shape_name": "Rectangle 5",
-      "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 5,
-      "source_kind": "shape_text",
-      "text": "瓶颈自动判定\nSA 四工位、CAW 双机台自动取最慢环节，UPH 口径与客户定义一致。",
-      "rect_pt": {
-        "left": 341.28,
-        "top": 126.0,
-        "width": 280.8,
-        "height": 176.4
-      },
-      "inner_rect_pt": {
-        "left": 351.35999999999996,
-        "top": 130.32,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -3012,40 +3350,17 @@
       "owner_shape_type": "AUTO_SHAPE",
       "z_order": 6,
       "source_kind": "shape_text",
-      "text": "换盘时间平摊\n整盘结束后的下料-上料时间按每盘颗数摊入单颗 CT。",
+      "text": "瓶颈自动判定\nSA 四工位、CAW 双机台自动取最慢环节，UPH 口径与客户定义一致。",
       "rect_pt": {
-        "left": 632.16,
+        "left": 341.28,
         "top": 126.0,
         "width": 280.8,
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 642.24,
+        "left": 388.79999999999995,
         "top": 130.32,
-        "width": 260.64000000000004,
-        "height": 167.76000000000002
-      },
-      "font_size_pt": 16.0,
-      "paragraph_count": 2
-    },
-    {
-      "slide_number": 4,
-      "owner_shape_id": 8,
-      "owner_shape_name": "Rectangle 7",
-      "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 7,
-      "source_kind": "shape_text",
-      "text": "步骤深度分析 + 甘特图\n按轴 / 平台运动节拍拆步骤，Excel 甘特图直接看出先后与并行。",
-      "rect_pt": {
-        "left": 50.4,
-        "top": 316.8,
-        "width": 280.8,
-        "height": 176.4
-      },
-      "inner_rect_pt": {
-        "left": 60.48,
-        "top": 321.12,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -3058,6 +3373,52 @@
       "owner_shape_type": "AUTO_SHAPE",
       "z_order": 8,
       "source_kind": "shape_text",
+      "text": "换盘时间平摊\n整盘结束后的下料-上料时间按每盘颗数摊入单颗 CT。",
+      "rect_pt": {
+        "left": 632.16,
+        "top": 126.0,
+        "width": 280.8,
+        "height": 176.4
+      },
+      "inner_rect_pt": {
+        "left": 679.68,
+        "top": 130.32,
+        "width": 223.2,
+        "height": 167.76000000000002
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 11,
+      "owner_shape_name": "Rectangle 10",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 10,
+      "source_kind": "shape_text",
+      "text": "步骤深度分析 + 甘特图\n按轴 / 平台运动节拍拆步骤，Excel 甘特图直接看出先后与并行。",
+      "rect_pt": {
+        "left": 50.4,
+        "top": 316.8,
+        "width": 280.8,
+        "height": 176.4
+      },
+      "inner_rect_pt": {
+        "left": 97.92,
+        "top": 321.12,
+        "width": 223.2,
+        "height": 167.76000000000002
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 4,
+      "owner_shape_id": 13,
+      "owner_shape_name": "Rectangle 12",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 12,
+      "source_kind": "shape_text",
       "text": "异常日志自动标红\n报警 / 停机 / 步骤超时行标红，剔除产品码中的 NG 误报。",
       "rect_pt": {
         "left": 341.28,
@@ -3066,9 +3427,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 351.35999999999996,
+        "left": 388.79999999999995,
         "top": 321.12,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -3076,10 +3437,10 @@
     },
     {
       "slide_number": 4,
-      "owner_shape_id": 10,
-      "owner_shape_name": "Rectangle 9",
+      "owner_shape_id": 15,
+      "owner_shape_name": "Rectangle 14",
       "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 9,
+      "z_order": 14,
       "source_kind": "shape_text",
       "text": "自动 PPT 报告\n汇总 + 图表 + 瓶颈工序甘特图，时间格式统一、可编辑。",
       "rect_pt": {
@@ -3089,9 +3450,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 642.24,
+        "left": 679.68,
         "top": 321.12,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -3099,10 +3460,10 @@
     },
     {
       "slide_number": 4,
-      "owner_shape_id": 11,
-      "owner_shape_name": "TextBox 10",
+      "owner_shape_id": 17,
+      "owner_shape_name": "TextBox 16",
       "owner_shape_type": "TEXT_BOX",
-      "z_order": 10,
+      "z_order": 16,
       "source_kind": "shape_text",
       "text": "4 / 13",
       "rect_pt": {
@@ -4952,32 +5313,9 @@
         "height": 208.8
       },
       "inner_rect_pt": {
-        "left": 60.48,
+        "left": 97.92,
         "top": 130.32,
-        "width": 260.64000000000004,
-        "height": 200.16000000000003
-      },
-      "font_size_pt": 16.0,
-      "paragraph_count": 2
-    },
-    {
-      "slide_number": 10,
-      "owner_shape_id": 6,
-      "owner_shape_name": "Rectangle 5",
-      "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 5,
-      "source_kind": "shape_text",
-      "text": "机台状态分析\n优先读 status:RUN/IDLE/DOWN 行；无 status 时按“活动 + 停机关键词”推导时间线，输出各状态时长 / 占比 / 小时分布。",
-      "rect_pt": {
-        "left": 341.28,
-        "top": 126.0,
-        "width": 280.8,
-        "height": 208.8
-      },
-      "inner_rect_pt": {
-        "left": 351.35999999999996,
-        "top": 130.32,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 200.16000000000003
       },
       "font_size_pt": 16.0,
@@ -4990,6 +5328,29 @@
       "owner_shape_type": "AUTO_SHAPE",
       "z_order": 6,
       "source_kind": "shape_text",
+      "text": "机台状态分析\n优先读 status:RUN/IDLE/DOWN 行；无 status 时按“活动 + 停机关键词”推导时间线，输出各状态时长 / 占比 / 小时分布。",
+      "rect_pt": {
+        "left": 341.28,
+        "top": 126.0,
+        "width": 280.8,
+        "height": 208.8
+      },
+      "inner_rect_pt": {
+        "left": 388.79999999999995,
+        "top": 130.32,
+        "width": 223.2,
+        "height": 200.16000000000003
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 10,
+      "owner_shape_id": 9,
+      "owner_shape_name": "Rectangle 8",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "source_kind": "shape_text",
       "text": "报警分析\n按关键词命中计数，按机台 / 模组汇总；EReason 清单映射中文原因名称。",
       "rect_pt": {
         "left": 632.16,
@@ -4998,9 +5359,9 @@
         "height": 208.8
       },
       "inner_rect_pt": {
-        "left": 642.24,
+        "left": 679.68,
         "top": 130.32,
-        "width": 260.64000000000004,
+        "width": 223.2,
         "height": 200.16000000000003
       },
       "font_size_pt": 16.0,
@@ -5008,10 +5369,10 @@
     },
     {
       "slide_number": 10,
-      "owner_shape_id": 8,
-      "owner_shape_name": "TextBox 7",
+      "owner_shape_id": 11,
+      "owner_shape_name": "TextBox 10",
       "owner_shape_type": "TEXT_BOX",
-      "z_order": 7,
+      "z_order": 10,
       "source_kind": "shape_text",
       "text": "停机分类：EReason 清单中的计划停机（Planned / Routine）计入 pDT，其余计入 uDT；\n未填计划停机 ReasonID 时，全部停机计入可用性损失。\n状态推导：优先识别日志中的 status:RUN / IDLE…",
       "rect_pt": {
@@ -5031,10 +5392,10 @@
     },
     {
       "slide_number": 10,
-      "owner_shape_id": 9,
-      "owner_shape_name": "TextBox 8",
+      "owner_shape_id": 12,
+      "owner_shape_name": "TextBox 11",
       "owner_shape_type": "TEXT_BOX",
-      "z_order": 8,
+      "z_order": 11,
       "source_kind": "shape_text",
       "text": "10 / 13",
       "rect_pt": {
@@ -5481,32 +5842,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 60.48,
+        "left": 97.92,
         "top": 130.32,
-        "width": 408.24,
-        "height": 167.76000000000002
-      },
-      "font_size_pt": 16.0,
-      "paragraph_count": 2
-    },
-    {
-      "slide_number": 12,
-      "owner_shape_id": 6,
-      "owner_shape_name": "Rectangle 5",
-      "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 5,
-      "source_kind": "shape_text",
-      "text": "EReasonlist\n根目录保留 EReasonlist 文件夹，新制程按文件名放入自己的清单，用于状态推导与报警映射。",
-      "rect_pt": {
-        "left": 488.88,
-        "top": 126.0,
-        "width": 428.4,
-        "height": 176.4
-      },
-      "inner_rect_pt": {
-        "left": 498.96,
-        "top": 130.32,
-        "width": 408.24,
+        "width": 370.8,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -5519,6 +5857,29 @@
       "owner_shape_type": "AUTO_SHAPE",
       "z_order": 6,
       "source_kind": "shape_text",
+      "text": "EReasonlist\n根目录保留 EReasonlist 文件夹，新制程按文件名放入自己的清单，用于状态推导与报警映射。",
+      "rect_pt": {
+        "left": 488.88,
+        "top": 126.0,
+        "width": 428.4,
+        "height": 176.4
+      },
+      "inner_rect_pt": {
+        "left": 536.4,
+        "top": 130.32,
+        "width": 370.8,
+        "height": 167.76000000000002
+      },
+      "font_size_pt": 16.0,
+      "paragraph_count": 2
+    },
+    {
+      "slide_number": 12,
+      "owner_shape_id": 9,
+      "owner_shape_name": "Rectangle 8",
+      "owner_shape_type": "AUTO_SHAPE",
+      "z_order": 8,
+      "source_kind": "shape_text",
       "text": "PPT 模板\nAnalysis_Report.pptx 放到程序同目录即可正常生成报告；模板含内部数据，仅限内部传送。",
       "rect_pt": {
         "left": 50.4,
@@ -5527,9 +5888,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 60.48,
+        "left": 97.92,
         "top": 321.12,
-        "width": 408.24,
+        "width": 370.8,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -5537,10 +5898,10 @@
     },
     {
       "slide_number": 12,
-      "owner_shape_id": 8,
-      "owner_shape_name": "Rectangle 7",
+      "owner_shape_id": 11,
+      "owner_shape_name": "Rectangle 10",
       "owner_shape_type": "AUTO_SHAPE",
-      "z_order": 7,
+      "z_order": 10,
       "source_kind": "shape_text",
       "text": "灵活覆盖\n日志文件筛选框自动填充与制程匹配的内容，用户有特殊需求可手动输入。",
       "rect_pt": {
@@ -5550,9 +5911,9 @@
         "height": 176.4
       },
       "inner_rect_pt": {
-        "left": 498.96,
+        "left": 536.4,
         "top": 321.12,
-        "width": 408.24,
+        "width": 370.8,
         "height": 167.76000000000002
       },
       "font_size_pt": 16.0,
@@ -5560,10 +5921,10 @@
     },
     {
       "slide_number": 12,
-      "owner_shape_id": 9,
-      "owner_shape_name": "TextBox 8",
+      "owner_shape_id": 13,
+      "owner_shape_name": "TextBox 12",
       "owner_shape_type": "TEXT_BOX",
-      "z_order": 8,
+      "z_order": 12,
       "source_kind": "shape_text",
       "text": "12 / 13",
       "rect_pt": {
