@@ -39,14 +39,16 @@ python main.py
 ## 打包 Windows exe
 
 ```bash
-pyinstaller --onedir --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --name MC_LogAnalysis main.py
+pyinstaller --onedir --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --add-data "Analysis_Report.pptx;." --name MC_LogAnalysis main.py
 ```
 
 > 使用 `--onedir`（文件夹模式）而非 `--onefile`：onefile 每次启动都要先解压整个包到临时目录，51MB 的包启动明显变慢；onedir 直接运行目录内的 exe，秒开。
 
 也可以推送 `main` / `master` 分支，由 GitHub Actions 自动构建（见 `.github/workflows/build.yml`）。
 
-> PPT 报告模板（`Analysis_Report.pptx`）包含内部数据，**不随 exe 打包**。打包后的用户将模板放到 exe 同目录即可生效；开发模式下放到项目根目录。未放置模板时自动使用内置的简洁版式。
+> PPT 报告模板（`Analysis_Report.pptx`）已随仓库与 Windows 包内置（`--add-data`）。
+> 打包后用户将同名模板放到 exe 同目录即可覆盖内置模板；开发模式下项目根目录同名文件优先。
+> 未找到模板时自动使用内置的简洁版式。
 
 > 状态变更原因清单：把 `{制程}_EReasonList.xlsx`（如 `FR_EReasonList.xlsx`）放入根目录（打包后为 exe 同目录）的 `EReasonList/` 文件夹，EFF 分析页选择对应"原因清单"即可按文件名匹配，自动输出停机原因名称并拆分 pDT/uDT。该文件夹含内部数据，不随包/仓库分发。
 

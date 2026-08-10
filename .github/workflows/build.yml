@@ -41,8 +41,8 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        # 注意：PPT 模板含内部数据，不随包内置，由用户放置到 exe 同目录
-        pyinstaller --onedir --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --name MC_LogAnalysis main.py
+        # PPT 报告模板随包内置（_internal）；用户放 exe 同目录的同名文件可覆盖默认模板
+        pyinstaller --onedir --windowed --icon log.ico --add-data "Machine.png;." --add-data "log.ico;." --add-data "Analysis_Report.pptx;." --name MC_LogAnalysis main.py
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:

@@ -18,8 +18,16 @@ def runtime_root():
 
 
 def find_external_resource(name):
-    """在外部资源根目录/当前目录查找文件（不随包内置，由用户自行放置），找不到返回 None。"""
-    for base in (runtime_root(), os.getcwd()):
+    """按顺序查找资源：外部根目录/当前目录 → PyInstaller 打包内置目录(_MEIPASS)。
+
+    打包内置为默认回退；用户放在 exe 同目录（或项目根目录）的同名文件优先。
+    找不到返回 None。
+    """
+    bases = [runtime_root(), os.getcwd()]
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        bases.append(meipass)
+    for base in bases:
         path = os.path.join(base, name)
         if os.path.exists(path):
             return path
