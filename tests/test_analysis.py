@@ -1053,8 +1053,15 @@ class AnalysisTest(unittest.TestCase):
         texts = "\n".join(sh.text_frame.text for sh in uph_slide.shapes if sh.has_text_frame)
         self.assertIn("瓶颈工位：热压", texts)
         self.assertIn("650.94", texts)
-        # PPT 只放最终结果：不展示工位明细表
-        self.assertFalse(any(sh.has_table for sh in uph_slide.shapes))
+        # 成品稿模板：UPH 页表格保留并填充真实工位数据
+        tbl_texts = [
+            shape.table.cell(r, c).text
+            for shape in uph_slide.shapes if shape.has_table
+            for r in range(len(shape.table.rows))
+            for c in range(len(shape.table.columns))
+        ]
+        self.assertTrue(tbl_texts)
+        self.assertIn("热压", tbl_texts)
         self.assertTrue(any(sh.has_chart for sh in uph_slide.shapes))
 
     def test_status_time_only_multi_file(self):

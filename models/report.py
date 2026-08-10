@@ -18,6 +18,7 @@ from pptx import Presentation
 from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
 from pptx.enum.chart import XL_CHART_TYPE
+from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
@@ -124,6 +125,95 @@ def _add_slide(prs, title, subtitle=""):
         tf2.text = subtitle
         tf2.paragraphs[0].font.size = Pt(13)
         tf2.paragraphs[0].font.color.rgb = GRAY
+    return slide
+
+
+def _blank_layout(prs):
+    for layout in prs.slide_layouts:
+        if layout.name.lower() == "blank":
+            return layout
+    return prs.slide_layouts[-1] if prs.slide_layouts else None
+
+
+def _add_dark_gantt_slide(prs, index, total):
+    """新增甘特页：与深色驾驶舱模板同一设计系统（深底/标签/胶囊/面板/页脚）。"""
+    slide = prs.slides.add_slide(_blank_layout(prs))
+    bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0,
+                                prs.slide_width, prs.slide_height)
+    bg.fill.solid()
+    bg.fill.fore_color.rgb = RGBColor(0x0D, 0x15, 0x24)
+    bg.line.fill.background()
+    bg.shadow.inherit = False
+
+    tag = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                                 Inches(0.53), Inches(0.33), Inches(1.6), Inches(0.4))
+    tag.fill.solid()
+    tag.fill.fore_color.rgb = RGBColor(0x16, 0x23, 0x3C)
+    tag.line.fill.background()
+    tag.shadow.inherit = False
+    tag.text_frame.text = "机台日志分析"
+    tag.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+    tag.text_frame.paragraphs[0].font.size = Pt(13)
+    tag.text_frame.paragraphs[0].font.bold = True
+    tag.text_frame.paragraphs[0].font.color.rgb = RGBColor(0x35, 0xC6, 0xF4)
+
+    tb = slide.shapes.add_textbox(Inches(2.67), Inches(0.27), Inches(8.5), Inches(0.8))
+    tb.text_frame.text = "瓶颈工序甘特图"
+    tb.text_frame.paragraphs[0].font.size = Pt(40)
+    tb.text_frame.paragraphs[0].font.bold = True
+    tb.text_frame.paragraphs[0].font.color.rgb = RGBColor(0xE7, 0xF1, 0xFF)
+
+    chip = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                                  Inches(11.4), Inches(0.36), Inches(1.93), Inches(0.4))
+    chip.fill.solid()
+    chip.fill.fore_color.rgb = RGBColor(0x16, 0x23, 0x3C)
+    chip.line.fill.background()
+    chip.shadow.inherit = False
+    chip.text_frame.text = f"{index:02d} / {total:02d}"
+    chip.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+    chip.text_frame.paragraphs[0].font.size = Pt(13)
+    chip.text_frame.paragraphs[0].font.bold = True
+    chip.text_frame.paragraphs[0].font.color.rgb = RGBColor(0x35, 0xC6, 0xF4)
+
+    panel = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
+                                   Inches(0.4), Inches(1.78), Inches(12.53), Inches(4.75))
+    panel.fill.solid()
+    panel.fill.fore_color.rgb = RGBColor(0x13, 0x1E, 0x33)
+    panel.line.color.rgb = RGBColor(0x25, 0x33, 0x4F)
+    panel.line.width = Pt(0.75)
+    panel.shadow.inherit = False
+    try:
+        panel.adjustments[0] = 0.03
+    except Exception:
+        pass
+    for x0, y0, dx, dy in (
+        (0.4, 1.78, 1, 1), (12.93, 1.78, -1, 1),
+        (0.4, 6.53, 1, -1), (12.93, 6.53, -1, -1),
+    ):
+        for x1, y1 in ((x0 + dx * 0.18, y0), (x0, y0 + dy * 0.18)):
+            c = slide.shapes.add_connector(1, Inches(x0), Inches(y0),
+                                           Inches(x1), Inches(y1))
+            c.line.color.rgb = RGBColor(0x35, 0xC6, 0xF4)
+            c.line.width = Pt(1)
+            c.shadow.inherit = False
+
+    line = slide.shapes.add_connector(1, Inches(0.53), Inches(6.93),
+                                      Inches(12.8), Inches(6.93))
+    line.line.color.rgb = RGBColor(0x22, 0x31, 0x4D)
+    line.line.width = Pt(0.75)
+    line.shadow.inherit = False
+
+    f = slide.shapes.add_textbox(Inches(0.53), Inches(7.13), Inches(8), Inches(0.3))
+    f.text_frame.text = "© 2026 Hon Hai Precision Industry Co., Ltd. All rights reserved."
+    f.text_frame.paragraphs[0].font.size = Pt(13)
+    f.text_frame.paragraphs[0].font.color.rgb = RGBColor(0x5F, 0x73, 0x96)
+
+    pn = slide.shapes.add_textbox(Inches(11.56), Inches(7.13), Inches(1.24), Inches(0.3))
+    pn.text_frame.text = f"{index}/{total}"
+    pn.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
+    pn.text_frame.paragraphs[0].font.size = Pt(14)
+    pn.text_frame.paragraphs[0].font.bold = True
+    pn.text_frame.paragraphs[0].font.color.rgb = RGBColor(0xF5, 0xB6, 0x4C)
     return slide
 
 
@@ -276,7 +366,7 @@ def _gantt_page_rows(uph_path):
 
 
 def _gantt_png(rows_df, title, out_path):
-    """PIL 绘制步骤甘特图 PNG：每行一个步骤横条，x 轴为相对周期秒。"""
+    """PIL 绘制步骤甘特图 PNG（深色驾驶舱样式，与模板一致）。"""
     if rows_df is None or rows_df.empty:
         return False
     font_path = _find_cn_font()
@@ -285,10 +375,15 @@ def _gantt_png(rows_df, title, out_path):
     f_title = font(26)
     f_label = font(17)
     f_axis = font(14)
+    bg = (13, 21, 36)          # 0D1524
+    grid = (36, 51, 78)        # 24334E
+    axis = (143, 163, 196)     # 8FA3C4
+    title_c = (231, 241, 255)  # E7F1FF
+    label_c = (198, 211, 232)  # C6D3E8
     colors = {
-        '循环': (91, 155, 213),    # 蓝
-        '批次': (237, 125, 49),    # 橙
-        '盘': (112, 173, 71),      # 绿
+        '循环': (53, 198, 244),    # 青
+        '批次': (245, 182, 76),    # 琥珀
+        '盘': (46, 134, 193),      # 钢蓝
     }
     n = len(rows_df)
     left_pad, right_pad, top_pad, bottom_pad = 280, 40, 78, 46
@@ -297,24 +392,24 @@ def _gantt_png(rows_df, title, out_path):
     plot_w = 1180
     px_per_sec = plot_w / max_end
     img_h = top_pad + n * row_h + bottom_pad
-    img = Image.new("RGB", (left_pad + plot_w + right_pad, img_h), "white")
+    img = Image.new("RGB", (left_pad + plot_w + right_pad, img_h), bg)
     d = ImageDraw.Draw(img)
-    d.text((20, 18), title, fill="black", font=f_title)
+    d.text((20, 18), title, fill=title_c, font=f_title)
     # 网格与刻度
     step = 1.0
     while max_end / step > 24:
         step *= 2
     for s in range(0, int(math.ceil(max_end / step)) + 1):
         x = left_pad + s * step * px_per_sec
-        d.line([(x, top_pad - 14), (x, top_pad + n * row_h)], fill=(220, 220, 220))
-        d.text((x - 8, top_pad - 34), str(int(s * step)), fill="gray", font=f_axis)
+        d.line([(x, top_pad - 14), (x, top_pad + n * row_h)], fill=grid)
+        d.text((x - 8, top_pad - 34), str(int(s * step)), fill=axis, font=f_axis)
     d.line([(left_pad, top_pad + n * row_h), (left_pad + plot_w, top_pad + n * row_h)],
-           fill="black", width=2)
+           fill=axis, width=2)
     # 步骤横条
     for i, (_, r) in enumerate(rows_df.iterrows()):
         y = top_pad + i * row_h
         label = "%s · %s" % (r['单元'], r['步骤'])
-        d.text((8, y + 4), label, fill="black", font=f_label)
+        d.text((8, y + 4), label, fill=label_c, font=f_label)
         start = float(r['开始秒'])
         end = float(r['结束秒'])
         x0 = left_pad + start * px_per_sec
@@ -322,7 +417,7 @@ def _gantt_png(rows_df, title, out_path):
         if x1 - x0 < 3:
             x1 = x0 + 3
         color = colors.get(str(r['层级']), colors['循环'])
-        d.rectangle([x0, y + 2, x1, y + row_h - 4], fill=color, outline=(40, 40, 40))
+        d.rectangle([x0, y + 2, x1, y + row_h - 4], fill=color, outline=(24, 33, 51))
     img.save(out_path)
     return True
 
@@ -453,6 +548,26 @@ def _replace_chart(slide, chart_type, chart_title, categories, values, legend=Fa
     return None
 
 
+def _refresh_chart(slide, chart_type, chart_title, categories, values):
+    """原位刷新模板图表数据（replace_data），保留模板图表样式/颜色/标签/图例。
+
+    与 _replace_chart（删除重建）不同，不会丢深色驾驶舱模板的自定义样式，
+    也不会在包内残留孤儿图表部件。仅当类型不匹配等极端情况回退到重建。
+    """
+    for shape in slide.shapes:
+        if not shape.has_chart:
+            continue
+        chart_data = CategoryChartData()
+        chart_data.categories = list(categories)
+        chart_data.add_series("数值", _chart_values(values))
+        try:
+            shape.chart.replace_data(chart_data)
+            return shape.chart
+        except Exception:
+            return _replace_chart(slide, chart_type, chart_title, categories, values)
+    return None
+
+
 def _remove_table(slide):
     """删除页面上的表格（瓶颈模式 PPT 只放最终结果，不展示工位明细）。"""
     for shape in list(slide.shapes):
@@ -517,8 +632,7 @@ def _build_section(prs, title, subtitle, chart_type, chart_title, cats, vals, ta
         return
     _set_subtitle(slide, subtitle)
     if cats is not None and len(cats) > 0:
-        _replace_chart(slide, chart_type, chart_title, cats, vals,
-                       legend=(chart_type == XL_CHART_TYPE.PIE))
+        _refresh_chart(slide, chart_type, chart_title, cats, vals)
     if not table_df.empty:
         _update_table(slide, table_df)
 
@@ -565,6 +679,18 @@ def _update_page_textbox(slide, index, total):
     return False
 
 
+def _update_section_chips(slide, index, total):
+    """同步页头胶囊页码（02 / 07 → 实际页序），删页后保持一致。"""
+    pattern = re.compile(r"^\d{2} / \d{2}$")
+    for shape in slide.shapes:
+        if not shape.has_text_frame:
+            continue
+        txt = shape.text_frame.text.strip()
+        if pattern.match(txt):
+            _set_text_preserving(shape.text_frame, f"{index:02d} / {total:02d}")
+            return
+
+
 def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report.pptx"):
     """读取 output_dir 下 4 个分析 Excel，基于最终模板生成报告，返回报告路径。"""
     out_path = os.path.join(output_dir, report_name)
@@ -608,8 +734,8 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
             machine_table = uph_summary.copy()
             if "单颗CT(秒)" in machine_table.columns:
                 machine_table["单颗CT(秒)"] = machine_table["单颗CT(秒)"].fillna("")
-            _remove_table(slide)
-            _replace_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "各机台单颗CT（秒）",
+            _update_table(slide, machine_table)
+            _refresh_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "各机台单颗CT（秒）",
                            uph_summary["机台"], uph_summary["单颗CT(秒)"])
         elif not uph_summary.empty and "工位" in uph_summary.columns:
             # 多工位机：PPT 只放最终结果——瓶颈工位与 UPH，各工位周期用图展示
@@ -625,8 +751,8 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
             station_table = uph_summary.copy()
             if "瓶颈" in station_table.columns:
                 station_table["瓶颈"] = station_table["瓶颈"].fillna("")
-            _remove_table(slide)
-            _replace_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "各工位每排周期（秒）",
+            _update_table(slide, station_table)
+            _refresh_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "各工位每排周期（秒）",
                            station_table["工位"], station_table["每排周期(秒)"])
         else:
             labels = ["Pure UPH(个/小时)", "Derated UPH M1(个/小时)", "Derated UPH M2(个/小时)"]
@@ -640,18 +766,24 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
         png_path = os.path.join(output_dir, "_gantt_bottleneck.png")
         try:
             if _gantt_png(gantt_rows, gantt_title, png_path):
-                slide = _add_slide(prs, "瓶颈工序甘特图", gantt_title)
+                slide = _add_dark_gantt_slide(prs, len(prs.slides) + 1, len(prs.slides) + 1)
+                st = slide.shapes.add_textbox(Inches(0.53), Inches(1.22), Inches(12.27), Inches(0.4))
+                st.text_frame.text = gantt_title
+                st.text_frame.paragraphs[0].font.size = Pt(18)
+                st.text_frame.paragraphs[0].font.color.rgb = RGBColor(0x8F, 0xA3, 0xC4)
                 with Image.open(png_path) as img:
                     # Windows 下 Image 对象未关闭会持有文件句柄，
                     # 导致下方 os.remove 报 WinError 32，必须用 with 及时释放。
                     ratio = img.width / img.height
-                    w = Inches(12.3)
-                    h = Inches(12.3 / ratio)
-                    if h > Inches(5.7):
-                        h = Inches(5.7)
-                        w = Inches(5.7 * ratio)
-                slide.shapes.add_picture(png_path, Inches(0.4), Inches(1.75),
-                                         width=w, height=h)
+                w = 12.13
+                h = w / ratio
+                if h > 4.55:
+                    h = 4.55
+                    w = h * ratio
+                slide.shapes.add_picture(png_path,
+                                         Inches(0.4 + (12.53 - w) / 2),
+                                         Inches(1.78 + (4.75 - h) / 2),
+                                         width=Inches(w), height=Inches(h))
         finally:
             try:
                 if os.path.exists(png_path):
@@ -726,5 +858,7 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
         _delete_slide_by_title(prs, title)
 
     _update_page_numbers(prs)
+    for i, slide in enumerate(prs.slides, start=1):
+        _update_section_chips(slide, i, len(prs.slides))
     prs.save(out_path)
     return out_path

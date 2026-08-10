@@ -96,6 +96,7 @@
 - 数据：`build_gantt_rows`（通用 units，逐周期计算每步相对周期起点的中位起止偏移；B 模式=链式段、A 模式=start/end、standalone 独立绘制）与 `build_gantt_rows_sa`（四工位行周期轨道 0→中位 + 左右点胶头三段 视觉对位→探针对位→点胶轮廓）。
 - 绘制：`LogModel._format_gantt_sheet`（openpyxl 块填充），层级颜色 循环=浅蓝 DDEBF7 / 批次=浅橙 FCE4D6 / 盘=浅绿 E2EFDA，时间块列宽 2.5、冻结 F2；UPH_Analysis.xlsx 新增 sheet，各制程（LM/FR/CAW/ACF 通用、SA 专用）自动生成。
 - PPT 报告新增「瓶颈工序甘特图」页：`_gantt_page_rows` 从 UPH Excel 筛选瓶颈工序（CAW 瓶颈机台=焊接机时按滑台周期排序取表现居中的滑台左右工位；SA 瓶颈工位截四工位并行全图；其余制程截整机），`_gantt_png` 用 PIL 渲染 PNG 后插入（中文字体自动查找苹方/微软雅黑；临时 PNG 用完即删）。甘特 sheet 时间块刻度从 G 列起（F 列保留“层级”表头）。
+- **成品稿模板适配（2026-08-10）**：`Analysis_Report.pptx` 已更新为成品视觉稿（方案C 深色驾驶舱：文本框标题 + 原生图表/表格 + 图标图片）。报告生成器配套调整：①图表用 `chart.replace_data` **原位刷新数据**，保留模板样式/颜色/图例，禁止改回“删除重建”（会变白底默认样式并残留孤儿图表部件）；②甘特页 `_add_dark_gantt_slide` 深色化（深底/标签/胶囊/面板/页脚），`_gantt_png` 同步深色渲染；③删页后 `_update_section_chips` 同步页头胶囊页码（02/07→实际页序）；④CAW/SA 瓶颈模式不再删除 UPH 表格，改为填充真实机台/工位数据。
 - **Windows 文件占用修复（2026-08-10）**：临时 PNG 用 `Image.open` 取宽高后未关闭，Windows 下句柄未释放导致 `os.remove` 报 WinError 32、整份 PPT 生成中断；改为 `with Image.open(...)` 及时释放句柄，且删除失败只跳过清理、不再中断报告生成。
 - 已验证：SA（analyze_steps_sa 模式）530 行步骤超时标红；ACF（4.8M 行 per-file 路径）上料機每时文件约 320 行标红。ACF 全量合并+标红约 6-7 分钟（480 万行 openpyxl 逐行检查），属正常开销。
 - 注意：环境需装 pptx / xlsxwriter / PyQt5，否则相关用例报错（不是代码问题）。
