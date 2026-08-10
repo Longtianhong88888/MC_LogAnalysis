@@ -186,6 +186,7 @@ class LogModel:
             '循环': PatternFill('solid', fgColor='DDEBF7'),   # 浅蓝
             '批次': PatternFill('solid', fgColor='FCE4D6'),   # 浅橙
             '盘': PatternFill('solid', fgColor='E2EFDA'),     # 浅绿
+            '换盘': PatternFill('solid', fgColor='D9E2F3'),   # 浅灰蓝（换盘间隔）
         }
         # 读取已写入的步骤数据（单元/步骤/开始秒/时长秒/结束秒/层级）
         rows = list(ws.iter_rows(values_only=True))

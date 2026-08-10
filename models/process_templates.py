@@ -74,6 +74,10 @@ PROCESS_TEMPLATES = {
                         # 平台级动作（每盘约 24 颗），standalone 独立计时。
                         {"name": "平台下料(每盘)", "start": "发送下料请求信号",
                          "end": "收到下料完成信号", "standalone": True, "timeout_seconds": 5.0},
+                        # 换盘间隔（下料完成 → 上料请求），甘特图上用独立层级浅色条补齐换盘过程
+                        {"name": "换盘间隔", "start": "收到下料完成信号",
+                         "end": "发送上料请求信号", "standalone": True, "layer": "换盘",
+                         "timeout_seconds": 5.0},
                         {"name": "平台上料(每盘)", "start": "发送上料请求信号",
                          "end": "收到上料完成信号", "standalone": True, "timeout_seconds": 5.0},
                     ],

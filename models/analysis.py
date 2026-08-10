@@ -720,7 +720,7 @@ def build_gantt_rows(rows, units, max_step_seconds=None, merge_gap=0.05,
             end_med = statistics.median(b for _a, b in recs)
             if end_med <= start_med:
                 continue
-            layer = '批次' if st.get('standalone') else '循环'
+            layer = st.get('layer') or ('批次' if st.get('standalone') else '循环')
             gantt_rows.append({
                 '单元': unit_name,
                 '步骤': st.get('name', '步骤%d' % (i + 1)),

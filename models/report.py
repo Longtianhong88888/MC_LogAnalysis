@@ -400,6 +400,7 @@ def _gantt_png(rows_df, title, out_path):
         '循环': (53, 198, 244),    # 青
         '批次': (245, 182, 76),    # 琥珀
         '盘': (46, 134, 193),      # 钢蓝
+        '换盘': (105, 126, 155),   # 灰蓝（换盘间隔，浅色低饱和）
     }
     n = len(rows_df)
     left_pad, right_pad, top_pad, bottom_pad = 280, 40, 78, 46
