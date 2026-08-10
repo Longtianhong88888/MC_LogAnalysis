@@ -40,6 +40,22 @@ _TITLE_PREFIX = {
 _TEMPLATE_CANDIDATES = ["Analysis_Report.pptx", "PPT模板.pptx"]
 SECTION_TITLES = ["UPH 分析", "EFF 分析", "停机 Pareto", "报警分析", "机台状态汇总", "机台状态趋势"]
 
+# 方案C 成品视觉稿（Analysis_Report.pptx）设计参数：
+# 600×338 设计单位画布 → 13.333×7.5in，表格模块位于 350..574 × 86..300
+_TEMPLATE_DESIGN = {
+    "table_box": (350, 86, 574, 300),   # 表格模块（设计单位）
+    "table_font_pt": 13,                # 表格字号
+    "table_min_row_in": 0.25,           # 行高下限（in），13pt 文本安全高度
+    "table_max_data_rows": 18,          # 数据行上限（超出截断，防止溢出）
+    "theme_bg": "0D1524",               # 深色驾驶舱背景
+    "theme_panel": "131E33",            # 模块面板
+    "theme_panel_line": "25344F",       # 面板描边
+    "theme_title": "E7F1FF",            # 主标题
+    "theme_sub": "8FA3C4",              # 副标题
+    "theme_accent": "F5B64C",           # 强调色（琥珀）
+    "theme_cyan": "35C6F4",             # 图表主色（青）
+}
+
 
 def _read_sheet(path, name):
     if not os.path.exists(path):
@@ -576,6 +592,12 @@ def _remove_table(slide):
 
 
 def _update_table(slide, df, max_rows=12):
+    """原位更新模板表格，严格受方案C 模板模块边界约束：
+
+    - 行数超出容量时截断；
+    - 行高按模块高度均分，保证不溢出模块/页脚；
+    - 列数变化时按模块宽度重新均分列宽，避免横向溢出。
+    """
     data = df.head(max_rows)
     rows, cols = data.shape
     if rows == 0 or cols == 0:
@@ -585,10 +607,14 @@ def _update_table(slide, df, max_rows=12):
             continue
         table = shape.table
         t_el = table._tbl
+        # 以模板表格图形框为边界（in）
+        box_w = (shape.width or Inches(5)).inches
+        box_h = (shape.height or Inches(4.75)).inches
         # 列数不足时扩展（模板表可能只有 2 列，而工位明细有多列）
         need_cols = min(cols, 12)
         grid = t_el.find(qn('a:tblGrid'))
         grid_cols = grid.findall(qn('a:gridCol')) if grid is not None else []
+        original_cols = len(grid_cols)
         if len(grid_cols) < need_cols:
             for _ in range(need_cols - len(grid_cols)):
                 grid.append(copy.deepcopy(grid_cols[-1]))
@@ -597,6 +623,18 @@ def _update_table(slide, df, max_rows=12):
                 if tcs:
                     for _ in range(need_cols - len(tcs)):
                         tr.append(copy.deepcopy(tcs[-1]))
+        elif len(grid_cols) > need_cols:
+            for gc in grid_cols[need_cols:]:
+                grid.remove(gc)
+            for tr in t_el.findall(qn('a:tr')):
+                for tc in tr.findall(qn('a:tc'))[need_cols:]:
+                    tr.remove(tc)
+        # 行数容量：模块高度 / 最小行高 - 表头
+        capacity = max(1, int(box_h / _TEMPLATE_DESIGN["table_min_row_in"]) - 1)
+        capacity = min(capacity, _TEMPLATE_DESIGN["table_max_data_rows"])
+        if rows > capacity:
+            data = data.head(capacity)
+            rows = capacity
         trs = t_el.findall(qn('a:tr'))
         need = rows + 1
         if len(trs) < need:
@@ -606,7 +644,16 @@ def _update_table(slide, df, max_rows=12):
         elif len(trs) > need:
             for tr in trs[need:]:
                 t_el.remove(tr)
-        n_cols = min(cols, len(table.columns))
+        # 行高均分到模块高度（不溢出）
+        row_h_in = box_h / need
+        for ri in range(need):
+            table.rows[ri].height = Inches(row_h_in)
+        # 列数变化时按模块宽度重新均分；不变时保留模板原始列宽
+        if need_cols != original_cols and need_cols > 0:
+            col_w_in = box_w / need_cols
+            for ci in range(need_cols):
+                table.columns[ci].width = Inches(col_w_in)
+        n_cols = min(cols, need_cols)
         for j in range(n_cols):
             _set_text_preserving(table.cell(0, j).text_frame, str(data.columns[j]))
         for i, (_, row) in enumerate(data.iterrows(), start=1):
