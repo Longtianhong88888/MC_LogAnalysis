@@ -8,6 +8,7 @@ import copy
 import io
 import math
 import os
+import re
 from datetime import datetime
 from collections import Counter
 
@@ -334,7 +335,12 @@ def _report_title(process_name):
 
 
 def _fill_template_cover(prs, process_name):
-    """替换封面标题中的制程字母（XX/LM/CAW/FR），其余内容与样式保持不变。"""
+    """替换封面标题中的制程字母（XX/LM/CAW/FR），其余内容与样式保持不变。
+
+    兼容两种模板形态：
+    - 旧模板：标题为独立 run（"LM" + "設備一鍵自動分析報告"）；
+    - 新模板（成品视觉稿）：标题为整段单 run（"LM設備一鍵自動分析報告"）。
+    """
     if not prs.slides:
         return
     prefix = _TITLE_PREFIX.get(process_name)
@@ -348,9 +354,13 @@ def _fill_template_cover(prs, process_name):
         if "設備一鍵自動分析報告" not in tf.text:
             continue
         if tf.paragraphs and tf.paragraphs[0].runs:
-            first = tf.paragraphs[0].runs[0]
-            if first.text.replace(" ", "") in ("XX", "LM", "CAW", "FR"):
-                first.text = prefix
+            runs = tf.paragraphs[0].runs
+            old = "".join(r.text for r in runs)
+            head = old.split("設備")[0].replace(" ", "")
+            if head in ("XX", "LM", "CAW", "FR", "SA", "ACF"):
+                runs[0].text = prefix + old[len(head):]
+                for r in runs[1:]:
+                    r.text = ""
         return
 
 
@@ -367,8 +377,7 @@ def _delete_slide_by_title(prs, title):
     sld_id_lst = prs.slides._sldIdLst
     for idx in range(len(sld_id_lst) - 1, 0, -1):
         slide = prs.slides[idx]
-        t = slide.shapes.title
-        if t is not None and t.text.strip() == title:
+        if _slide_has_title(slide, title):
             _delete_slide(prs, idx)
             return
 
@@ -391,13 +400,34 @@ def _prepare_template_pages(prs):
 
 def _section_slide(prs, title):
     for slide in prs.slides:
-        t = slide.shapes.title
-        if t is not None and t.text.strip() == title:
+        if _slide_has_title(slide, title):
             return slide
     return None
 
 
+def _slide_has_title(slide, title):
+    """按任意文本框内容匹配分节标题（兼容占位符标题与成品稿文本框标题）。"""
+    for shape in slide.shapes:
+        if not shape.has_text_frame:
+            continue
+        if shape.text_frame.text.strip() == title:
+            return True
+    return False
+
+
 def _set_subtitle(slide, subtitle):
+    """更新副标题：优先命中标题下方通栏文本框，兼容成品视觉稿模板。"""
+    for shape in slide.shapes:
+        if shape.is_placeholder or shape.has_chart or shape.has_table or not shape.has_text_frame:
+            continue
+        tf = shape.text_frame
+        if not tf.text.strip():
+            continue
+        top = (shape.top or 0) / 914400.0
+        width = (shape.width or 0) / 914400.0
+        if 0.9 <= top <= 2.3 and width >= 4.0:
+            _set_text_preserving(tf, subtitle)
+            return
     for shape in slide.shapes:
         if shape.is_placeholder or shape.has_chart or shape.has_table or not shape.has_text_frame:
             continue
@@ -494,7 +524,7 @@ def _build_section(prs, title, subtitle, chart_type, chart_title, cats, vals, ta
 
 
 def _update_page_numbers(prs):
-    """封面 '1 /' + 总页数；内容页 'n/总页数'（与模板样式一致）。"""
+    """同步页码：成品稿模板为合成文本框（1/7、2/7…），旧模板为占位符（'1 /' + 总数）。"""
     total = len(prs.slides)
     for i, slide in enumerate(prs.slides, start=1):
         page_holder = page_x = None
@@ -513,13 +543,26 @@ def _update_page_numbers(prs):
                 _set_text_preserving(page_x.text_frame, str(total))
             else:
                 _set_text_preserving(page_x.text_frame, f"{i}/{total}")
-        if page_holder is None and page_x is None:
+        if page_holder is None and page_x is None and not _update_page_textbox(slide, i, total):
             tb = slide.shapes.add_textbox(Inches(11.35), Inches(7.08), Inches(1.75), Inches(0.3))
             tf = tb.text_frame
             tf.text = f"{i}/{total}"
             tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
             tf.paragraphs[0].font.size = Pt(10)
             tf.paragraphs[0].font.color.rgb = GRAY
+
+
+def _update_page_textbox(slide, index, total):
+    """成品视觉稿模板：更新右下角合成页码文本框（1/7、2/7…），返回是否命中。"""
+    pattern = re.compile(r"^\d{1,2}/\d{1,2}$")
+    for shape in slide.shapes:
+        if not shape.has_text_frame:
+            continue
+        txt = shape.text_frame.text.strip()
+        if pattern.match(txt):
+            _set_text_preserving(shape.text_frame, f"{index}/{total}")
+            return True
+    return False
 
 
 def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report.pptx"):
@@ -598,18 +641,25 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
         try:
             if _gantt_png(gantt_rows, gantt_title, png_path):
                 slide = _add_slide(prs, "瓶颈工序甘特图", gantt_title)
-                img = Image.open(png_path)
-                ratio = img.width / img.height
-                w = Inches(12.3)
-                h = Inches(12.3 / ratio)
-                if h > Inches(5.7):
-                    h = Inches(5.7)
-                    w = Inches(5.7 * ratio)
+                with Image.open(png_path) as img:
+                    # Windows 下 Image 对象未关闭会持有文件句柄，
+                    # 导致下方 os.remove 报 WinError 32，必须用 with 及时释放。
+                    ratio = img.width / img.height
+                    w = Inches(12.3)
+                    h = Inches(12.3 / ratio)
+                    if h > Inches(5.7):
+                        h = Inches(5.7)
+                        w = Inches(5.7 * ratio)
                 slide.shapes.add_picture(png_path, Inches(0.4), Inches(1.75),
                                          width=w, height=h)
         finally:
-            if os.path.exists(png_path):
-                os.remove(png_path)
+            try:
+                if os.path.exists(png_path):
+                    os.remove(png_path)
+            except OSError:
+                # 个别环境（杀毒软件/索引服务）可能瞬时占用文件，
+                # 删除失败不应让整个 PPT 报告生成中断。
+                pass
 
     # ---------- EFF 分析 ----------
     eff = _read_sheet(os.path.join(output_dir, "EFF_Analysis.xlsx"), "Summary")

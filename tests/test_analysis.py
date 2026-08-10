@@ -982,8 +982,8 @@ class AnalysisTest(unittest.TestCase):
             sh.text_frame.text for sh in prs.slides[0].shapes if sh.has_text_frame
         )
         self.assertIn("CAW設備一鍵自動分析報告", cover_text)  # 制程字母已替换
-        self.assertIn("——UPH、EFF、Alarm", cover_text)  # 模板副标题保留
-        self.assertIn("1 /", cover_text)
+        self.assertIn("UPH、EFF、Alarm", cover_text)  # 模板副标题保留
+        self.assertIn("1/7", cover_text)  # 成品稿模板为合成页码
         self.assertIn("7", cover_text)  # 封面总页数
         uph_page = "\n".join(
             sh.text_frame.text for sh in prs.slides[1].shapes if sh.has_text_frame
@@ -1047,7 +1047,8 @@ class AnalysisTest(unittest.TestCase):
         prs = Presentation(ppt)
         uph_slide = next(
             s for s in prs.slides
-            if s.shapes.title is not None and s.shapes.title.text == "UPH 分析"
+            if any(sh.has_text_frame and sh.text_frame.text.strip() == "UPH 分析"
+                   for sh in s.shapes)
         )
         texts = "\n".join(sh.text_frame.text for sh in uph_slide.shapes if sh.has_text_frame)
         self.assertIn("瓶颈工位：热压", texts)

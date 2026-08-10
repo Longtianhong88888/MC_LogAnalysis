@@ -12,7 +12,7 @@
 ## 重要约定（务必遵守）
 
 1. **推送规则**：用户明确命令「推送」前，不得 push；提交可在本地保留。
-2. **PPT 模板**：`Analysis_Report.pptx` 含内部数据，**不随打包**；用户将模板放到 exe 同目录即可，未放则用内置简洁版式。
+2. **PPT 模板**：`Analysis_Report.pptx` 已随仓库入库并随 Windows 包内置（build.yml `--add-data "Analysis_Report.pptx;."`）；查找顺序：exe/项目根目录 → 当前目录 → 打包内置目录(_MEIPASS)，用户放 exe 同目录的同名文件可覆盖内置模板；均无则用内置简洁版式。模板为成品视觉稿结构（文本框标题 + 原生图表/表格），报告生成器已兼容（`_slide_has_title`/`_set_subtitle`/`_update_page_textbox`）。
 3. **EReasonList**：根目录 `EReasonList/` 按文件名匹配（如 ACF_EReasonList.xlsx），新用户放入自己制程的清单即可。
 4. **打包**：使用 `--onedir`（免解压秒开），不要用 `--onefile`。macOS：`pyinstaller -y --onedir --windowed --icon log.ico --add-data "Machine.png:." --add-data "log.ico:." --name MC_LogAnalysis main.py`。GitHub Actions（`.github/workflows/build.yml`）在 push 到 main 时自动构建 Windows 版。
 
@@ -96,6 +96,7 @@
 - 数据：`build_gantt_rows`（通用 units，逐周期计算每步相对周期起点的中位起止偏移；B 模式=链式段、A 模式=start/end、standalone 独立绘制）与 `build_gantt_rows_sa`（四工位行周期轨道 0→中位 + 左右点胶头三段 视觉对位→探针对位→点胶轮廓）。
 - 绘制：`LogModel._format_gantt_sheet`（openpyxl 块填充），层级颜色 循环=浅蓝 DDEBF7 / 批次=浅橙 FCE4D6 / 盘=浅绿 E2EFDA，时间块列宽 2.5、冻结 F2；UPH_Analysis.xlsx 新增 sheet，各制程（LM/FR/CAW/ACF 通用、SA 专用）自动生成。
 - PPT 报告新增「瓶颈工序甘特图」页：`_gantt_page_rows` 从 UPH Excel 筛选瓶颈工序（CAW 瓶颈机台=焊接机时按滑台周期排序取表现居中的滑台左右工位；SA 瓶颈工位截四工位并行全图；其余制程截整机），`_gantt_png` 用 PIL 渲染 PNG 后插入（中文字体自动查找苹方/微软雅黑；临时 PNG 用完即删）。甘特 sheet 时间块刻度从 G 列起（F 列保留“层级”表头）。
+- **Windows 文件占用修复（2026-08-10）**：临时 PNG 用 `Image.open` 取宽高后未关闭，Windows 下句柄未释放导致 `os.remove` 报 WinError 32、整份 PPT 生成中断；改为 `with Image.open(...)` 及时释放句柄，且删除失败只跳过清理、不再中断报告生成。
 - 已验证：SA（analyze_steps_sa 模式）530 行步骤超时标红；ACF（4.8M 行 per-file 路径）上料機每时文件约 320 行标红。ACF 全量合并+标红约 6-7 分钟（480 万行 openpyxl 逐行检查），属正常开销。
 - 注意：环境需装 pptx / xlsxwriter / PyQt5，否则相关用例报错（不是代码问题）。
 
