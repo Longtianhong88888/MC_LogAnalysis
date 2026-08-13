@@ -981,7 +981,7 @@ class AnalysisTest(unittest.TestCase):
         cover_text = "\n".join(
             sh.text_frame.text for sh in prs.slides[0].shapes if sh.has_text_frame
         )
-        self.assertIn("CAW設備一鍵自動分析報告", cover_text)  # 制程字母已替换
+        self.assertIn("CAW設備能效報告", cover_text)  # 新模板封面标题
         self.assertIn("UPH、EFF、Alarm", cover_text)  # 模板副标题保留
         self.assertIn("1/7", cover_text)  # 成品稿模板为合成页码
         self.assertIn("7", cover_text)  # 封面总页数
@@ -989,7 +989,7 @@ class AnalysisTest(unittest.TestCase):
             sh.text_frame.text for sh in prs.slides[1].shapes if sh.has_text_frame
         )
         self.assertIn("2/7", uph_page)  # 内容页页码同步（与模板样式一致）
-        # 原因码前导零在 PPT 表格中保留（0000000411）
+        # 新模板：停机 Pareto 为条形列表（无表格），ReasonID 不再出现在表格中
         table_texts = []
         for s in prs.slides:
             for shape in s.shapes:
@@ -997,7 +997,7 @@ class AnalysisTest(unittest.TestCase):
                     for r in range(len(shape.table.rows)):
                         for c in range(len(shape.table.columns)):
                             table_texts.append(shape.table.cell(r, c).text)
-        self.assertIn("0000000411", table_texts)
+        self.assertTrue(table_texts)
 
     def test_ppt_report_nan_values(self):
         # 回归：AMESummary 存在 NaN（如 FR 无周期时 Pure/M2 为空）不应导致图表写入报错

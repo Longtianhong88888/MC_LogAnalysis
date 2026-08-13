@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime, timedelta
 
 import pandas as pd
 from openpyxl import load_workbook
@@ -22,17 +23,23 @@ from models.analysis import (
     build_cycles_df,
     build_gantt_rows,
     build_gantt_rows_sa,
+    build_web_uph_sheets,
     detect_units_per_tray,
     detect_tray_stats,
     down_pareto,
+    _finalize_status,
     measure_tray_change,
     parse_em_production,
     summarize_alarms,
     summarize_eff_coretech,
+    summarize_machine_eff,
     summarize_uph,
     summarize_uph_ame,
+    summarize_web_alarms,
+    web_runlog_records,
 )
 from models.reason_codes import load_reason_codes
+from models import web_api
 from utils.file_utils import read_files, clean_for_excel
 
 
@@ -975,8 +982,27 @@ class LogModel:
     def analyze_eff(self, source_dir, output_dir, planned_hours=None,
                     pdt_reason_ids=None, reason_device=None, file_filters=None, rows=None,
                     cancel_event=None, activity_keywords=None, stop_reason_keywords=None,
-                    progress_callback=None):
+                    progress_callback=None,
+                    eff_source="local",
+                    web_api_url=None, web_plant_id=None, web_machine_type="",
+                    web_machine_nos="", web_begin_time=None, web_end_time=None, web_head=""):
         """CoreTech AME 效率：EFF = 操作时间(运行+待机) / 计划生产时间，基于 RUN/IDLE/DOWN 状态。"""
+        if eff_source == "web":
+            return self._analyze_eff_web(
+                output_dir=output_dir,
+                planned_hours=planned_hours,
+                pdt_reason_ids=pdt_reason_ids,
+                reason_device=reason_device,
+                cancel_event=cancel_event,
+                progress_callback=progress_callback,
+                api_url=web_api_url,
+                plant_id=web_plant_id,
+                machine_type=web_machine_type,
+                machine_nos=web_machine_nos,
+                begin_time=web_begin_time,
+                end_time=web_end_time,
+                head=web_head,
+            )
         reason_map = LogModel._load_reason_map(reason_device)
         if progress_callback:
             progress_callback(5)
@@ -1010,6 +1036,421 @@ class LogModel:
         if progress_callback:
             progress_callback(100)
         return out_path
+
+    def _analyze_eff_web(self, output_dir, planned_hours=None, pdt_reason_ids=None,
+                         reason_device=None, cancel_event=None, progress_callback=None,
+                         api_url=None, plant_id=None, machine_type="", machine_nos="",
+                         begin_time=None, end_time=None, head=""):
+        """联网 EFF：从戰情中心 CMS 接口拉机台状态日志 + 逐机台 EFF 汇总。
+
+        数据口径与页面一致：LoadRunLog 状态段（status_merge_flg=1，dataSource 0/1），
+        DownFlag=Routine/Planned 的停机段归 pDT，其余归 uDT（EReason/手动码仍可补充）。
+        """
+        api_url = (api_url or web_api.DEFAULT_BASE_URL).strip().rstrip('/')
+        plant_id = (plant_id or web_api.DEFAULT_PLANT_ID).strip()
+        reason_map = LogModel._load_reason_map(reason_device)
+        records, _raw_logs, eff_rows, candidates, begin_time, end_time = self._fetch_web_eff_records(
+            api_url=api_url, plant_id=plant_id, machine_type=machine_type, machine_nos=machine_nos,
+            begin_time=begin_time, end_time=end_time, head=head,
+            cancel_event=cancel_event, progress_callback=progress_callback,
+        )
+        if not records:
+            raise ValueError('联网 EFF：所选机台在时间范围内没有状态日志（可能未上传数据）')
+        if progress_callback:
+            progress_callback(70)
+        status_summary, hourly, detail = _finalize_status(records)
+        summary = summarize_eff_coretech(
+            status_summary, detail,
+            planned_hours=planned_hours, pdt_reason_ids=pdt_reason_ids,
+            reason_map=reason_map,
+            planned_down_flags=('Routine downtime', 'Routine Downtime', 'Routine',
+                                'Planned downtime', 'Planned Downtime', 'Planned'),
+        )
+        pareto = down_pareto(detail, reason_map=reason_map)
+        machine_eff = summarize_machine_eff(eff_rows, begin_time=begin_time, end_time=end_time)
+        if progress_callback:
+            progress_callback(85)
+        sheets = {'Summary': summary}
+        if not hourly.empty:
+            sheets['Hourly'] = hourly
+        if not pareto.empty:
+            sheets['DOWN_Pareto'] = pareto
+        if not detail.empty:
+            sheets['Detail'] = detail
+        if not machine_eff.empty:
+            sheets['MachineEff'] = machine_eff
+        out_path = os.path.join(output_dir, 'EFF_Analysis.xlsx')
+        self._write_sheets(out_path, sheets, cancel_event=cancel_event)
+        if progress_callback:
+            progress_callback(100)
+        return f"{out_path}（联网 EFF，共 {len(candidates)} 台机台，时间 {begin_time} ~ {end_time}）"
+
+    def _fetch_web_eff_records(self, api_url, plant_id, machine_type="", machine_nos="",
+                               begin_time=None, end_time=None, head="",
+                               cancel_event=None, progress_callback=None):
+        """联网取数公共逻辑：机台清单 → 逐机台 EFF 汇总 + 状态日志。
+
+        返回 (records, raw_logs, eff_rows, candidates, begin_time, end_time)：
+        - records：LoadRunLog 转换后的状态段（供 EFF/状态分析）
+        - raw_logs：原始状态行（供报警分析）
+        - eff_rows：GetMachineEff 逐机台汇总（供 MachineEff/UPH 兜底）
+        - candidates：匹配机台列表（machineNo/machineType）
+        """
+        api_url = (api_url or web_api.DEFAULT_BASE_URL).strip().rstrip('/')
+        plant_id = (plant_id or web_api.DEFAULT_PLANT_ID).strip()
+        if progress_callback:
+            progress_callback(5)
+        begin_time, end_time = self._normalize_web_window(begin_time, end_time)
+        machine_type = (machine_type or '').strip()
+        nos = [n.strip() for n in str(machine_nos or '').replace('，', ',').split(',') if n.strip()]
+        if not machine_type and not nos:
+            raise ValueError('设备效能：请选择站位或填写机台号（至少一项）')
+        if progress_callback:
+            progress_callback(10)
+        machines = web_api.fetch_machines(api_url, plant_id)
+        candidates = []
+        for m in machines or []:
+            mtype = (m.get('machine') or m.get('machineType') or '').strip()
+            mno = (m.get('machineNo') or '').strip()
+            if not mno:
+                continue
+            if machine_type and mtype.lower() != machine_type.lower():
+                continue
+            if nos and mno not in nos:
+                continue
+            candidates.append({'machineNo': mno, 'machineType': mtype})
+        found = {c['machineNo'] for c in candidates}
+        for no in nos:
+            if no not in found:
+                # 机台号不在清单中时按用户填写的类型直接尝试（未知机台接口返回空，不报错）
+                candidates.append({'machineNo': no, 'machineType': machine_type})
+        if not candidates:
+            raise ValueError(
+                f'设备效能：未找到匹配机台（类型={machine_type or "任意"}，机台号={machine_nos or "任意"}）'
+            )
+        # 逐机台 EFF/UPH 汇总：按机台类型分批拉取，减少请求次数
+        eff_rows = []
+        seen = set()
+        for mt in sorted({c['machineType'] for c in candidates if c['machineType']}):
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            batch = web_api.fetch_machine_eff(
+                api_url, plant_id, machine_type=mt,
+                begin_time=begin_time, end_time=end_time,
+            )
+            for r in batch or []:
+                mno = (r.get('machineNO') or '').strip()
+                if nos and mno not in nos:
+                    continue
+                if mno and mno not in seen:
+                    seen.add(mno)
+                    eff_rows.append(r)
+        # 状态日志逐机台拉取（进度 15 → 70）
+        records = []
+        raw_logs = []
+        total = len(candidates)
+        for i, c in enumerate(candidates, 1):
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            if progress_callback:
+                progress_callback(15 + int(55 * (i - 1) / total))
+            try:
+                log_rows = web_api.fetch_run_log(
+                    api_url, plant_id, c['machineNo'],
+                    machine_type=c['machineType'],
+                    st=begin_time, et=end_time, head=head,
+                )
+            except web_api.WebApiError as exc:
+                msg = str(exc)
+                if (not c['machineType']) or any(
+                    kw in msg for kw in ('未找到', '找不到', '無資料', '无数据', '沒有資料')
+                ):
+                    continue  # 机台类型缺失时跳过，避免整个分析失败
+                raise
+            raw_logs.append({'machineNo': c['machineNo'], 'rows': log_rows})
+            records.extend(web_runlog_records(log_rows, c['machineNo']))
+        return records, raw_logs, eff_rows, candidates, begin_time, end_time
+
+    def analyze_web_report(self, output_dir, process_name=None, planned_hours=None,
+                           pdt_reason_ids=None, reason_device=None, cancel_event=None,
+                           progress_callback=None,
+                           api_url=None, plant_id=None, machine_type="", machine_nos="",
+                           begin_time=None, end_time=None, head=""):
+        """联网一键报告：产出/UPH + EFF + 报警 + 状态 四张 Excel，再生成 PPT。"""
+        api_url = (api_url or web_api.DEFAULT_BASE_URL).strip().rstrip('/')
+        plant_id = (plant_id or web_api.DEFAULT_PLANT_ID).strip()
+        data = self.fetch_web_report_data(
+            api_url=api_url, plant_id=plant_id, machine_type=machine_type, machine_nos=machine_nos,
+            begin_time=begin_time, end_time=end_time, head=head,
+            cancel_event=cancel_event, progress_callback=progress_callback,
+        )
+        return self.generate_web_report_data(
+            output_dir=output_dir, data=data,
+            process_name=process_name, planned_hours=planned_hours, pdt_reason_ids=pdt_reason_ids,
+            reason_device=reason_device, cancel_event=cancel_event, progress_callback=progress_callback,
+        )
+
+    def fetch_web_report_data(self, api_url, plant_id, machine_type="", machine_nos="",
+                              begin_time=None, end_time=None, head="",
+                              cancel_event=None, progress_callback=None):
+        """查询设备效能数据：产出看板 + EFF 汇总 + 状态日志。
+
+        返回 dict（records/raw_logs/eff_rows/output_rows/candidates/begin_time/end_time/preview_text），
+        无任何数据时抛 WebNoDataError。
+        """
+        api_url = (api_url or web_api.DEFAULT_BASE_URL).strip().rstrip('/')
+        plant_id = (plant_id or web_api.DEFAULT_PLANT_ID).strip()
+        records, raw_logs, eff_rows, candidates, begin_time, end_time = self._fetch_web_eff_records(
+            api_url=api_url, plant_id=plant_id, machine_type=machine_type, machine_nos=machine_nos,
+            begin_time=begin_time, end_time=end_time, head=head,
+            cancel_event=cancel_event, progress_callback=progress_callback,
+        )
+        # 产出看板（逐机台 投入/产出/达成率）：按机台类型分批拉取
+        output_rows = []
+        nos = [n.strip() for n in str(machine_nos or '').replace('，', ',').split(',') if n.strip()]
+        for mt in sorted({c['machineType'] for c in candidates if c['machineType']}):
+            if cancel_event is not None and cancel_event.is_set():
+                raise OperationCancelled()
+            batch = web_api.fetch_machine_output_board(
+                api_url, plant_id, mt, st=begin_time, et=end_time,
+            )
+            for r in batch or []:
+                mno = (r.get('machine_no') or r.get('machineNO') or '').strip()
+                if nos and mno not in nos:
+                    continue
+                if mno:
+                    output_rows.append(r)
+        if not records and not output_rows:
+            raise web_api.WebNoDataError(
+                f"所选机台在时间范围内无数据（{begin_time} ~ {end_time}，"
+                f"机台 {machine_nos or machine_type or '全部'}）"
+            )
+        preview = self._web_report_preview(
+            records, raw_logs, eff_rows, output_rows, candidates, begin_time, end_time,
+        )
+        alarm_count = self._web_alarm_count(raw_logs)
+        window_hours = 0.0
+        try:
+            b = datetime.strptime(begin_time, '%Y/%m/%d %H:%M:%S')
+            e = datetime.strptime(end_time, '%Y/%m/%d %H:%M:%S')
+            window_hours = round((e - b).total_seconds() / 3600.0, 2)
+        except (ValueError, TypeError):
+            pass
+        return {
+            'records': records,
+            'raw_logs': raw_logs,
+            'eff_rows': eff_rows,
+            'output_rows': output_rows,
+            'candidates': candidates,
+            'begin_time': begin_time,
+            'end_time': end_time,
+            'preview_text': preview,
+            'preview_rows': self._web_preview_rows(output_rows),
+            'record_count': len(records),
+            'alarm_count': alarm_count,
+            'window_hours': window_hours,
+            'query': {
+                'api_url': api_url,
+                'plant_id': plant_id,
+                'machine_type': machine_type,
+                'machine_nos': machine_nos,
+                'begin_time': begin_time,
+                'end_time': end_time,
+                'head': head,
+            },
+        }
+
+    @staticmethod
+    def _web_alarm_count(raw_logs):
+        """统计停机/报警段数量（DOWN 且有报错信息的段）。"""
+        return sum(
+            1 for entry in raw_logs or [] for r in entry.get('rows') or []
+            if str(r.get('status') or '').strip().upper() == 'DOWN'
+            and str(r.get('errorname') or r.get('errorMsg') or r.get('reasonid') or '').strip()
+        )
+
+    @staticmethod
+    def _web_preview_rows(output_rows):
+        """生成预览表格行（逐机台 产出/达成率）。"""
+        rows = []
+        for r in output_rows or []:
+            try:
+                hit = f"{float(r.get('hit_rate') or 0) * 100:.1f}%"
+            except (TypeError, ValueError):
+                hit = "-"
+            rows.append({
+                '机台号': str(r.get('machine_no') or r.get('machineNO') or ''),
+                '设备': str(r.get('device_name') or ''),
+                '状态': str(r.get('status') or ''),
+                '投入(个)': r.get('input') if r.get('input') is not None else '',
+                '产出(个)': r.get('output') if r.get('output') is not None else '',
+                '达成率(%)': hit,
+            })
+        return rows
+
+    def _web_report_preview(self, records, raw_logs, eff_rows, output_rows,
+                            candidates, begin_time, end_time):
+        """生成联网数据查询预览文本（供界面展示）。"""
+        lines = [
+            f"查询成功：{len(candidates)} 台机台，时间 {begin_time} ~ {end_time}",
+            "",
+            "【机台产出】",
+        ]
+        if output_rows:
+            for r in output_rows:
+                try:
+                    hit = f"{float(r.get('hit_rate') or 0) * 100:.1f}%"
+                except (TypeError, ValueError):
+                    hit = "-"
+                lines.append(
+                    f"  {r.get('machine_no') or ''} | {r.get('device_name') or ''} | {r.get('status') or ''} | "
+                    f"投入 {r.get('input') or 0} | 产出 {r.get('output') or 0} | 达成率 {hit}"
+                )
+        else:
+            lines.append("  （该时间范围内无产出数据）")
+        # EFF / 状态概览
+        if records:
+            status_summary, _, detail = _finalize_status(records)
+            eff = summarize_eff_coretech(
+                status_summary, detail,
+                planned_down_flags=('Routine downtime', 'Routine Downtime', 'Routine',
+                                    'Planned downtime', 'Planned Downtime', 'Planned'),
+            ).iloc[0]
+            lines += [
+                "",
+                "【状态 / EFF】",
+                f"  RUN {eff['运行时间RUN(秒)']} 秒 | IDLE {eff['待机时间IDLE(秒)']} 秒 | "
+                f"DOWN {eff['停机时间DOWN(秒)']} 秒 | EFF {eff['EFF(%)']}%",
+            ]
+            alarm_count = self._web_alarm_count(raw_logs)
+            if alarm_count:
+                lines.append(f"  停机/报警段 {alarm_count} 条")
+        lines.append("")
+        lines.append("数据就绪，可点击「输出报告」生成 PPT。")
+        return "\n".join(lines)
+
+    def generate_web_report_data(self, output_dir, data, process_name=None, planned_hours=None,
+                                 pdt_reason_ids=None, reason_device=None, cancel_event=None,
+                                 progress_callback=None):
+        """用已查询的联网数据生成 4 张 Excel + PPT 报告。"""
+        records = data['records']
+        raw_logs = data['raw_logs']
+        eff_rows = data['eff_rows']
+        output_rows = data['output_rows']
+        candidates = data['candidates']
+        begin_time = data['begin_time']
+        end_time = data['end_time']
+        reason_map = LogModel._load_reason_map(reason_device)
+        # UPH/产出汇总
+        uph_summary, uph_ame = build_web_uph_sheets(
+            output_rows, eff_rows, begin_time=begin_time, end_time=end_time,
+            station=(data.get('query') or {}).get('machine_type') or '',
+        )
+        # 状态 + EFF
+        status_summary, hourly, detail = _finalize_status(records)
+        eff_summary = summarize_eff_coretech(
+            status_summary, detail,
+            planned_hours=planned_hours, pdt_reason_ids=pdt_reason_ids,
+            reason_map=reason_map,
+            planned_down_flags=('Routine downtime', 'Routine Downtime', 'Routine',
+                                'Planned downtime', 'Planned Downtime', 'Planned'),
+        )
+        pareto = down_pareto(detail, reason_map=reason_map)
+        # 停机 Pareto 中文原因：优先取联网数据自带的 errorMsg（英文 errorname 备用）
+        if pareto is not None and not pareto.empty and '原因名称' not in pareto.columns:
+            reason_names = {}
+            for entry in raw_logs or []:
+                for r in entry.get('rows') or []:
+                    rid = str(r.get('reasonid') or '').strip()
+                    msg = str(r.get('errorMsg') or r.get('errorname') or '').strip()
+                    if rid and msg and rid not in reason_names:
+                        reason_names[rid] = msg
+            if reason_names:
+                pareto['原因名称'] = pareto['ReasonID'].map(
+                    lambda rid: reason_names.get(str(rid), '')
+                )
+        # 报警
+        alarm_summary, alarm_kw, alarm_detail = summarize_web_alarms(raw_logs)
+        if progress_callback:
+            progress_callback(88)
+        self._write_sheets(
+            os.path.join(output_dir, 'UPH_Analysis.xlsx'),
+            {'Summary': uph_summary, 'AMESummary': uph_ame},
+            cancel_event=cancel_event,
+        )
+        eff_sheets = {'Summary': eff_summary}
+        if not hourly.empty:
+            eff_sheets['Hourly'] = hourly
+        if not pareto.empty:
+            eff_sheets['DOWN_Pareto'] = pareto
+        if not detail.empty:
+            eff_sheets['Detail'] = detail
+        self._write_sheets(os.path.join(output_dir, 'EFF_Analysis.xlsx'), eff_sheets,
+                           cancel_event=cancel_event)
+        alarm_sheets = {'Summary': alarm_summary}
+        if not alarm_kw.empty:
+            alarm_sheets['ByKeyword'] = alarm_kw
+        if not alarm_detail.empty:
+            alarm_sheets['Detail'] = alarm_detail
+        self._write_sheets(os.path.join(output_dir, 'Alarm_Analysis.xlsx'), alarm_sheets,
+                           cancel_event=cancel_event)
+        status_sheets = {'Summary': status_summary}
+        if not hourly.empty:
+            status_sheets['Hourly'] = hourly
+        if not detail.empty:
+            status_sheets['Detail'] = detail
+        self._write_sheets(os.path.join(output_dir, 'Status_Analysis.xlsx'), status_sheets,
+                           cancel_event=cancel_event)
+        if progress_callback:
+            progress_callback(94)
+        from models.report import build_ppt_report
+        ppt_path = build_ppt_report(
+            output_dir, process_name=process_name,
+            report_name=self._web_report_filename(data),
+        )
+        if progress_callback:
+            progress_callback(100)
+        return (
+            f"{ppt_path}（设备效能：{len(candidates)} 台机台，"
+            f"产出 {int(uph_ame.iloc[0]['总产出(个)']) if not uph_ame.empty and uph_ame.iloc[0]['总产出(个)'] else 0} 个，"
+            f"时间 {begin_time} ~ {end_time}）"
+        )
+
+    @staticmethod
+    def _web_report_filename(data):
+        """报告文件名：站位_机台号_开始日期-结束日期（如 CAW_CAW7203_20260812-20260813.pptx）。"""
+        q = data.get('query') or {}
+        station = (q.get('machine_type') or '').strip() or 'ALL'
+        nos = (q.get('machine_nos') or '').strip().replace('，', ',').replace(',', '_') or 'ALL'
+
+        def date_part(value):
+            m = re.search(r'(\d{4})[-/](\d{2})[-/](\d{2})', str(value or ''))
+            return ''.join(m.groups()) if m else ''
+
+        begin = date_part(data.get('begin_time'))
+        end = date_part(data.get('end_time'))
+        name = f"{station}_{nos}_{begin}-{end}.pptx"
+        return re.sub(r'[\\/:*?"<>|\s]+', '_', name)
+
+    @staticmethod
+    def _normalize_web_window(begin_time, end_time):
+        """联网 EFF 时间窗口：留空默认昨天 06:00 ~ 今天 06:00（与页面默认一致）。"""
+        today = datetime.now()
+        default_begin = (today - timedelta(days=1)).strftime('%Y/%m/%d 06:00:00')
+        default_end = today.strftime('%Y/%m/%d 06:00:00')
+
+        def norm(value, default):
+            if not value:
+                return default
+            v = str(value).strip()
+            for fmt in ('%Y/%m/%d %H:%M:%S', '%Y-%m-%d %H:%M:%S'):
+                try:
+                    return datetime.strptime(v, fmt).strftime('%Y/%m/%d %H:%M:%S')
+                except ValueError:
+                    continue
+            raise ValueError(f'时间格式错误：{value}（应为 yyyy/MM/dd HH:mm:ss）')
+
+        return norm(begin_time, default_begin), norm(end_time, default_end)
 
     # ---------- 功能四：报警分析 ----------
     def analyze_alarms(self, source_dir, output_dir, alarm_keywords="报警,ALARM,ERROR,NG,失败,异常,停止信号",

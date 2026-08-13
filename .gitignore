@@ -22,6 +22,12 @@ CoreTech Optical AME Key Metrics Definition v0.8.pdf
 # 用户自定义制程模板（本地持久化）
 custom_template.json
 
+# 用户维护的站位列表（本地持久化）
+station_list.json
+
+# 联网报告上次选择方案记忆（本地持久化）
+web_report_memory.json
+
 # PowerPoint 临时锁文件
 ~$*
 
@@ -33,3 +39,6 @@ EReasonList/
 
 # 本地视觉稿/拼图产出（不入库）
 output/
+
+# 联网报告/拼图临时产物（不入库）
+out put/

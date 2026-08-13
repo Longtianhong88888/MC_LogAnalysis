@@ -4,7 +4,7 @@
 
 ## 项目概况
 
-- 机台日志分析工具（PyQt5 桌面应用），支持 文档合并与内容拆分 / UPH 分析 / EFF 分析 / 报警分析 / 机台状态分析 / 一键分析（自动报告，仅跑 4 项分析；合并单独执行）。
+- 设备效能分析工具（PyQt5 桌面应用），支持 文档合并与内容拆分 / UPH 分析 / EFF 分析 / 报警分析 / 机台状态分析 / 一键分析（自动报告，仅跑 4 项分析且仅导出 Excel，不含 PPT；合并单独执行）/ 设备效能。
 - 仓库：`https://github.com/Longtianhong88888/MC_LogAnalysis`（分支 main）
 - 本地路径：`/Users/user/Desktop/PY/MC_LogAnalysis`，venv 在 `venv/`
 - 开发环境依赖：PyQt5、pandas、openpyxl、chardet、python-pptx、xlsxwriter（均已装入 venv）
@@ -113,6 +113,49 @@
 - 根因：① `_iter_monotonic` 对 42 万行日志逐行调用 `datetime.timestamp()`（本地时区转换，77s/次扫描），且一键分析里被多次调用；② `analyze_steps`/`build_gantt_rows` 周期循环对每周期线性扫描全部步骤事件（O(周期×事件)，LM 2.8 万×2.8 万）；③ `_match_kws` 每次调用重复编译正则。
 - 修复：① `calendar.timegm(t.utctimetuple())` 替代 timestamp()（统一 UTC，差值不变，微秒级）；② 周期循环改用 bisect 二分定位区间事件；③ `parse_ts`/关键词正则 lru_cache；周期循环每 500 次检查 cancel_event。
 - 效果：analyze_steps 84.5→13.6s、build_gantt_rows 84→11s、换盘测量 153→2.5s；LM 全量 UPH 339→38s；FR 28s/CAW 2.4s/SA 0.2s/ACF 2.7s 冒烟通过。
+
+## 联网 EFF（戰情中心 CMS 接口，2026-08-13）
+
+- 数据源页面：`http://10.147.214.130:8093/#/main/cma/deviceeff`（Vue SPA，IIS 部署，页面本身无数据）。
+- 后端：默认 `http://10.151.128.35:8098`（前端请求带 `isFs` 标记切换到 VUE_APP_FS_API；默认基址 10.151.129.104:8080 对这批接口返回 404，勿混用）。接口无需登录即可调用。
+- 接口（`models/web_api.py`，stdlib urllib，无新依赖）：
+  - `api/MESBaseSFC/Load_Machine?PlantID=` 机台清单（8S01 实测 4747 台）
+  - `api/EquipmentEfficiency/GetMachineEff` 逐机台 EFF/UPH 汇总（**机台类型与机台号至少填一项，否则返回空**）
+  - `api/Mahcine/LoadRunLog?MachineNO=&St=&Et=&PlantID=&MachineType=&Head=&status_merge_flg=` 机台状态日志（**注意后端路径拼写为 Mahcine**）
+  - `api/Mahcine/GetMachineStatusErrorTypeByConfig` 报错配置（详情弹窗用）
+- **LoadRunLog 语义**：RUN/IDLE/DOWN 状态段（非原始事件行日志）；`dataSource` 0=机台真实数据（秒级）、1=整点补录（小时插值）；字段 `happentime/endtime/status/reasonid/errorname/errorMsg/downFlag/spendTime(分钟)/head`。未知机台返回空 resultvalue 但不报错，需先经 Load_Machine 过滤。
+- **接入方式**：EFF 页新增「数据来源：本地日志 / 联网接口」。联网模式参数：接口地址/PlantID/机台类型/机台号/开始时间/结束时间/机台头Head；机台类型与机台号至少填一项；时间留空默认昨天 06:00 ~ 今天 06:00（与页面默认一致）；**无需源文件夹**（run_parse 校验已放行）。
+- **输出** EFF_Analysis.xlsx：Summary/Hourly/DOWN_Pareto/Detail/MachineEff。`DownFlag`∈Routine/Planned 的停机段直接归 pDT（`summarize_eff_coretech` 新增 `planned_down_flags`），EReason 清单与手动 ReasonID 仍可补充；Detail 的 FileName=机台号，MachineEff 为 GetMachineEff 逐机台汇总（分钟→秒，含产出/UPH）。
+- 代码点：`analysis.web_runlog_records/_parse_api_dt/summarize_machine_eff`、`_finalize_status` 保留 DownFlag 列、`log_model.analyze_eff(eff_source="web")` 走 `_analyze_eff_web`。
+- 验证：CAW7203 2026-08-12 06:00~08-13 06:00，状态段算得 EFF=47.92%，与 GetMachineEff 返回完全一致；新增 7 个用例（tests/test_web_eff.py），全量 80 用例通过。
+- **局限**：接口只有状态日志与汇总，无原始事件行（MarkEnd1/放熟料完成/Cavity cnt:1 等），UPH 周期/步骤/甘特分析仍依赖本地日志文件。
+
+## 设备效能（联网报告，2026-08-13）
+
+- **PPT 口径**：本地「一键分析（自动报告）」已不再生成 PPT（2026-08-13 移除），PPT 仅由「设备效能」以联网数据生成；一键分析仍输出 4 张 Excel。
+- **PPT 排版改善（2026-08-13，依据 PPT改善.md + 结构分析）**：
+  - 表格行高固定（表头 0.38 / 数据行 0.30，行多时压缩 ≥0.25）不再按模块高度均分；列数变化时按内容长度加权分配列宽。
+  - 联网 UPH 汇总列精简为 7 列（机台号/设备(机型)/状态/投入/产出/达成率/UPH），AMESummary 增加「统计周期」；UPH 页副标题带周期，图表面板标题同步为「各机台产出（个）」。
+  - 封面新增 KPI 摘要卡（总产出/实际UPH/综合EFF，`_add_web_kpi_cards`），封面标题「XX設備能效報告」，页头 chip「设备能效」。
+  - 停机 Pareto 副标题改结论式（停机主要集中在 XX，N 次，占 X%，建议优先排查）；机台状态汇总副标题带健康度（正常运行占比 vs ≥75% 基准，🟢/🟡/🔴）；趋势副标题带低点标注。
+  - 联网报告趋势页前置到第 2 页（`_move_slide`，先看全貌再看归因），页码/胶囊自动重排。
+  - 报警关键词中文 errorMsg 优先（`summarize_web_alarms`）。
+  - 未实现（可后续）：EFF 100% 堆叠条+损失拆解、Pareto 时长柱+次数折线双轴、报警小时热力图、UPH Top3/Bottom3 排名、新增 Dashboard 总览页。
+- 功能入口：**主窗口顶部独立页签「设备效能」（2026-08-13 从功能下拉拆出）**，页面选 **站位 → 机台号 → 时间范围**（默认昨天 06:00 ~ 今天 06:00）；无需源文件夹，页面自带输出文件夹与结果区（`web_report_result`），查询/报告结果显示在页签内（`controller._result_target` 路由，`_launch(result_target="web")`）。
+- **站位维护与机台自动更新（2026-08-13）**：站位列表存 `station_list.json`（`models/station_config.py`，默认 LM/SA/ACF/FR/CAW，已 gitignore），页面「维护站位」弹窗可增删；**站位与机台号均为可编辑下拉框（支持下拉选择或直接输入）**，选站位（含手输新站位，防抖 500ms）后自动从 CMS `Load_Machine` 拉取该站位机台号填入机台下拉，机台号可逗号分隔多台、留空=该站位全部；`controller.refresh_station_machines` 后台刷新 + `_poll_machines` 轮询回填，`view.selected_machine_nos()` 取下拉/输入文本；App 启动时自动刷新一次（app.py）。
+- **会话记忆（2026-08-13）**：关闭软件时把设备效能选择方案（站位/机台号/起止时间/接口地址/PlantID/Head/计划生产时间/pdt）写入 `web_report_memory.json`（已 gitignore），下次启动自动恢复（`MainWindow.restore_web_report_memory`，App 装配后先恢复再刷新机台；`closeEvent` → `controller.save_web_report_memory`）。机台下拉刷新时**同站位保留已输入/记忆的机台号**（`view._last_machine_station` 判断），换站位才清空。
+- **两步流程（2026-08-13 更新）**：页面内「查询数据」先拉数据并预览（逐机台产出 + 状态/EFF + 报警条数），无数据抛 `WebNoDataError` 并在结果区提示；确认有数据后「输出报告」用缓存数据生成 4 张 Excel + PPT（条件变化会提示重新查询）。控制器 `_launch` 通用后台任务（结果前缀/无数据异常已在 `_poll_worker` 处理）；`LogModel.fetch_web_report_data`（查询+预览）与 `generate_web_report_data`（生成）分离，`analyze_web_report` 兼容一键直出。
+- **UI 改善（2026-08-13，依据 UI改善.md）**：设备效能页签三段式布局——①顶部必选查询区（站位+机台号+「🔍 查询数据」，机台号提示“留空则查询该站位下所有机台”）；②时间行 + 可折叠「▼/▲ 高级参数」（接口地址/PlantID/机台头Head❓/计划生产时间/停机ReasonID）；③底部输出区（📄 输出报告 默认禁用，查询成功才启用 + 📁 输出路径/选择保存路径）+ 结果控制台（状态栏「当前状态/数据行数/最后查询」+ 带时间戳日志 `QPlainTextEdit` + 前 10 行预览 `QTableWidget`）。查询完成自动回填状态/表格/计划生产时间（留空则填窗口小时，可手动覆盖）。`fetch_web_report_data` 返回结构化 `preview_rows/record_count/alarm_count/window_hours` 供界面展示。
+- **时间选择器（2026-08-13）**：开始/结束时间改为 `QDateTimeEdit`（`setCalendarPopup(True)`，格式 yyyy/MM/dd HH:mm:ss，默认昨/今 06:00）——点下拉箭头弹日历选日期，时间可直接修改；记忆恢复用 `QDateTime.fromString` 解析；查询前校验结束时间晚于开始时间。
+- **UI 改造（2026-08-13，依据 UI改善.md）**：设备效能页 Apple 化——页面标题行（#webTitle 30px/描述 #webSub）；第一行 站位(150)+机台号(280)+查询数据(蓝主按钮)；第二行 开始~结束(QDateTimeEdit 200px)+「↺ 重置到今天」+❓提示；第三行「▶/▼ 高级参数」平铺一行（接口/PlantID/Head❓/计划生产(h)/停机Reason，· 分隔，`QPropertyAnimation` 平滑展开）；输出报告=outline 描边按钮，查询成功变绿（success 属性+✓ 文案）；状态胶囊（● 状态/📋 行数/🕒 最后查询，chip QSS）；日志框 #webLog（#F5F5F7 圆角等宽 11px）；预览表前 5 行、表头 #F9F9FB；控件圆角统一 10px、白底 #D2D2D7 边框、聚焦 #007AFF；版权 10px #AEAEB2。
+- **报告文件名（2026-08-13）**：联网 PPT 输出名自动为 `站位_机台号_开始日期-结束日期.pptx`（如 `CAW_CAW7203_20260812-20260813.pptx`；机台号多台用 `_` 连接，留空=ALL，非法字符替换为 `_`），由 `LogModel._web_report_filename` 在 `generate_web_report_data` 统一生成。
+- **封面站位与 Pareto 中文（2026-08-13）**：设备效能封面标题前缀改用**页面选的站位**（AMESummary「站位」列 + `_TITLE_PREFIX` 增加裸站位名），不再用制程模板名；停机 Pareto 增加「原因名称」列，优先取联网数据自带 errorMsg（中文，英文 errorname 备用），PPT 图表/表格/结论副标题均用中文原因。
+- 一键生成：`LogModel.analyze_web_report` 从 CMS 拉 产出看板（GetMachineOutputBoard）+ EFF 汇总（GetMachineEff）+ 状态日志（LoadRunLog），落 4 张 Excel（UPH_Analysis/EFF_Analysis/Alarm_Analysis/Status_Analysis）后调 `build_ppt_report(report_name="Web_Report.pptx")`。
+- UPH Excel：Summary=逐机台 投入/产出/目标/达成率/UPH（UPH 优先取 GetMachineEff.uph，否则 产出÷窗口小时）；AMESummary=实际UPH/总投入/总产出/机台数/**数据来源=联网接口(CMS)**（report.py 据此走联网 UPH 页分支：表格=逐机台汇总，图表=各机台产出，副标题=总产出+实际UPH+机台数）。
+- 报警 Excel：从 LoadRunLog 原始 DOWN 段构建（`summarize_web_alarms`，Summary 按机台、ByKeyword 按报错名、Detail 含原因名称），列名与本地报警一致，PPT 页直接复用。
+- 站位映射：machine_type=站位名（CMS 机台清单 8S01：LM 55 / SA 70 / ACF 69 / FR 10（AR64xx）/ CAW 4）；`ACF DownTimeAnalysisTOP5.aspx` 这类 MMS 页面带空格需 %20 编码（未接入，仅调研）。
+- 实测：CAW7203 08/12~08/13 生成 7 页 PPT（封面/UPH产出/EFF/停机Pareto/报警/状态汇总/状态趋势），UPH 页副标题「总产出 10940 个 · 实际UPH 455.83/h · 1 台机台」。
+- 代码点：`log_model._fetch_web_eff_records`（公共取数，返回 records/raw_logs/eff_rows/candidates/时间）、`fetch_web_report_data`/`generate_web_report_data`/`analyze_web_report`；`analysis.build_web_uph_sheets/summarize_web_alarms`；`report.build_ppt_report` 联网 UPH 分支；`views._build_web_report_page/apply_station_machines/selected_machine_nos`；`controller.refresh_station_machines/manage_stations`。
 
 ## 代码质量优化（2026-08-08，依据 project review.md）
 

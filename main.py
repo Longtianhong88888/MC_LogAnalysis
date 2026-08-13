@@ -53,7 +53,7 @@ def main():
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication(sys.argv)
-    app.setApplicationName("MC Log Analysis Tool")
+    app.setApplicationName("设备效能分析工具")
     icon = QIcon(resource_path("log.ico"))
     if not icon.isNull():
         app.setWindowIcon(icon)
@@ -63,7 +63,7 @@ def main():
     if splash is not None:
         splash.show()
         splash.showMessage(
-            "正在启动 MC Log Analysis Tool ...",
+            "正在启动 设备效能分析工具 ...",
             Qt.AlignBottom | Qt.AlignCenter,
             Qt.white,
         )

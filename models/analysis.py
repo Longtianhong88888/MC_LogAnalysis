@@ -3,7 +3,7 @@ import os
 import bisect
 import calendar
 import statistics
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import Counter
 from functools import lru_cache
 
@@ -1182,11 +1182,13 @@ def summarize_uph_ame(cycles_df, units_per_cycle=1, ideal_ct=None, max_ct=None,
 
 
 def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pdt_reason_ids=None,
-                           reason_map=None):
+                           reason_map=None, planned_down_flags=None):
     """
     CoreTech AME EFF（基于机器状态）：
     EFF = 操作时间(运行RUN+待机IDLE) / 计划生产时间
     可用性损失 = 停机时间(DOWN)，可依据 ReasonID 拆分为 计划停机pDT / 非计划停机uDT。
+    planned_down_flags：联网数据源提供 DownFlag 列时，命中集合（如 Routine downtime）
+    的停机段直接归为 pDT，其余仍按 EReason 清单/手动 ReasonID 补充。
     """
     secs = {r['状态']: r['总时长(秒)'] for _, r in status_summary.iterrows()}
     run = float(secs.get('RUN', 0.0))
@@ -1198,6 +1200,10 @@ def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pd
     down_rows = status_detail.loc[status_detail['Status'] == 'DOWN'] if not status_detail.empty else status_detail
     # pDT 判定：EReason 清单匹配优先（Planned/Routine Downtime），手动计划停机码补充
     planned_mask = pd.Series(False, index=down_rows.index)
+    if planned_down_flags and 'DownFlag' in down_rows.columns:
+        planned_mask |= down_rows['DownFlag'].fillna('').astype(str).str.strip().isin(
+            {str(f).strip() for f in planned_down_flags if str(f).strip()}
+        )
     if reason_map:
         planned_mask |= down_rows['ReasonID'].apply(lambda rid: is_planned(reason_map, rid))
     if pdt_reason_ids:
@@ -1219,6 +1225,173 @@ def summarize_eff_coretech(status_summary, status_detail, planned_hours=None, pd
         '操作时间(秒)': round(operating, 3),
         'EFF(%)': eff,
     }])
+
+
+def summarize_machine_eff(eff_rows, begin_time='', end_time=''):
+    """把 CMS GetMachineEff 的逐机台汇总标准化为中文列（接口返回分钟，统一转秒）。"""
+    cols = ['机台号', '机台类型', '设备', '工位', '状态', '产出(个)', 'UPH(个/小时)',
+            'EFF(%)', '运行时间RUN(秒)', '待机IDLE(秒)', '停机DOWN(秒)',
+            '计划停机pDT(秒)', '非计划停机uDT(秒)', '时间范围']
+    rows = []
+    for r in eff_rows or []:
+        def minutes(key):
+            try:
+                return float(r.get(key) or 0.0) * 60.0
+            except (TypeError, ValueError):
+                return 0.0
+
+        def to_num(value):
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return 0.0
+
+        output_list = r.get('outputList') or []
+        outputs = [to_num(o.get('value')) for o in output_list if isinstance(o, dict)]
+        rows.append({
+            '机台号': str(r.get('machineNO') or ''),
+            '机台类型': str(r.get('machineType') or ''),
+            '设备': str(r.get('deviceName') or ''),
+            '工位': str(r.get('opno') or ''),
+            '状态': str(r.get('status') or ''),
+            '产出(个)': int(round(sum(outputs))) if outputs else '',
+            'UPH(个/小时)': r.get('uph') if r.get('uph') not in (None, '') else '',
+            'EFF(%)': r.get('eff') if r.get('eff') not in (None, '') else '',
+            '运行时间RUN(秒)': round(minutes('runTime'), 3),
+            '待机IDLE(秒)': round(minutes('idleTime'), 3),
+            '停机DOWN(秒)': round(minutes('errorTime'), 3),
+            '计划停机pDT(秒)': round(minutes('plannedDT'), 3),
+            '非计划停机uDT(秒)': round(minutes('unPlannedDT'), 3),
+            '时间范围': f"{begin_time} ~ {end_time}",
+        })
+    return pd.DataFrame(rows, columns=cols)
+
+
+def _window_hours(begin_time, end_time):
+    """联网时间窗口小时数；解析失败返回 0。"""
+    b = _parse_api_dt(begin_time)
+    e = _parse_api_dt(end_time)
+    if b is None or e is None or e <= b:
+        return 0.0
+    return (e - b).total_seconds() / 3600.0
+
+
+def build_web_uph_sheets(output_rows, eff_rows, begin_time='', end_time='', station=''):
+    """联网 UPH 汇总：逐机台 投入/产出/达成率/UPH（Summary）+ 整机汇总（AMESummary）。
+
+    output_rows 来自 GetMachineOutputBoard（窗口产出），eff_rows 来自 GetMachineEff
+    （提供 UPH 字段兜底）。UPH = 窗口产出 ÷ 窗口小时数，与工具"实际 UPH"口径一致。
+    """
+    hours = _window_hours(begin_time, end_time)
+    eff_by_no = {}
+    for r in eff_rows or []:
+        mno = str(r.get('machineNO') or '').strip()
+        if mno:
+            eff_by_no[mno] = r
+
+    def to_num(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    summary_cols = ['机台号', '设备(机型)', '状态', '投入(个)', '产出(个)',
+                    '达成率(%)', 'UPH(个/小时)']
+    summary_rows = []
+    total_input = 0.0
+    total_output = 0.0
+    for r in output_rows or []:
+        mno = str(r.get('machine_no') or r.get('machineNO') or '').strip()
+        if not mno:
+            continue
+        inp = to_num(r.get('input'))
+        out = to_num(r.get('output'))
+        target = to_num(r.get('output_target'))
+        hit = to_num(r.get('hit_rate'))
+        total_input += inp
+        total_output += out
+        eff = eff_by_no.get(mno) or {}
+        uph = to_num(eff.get('uph')) if eff.get('uph') not in (None, '') else 0.0
+        if not uph and hours:
+            uph = out / hours
+        device = str(r.get('device_name') or '').strip()
+        mtype = str(r.get('machine_type') or '').strip()
+        device_label = f"{device}({mtype})" if device and mtype else (device or mtype)
+        summary_rows.append({
+            '机台号': mno,
+            '设备(机型)': device_label,
+            '状态': str(r.get('status') or '').strip(),
+            '投入(个)': int(round(inp)),
+            '产出(个)': int(round(out)),
+            '达成率(%)': round(hit * 100, 2) if hit else '',
+            'UPH(个/小时)': round(uph, 2) if uph else '',
+        })
+    summary = pd.DataFrame(summary_rows, columns=summary_cols)
+    ame = pd.DataFrame([{
+        '实际UPH(个/小时)': round(total_output / hours, 2) if hours and total_output else '',
+        '总投入(个)': int(round(total_input)) if total_input else '',
+        '总产出(个)': int(round(total_output)) if total_output else '',
+        '机台数': len(summary_rows),
+        '数据来源': '联网接口(CMS)',
+        '站位': station,
+        '统计周期': f"{begin_time} ~ {end_time}",
+    }])
+    return summary, ame
+
+
+def summarize_web_alarms(raw_logs):
+    """联网报警汇总：从 LoadRunLog 原始状态段提取 DOWN 段（报错名/报错内容）。
+
+    raw_logs: [{'machineNo': ..., 'rows': [LoadRunLog 行, ...]}, ...]
+    输出与本地报警分析同结构：Summary(模块/报警次数/不同报警消息数)、
+    ByKeyword(命中关键词/报警次数)、Detail(FileName/Timestamp/Module/命中关键词/Message/Content/原因名称)。
+    """
+    detail = []
+    for entry in raw_logs or []:
+        mno = str(entry.get('machineNo') or '').strip()
+        for r in entry.get('rows') or []:
+            if str(r.get('status') or '').strip().upper() not in ('DOWN',):
+                continue
+            name = str(r.get('errorname') or '').strip()
+            msg = str(r.get('errorMsg') or '').strip()
+            zh = str(r.get('errorMsg') or '').strip()
+            reason = str(r.get('reasonid') or '').strip()
+            # 中文报错优先（英文 errorname 常超长，图表/表格易截断）
+            keyword = msg or name or reason or '未命名停机'
+            content = ' '.join(str(v) for v in (
+                r.get('happentime'), r.get('status'), reason, name, msg, r.get('downFlag')
+            ) if str(v).strip())
+            detail.append({
+                'FileName': mno,
+                'Timestamp': str(r.get('happentime') or ''),
+                'Module': mno,
+                '命中关键词': keyword,
+                'Message': msg or name or keyword,
+                'Content': content,
+                '原因名称': zh or name,
+            })
+    if not detail:
+        empty = pd.DataFrame(columns=['模块', '报警次数', '不同报警消息数'])
+        empty_kw = pd.DataFrame(columns=['命中关键词', '报警次数'])
+        empty_d = pd.DataFrame(
+            columns=['FileName', 'Timestamp', 'Module', '命中关键词', 'Message', 'Content', '原因名称']
+        )
+        return empty, empty_kw, empty_d
+    detail_df = pd.DataFrame(detail)
+    summary = (
+        detail_df.groupby('Module', sort=False)
+        .agg(报警次数=('Content', 'count'), 不同报警消息数=('Message', 'nunique'))
+        .reset_index()
+        .rename(columns={'Module': '模块'})
+    )
+    by_keyword = (
+        detail_df.groupby('命中关键词', sort=False)
+        .agg(报警次数=('Content', 'count'))
+        .reset_index()
+        .sort_values('报警次数', ascending=False)
+        .reset_index(drop=True)
+    )
+    return summary, by_keyword, detail_df
 
 
 def down_pareto(status_detail, reason_map=None):
@@ -1325,6 +1498,8 @@ def _normalize_status(raw):
 def _finalize_status(records):
     """由状态记录（StartTime/Status/ReasonID/DurationSeconds/NextStatus/_ts）生成汇总/按小时/明细。"""
     detail_cols = ['FileName', 'StartTime', 'Status', 'ReasonID', 'DurationSeconds', 'NextStatus']
+    if any(str(r.get('DownFlag', '') or '').strip() for r in records):
+        detail_cols.append('DownFlag')
     detail_df = pd.DataFrame([{k: r[k] for k in detail_cols} for r in records], columns=detail_cols)
     if detail_df.empty:
         return (
@@ -1372,6 +1547,62 @@ def _finalize_status(records):
             'EFF(%)': round((run + idle) / total_h * 100, 2) if total_h else '',
         })
     return summary, pd.DataFrame(hourly_rows), detail_df
+
+
+def _parse_api_dt(value):
+    """解析 CMS 接口时间：yyyy/MM/dd HH:mm:ss 或 yyyy-MM-dd（纯日期按当天 00:00）。"""
+    if not value:
+        return None
+    v = str(value).strip()
+    for fmt in ('%Y/%m/%d %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y/%m/%d', '%Y-%m-%d'):
+        try:
+            return datetime.strptime(v, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def web_runlog_records(web_rows, machine_no):
+    """把 CMS LoadRunLog 返回的状态段转换为 _finalize_status 可用的记录。
+
+    字段：FileName=机台号；DurationSeconds 优先按 (endtime-happentime) 计算，
+    endtime 缺失时回退到 spendTime(分钟)；DownFlag 保留用于计划停机判定。
+    """
+    records = []
+    for r in web_rows:
+        raw_status = str(r.get('status') or '').strip()
+        if not raw_status:
+            continue
+        status = _normalize_status(raw_status)
+        if status not in ('RUN', 'IDLE', 'DOWN', 'WARN'):
+            continue
+        start = _parse_api_dt(r.get('happentime'))
+        end = _parse_api_dt(r.get('endtime'))
+        if start is None:
+            continue
+        spend_seconds = None
+        try:
+            spend_seconds = float(r.get('spendTime')) * 60.0
+        except (TypeError, ValueError):
+            spend_seconds = None
+        if end is None and spend_seconds:
+            end = start + timedelta(seconds=spend_seconds)
+        duration = (end - start).total_seconds() if end is not None else None
+        if duration is None or duration <= 0:
+            duration = spend_seconds
+        if duration is None or duration <= 0:
+            continue
+        records.append({
+            'FileName': machine_no,
+            'StartTime': format_ts(start),
+            'Status': status,
+            'ReasonID': str(r.get('reasonid') or '').strip(),
+            'DurationSeconds': round(duration, 3),
+            'NextStatus': '',
+            '_ts': start,
+            'DownFlag': str(r.get('downFlag') or '').strip(),
+        })
+    return records
 
 
 def analyze_status(rows, cancel_event=None):

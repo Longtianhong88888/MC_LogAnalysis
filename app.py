@@ -7,3 +7,5 @@ class App:
         self.controller = LogController(None)
         self.root = MainWindow(self.controller)
         self.controller.view = self.root
+        self.root.restore_web_report_memory()
+        self.controller.refresh_station_machines()

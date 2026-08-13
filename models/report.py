@@ -36,6 +36,11 @@ _TITLE_PREFIX = {
     "FR 机台": "FR",
     "SA 机台": "SA",
     "ACF 三機": "ACF",
+    "LM": "LM",
+    "CAW": "CAW",
+    "FR": "FR",
+    "SA": "SA",
+    "ACF": "ACF",
 }
 _TEMPLATE_CANDIDATES = ["Analysis_Report.pptx", "PPT模板.pptx"]
 SECTION_TITLES = ["UPH 分析", "EFF 分析", "停机 Pareto", "报警分析", "机台状态汇总", "机台状态趋势"]
@@ -106,6 +111,187 @@ def _set_text_preserving(tf, text):
         tf.text = str(text)
 
 
+def _set_run_font(run, size, color, bold=False):
+    """新文本框 run 字体：中文微软雅黑、拉丁 Arial。"""
+    run.font.size = Pt(size)
+    run.font.bold = bold
+    run.font.color.rgb = color
+    run.font.name = "Arial"
+    rPr = run._r.get_or_add_rPr()
+    for tag in ("a:ea", "a:cs"):
+        el = rPr.find(qn(tag))
+        if el is None:
+            el = rPr.makeelement(qn(tag), {})
+            rPr.append(el)
+        el.set("typeface", "微软雅黑")
+
+
+def _text_len(text, pt):
+    """近似文本宽度（基准 600px 画布）：中文全角、拉丁半角。"""
+    unit = pt / 1.6
+    return sum(unit if ord(ch) > 127 else unit * 0.55 for ch in str(text))
+
+
+def _wrap_text(text, max_w, pt):
+    lines = []
+    cur = ""
+    for ch in str(text):
+        trial = cur + ch
+        if cur and _text_len(trial, pt) > max_w:
+            lines.append(cur)
+            cur = ch
+        else:
+            cur = trial
+    if cur:
+        lines.append(cur)
+    return lines or [""]
+
+
+# Apple 配色（UI改善.md 第 7 节）
+C_APPLE_TITLE = RGBColor.from_string("1D1D1F")
+C_APPLE_TEXT = RGBColor.from_string("3A3A3C")
+C_APPLE_SUB = RGBColor.from_string("86868B")
+C_APPLE_RED = RGBColor.from_string("FF3B30")
+C_APPLE_LIGHT_RED = RGBColor.from_string("FFB4AB")
+C_APPLE_GREEN = RGBColor.from_string("34C759")
+
+
+_KPI_NUM_RE = re.compile(r"^[0-9][0-9,]*(?:\.[0-9]+)?%?$")
+
+
+def _web_kpi_count(prs):
+    if not prs.slides:
+        return 0
+    return sum(
+        1 for shape in prs.slides[0].shapes
+        if shape.has_text_frame and _KPI_NUM_RE.match(shape.text_frame.text.strip())
+    )
+
+
+def _update_web_kpi(prs, values):
+    """封面 KPI 数值按出现顺序原位更新（模板已带 KPI 卡时用）。"""
+    if not prs.slides:
+        return
+    idx = 0
+    for shape in prs.slides[0].shapes:
+        if not shape.has_text_frame:
+            continue
+        txt = shape.text_frame.text.strip()
+        if _KPI_NUM_RE.match(txt) and idx < len(values):
+            _set_text_preserving(shape.text_frame, str(values[idx]))
+            idx += 1
+
+
+def _redraw_bar_list(slide, rows, title, top3=True):
+    """停机/报警页按数据重绘横向条形列表（模板静态条形替换为数据驱动）。"""
+    PX = 13.333 / 600.0
+    panel = None
+    for shape in slide.shapes:
+        if not shape.width or not shape.height:
+            continue
+        w = shape.width / 914400
+        h = shape.height / 914400
+        top = shape.top / 914400
+        # 内容面板：全宽圆角矩形（几何特征识别，兼容各渲染版本）
+        if 12.0 < w < 12.8 and 4.8 < h < 5.4 and 1.5 < top < 2.0:
+            panel = shape
+            break
+    if panel is not None:
+        px0 = panel.left / 914400
+        py0 = panel.top / 914400
+        px1 = px0 + panel.width / 914400
+        py1 = py0 + panel.height / 914400
+        for shape in list(slide.shapes):
+            if shape is panel:
+                continue
+            sx0 = shape.left / 914400
+            sy0 = shape.top / 914400
+            sx1 = sx0 + (shape.width or 0) / 914400
+            sy1 = sy0 + (shape.height or 0) / 914400
+            if sx0 >= px0 - 0.01 and sy0 >= py0 - 0.01 and sx1 <= px1 + 0.01 and sy1 <= py1 + 0.01:
+                slide.shapes._spTree.remove(shape._element)
+    x0, y0, x1, y1 = 30, 110, 570, 298
+    tb = slide.shapes.add_textbox(Inches(x0 * PX), Inches((y0 + 2) * PX),
+                                  Inches(4.5), Inches(0.32))
+    p = tb.text_frame.paragraphs[0]
+    r = p.add_run()
+    r.text = title
+    _set_run_font(r, 16, C_APPLE_TITLE, True)
+    py0c, py1c = y0 + 20, y1 - 4
+    rh = (py1c - py0c) / len(rows)
+    bar_x0 = x0
+    bar_max = (x1 - 150) - bar_x0
+    maxv = max(r[1] for r in rows)
+    threshold = None
+    if top3:
+        distinct = sorted({r[1] for r in rows}, reverse=True)
+        threshold = distinct[2] if len(distinct) >= 3 else (distinct[-1] if distinct else 0)
+    for i, row in enumerate(rows):
+        lab, v = row[0], row[1]
+        pct = row[2] if len(row) > 2 else None
+        cy = py0c + rh * (i + 0.5)
+        if top3:
+            red = v >= threshold
+            col = C_APPLE_RED if red else C_APPLE_LIGHT_RED
+            label_fill = RGBColor.from_string("FFFFFF") if red else C_APPLE_TEXT
+        else:
+            col = C_APPLE_RED if i == 0 else C_APPLE_GREEN
+            label_fill = RGBColor.from_string("FFFFFF")
+        bend = bar_x0 + (v / maxv) * bar_max
+        bar_w = bend - bar_x0
+        bar = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE, Inches(bar_x0 * PX), Inches((cy - 8) * PX),
+            Inches(bar_w * PX), Inches(16 * PX),
+        )
+        bar.fill.solid()
+        bar.fill.fore_color.rgb = col
+        bar.line.fill.background()
+        bar.shadow.inherit = False
+        try:
+            bar.adjustments[0] = 0.18
+        except Exception:
+            pass
+        value_txt = f"{v:,.0f}s · {pct}%" if pct is not None else f"{v:,}"
+        tv = slide.shapes.add_textbox(Inches((x1 - 150) * PX),
+                                      Inches(cy * PX) - Inches(0.13),
+                                      Inches(1.5), Inches(0.26))
+        ttf = tv.text_frame
+        ttf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tp = ttf.paragraphs[0]
+        tp.alignment = PP_ALIGN.RIGHT
+        tr = tp.add_run()
+        tr.text = value_txt
+        _set_run_font(tr, 13, C_APPLE_TEXT, True)
+        single = _wrap_text(lab, 99999, 13)
+        fits = bar_w > 48 and len(single) == 1 and _text_len(lab, 13) <= bar_w - 16
+        if fits:
+            tb_lab = slide.shapes.add_textbox(Inches((bar_x0 + 8) * PX),
+                                              Inches(cy * PX) - Inches(0.13),
+                                              Inches((bar_w - 16) * PX), Inches(0.26))
+            ltf = tb_lab.text_frame
+            ltf.vertical_anchor = MSO_ANCHOR.MIDDLE
+            lp = ltf.paragraphs[0]
+            lp.alignment = PP_ALIGN.LEFT
+            lr = lp.add_run()
+            lr.text = lab
+            _set_run_font(lr, 13, label_fill, True)
+        else:
+            value_w = _text_len(value_txt, 13) + 8
+            max_w = max(60, (x1 - 6) - (bend + 6) - value_w - 8)
+            lines = _wrap_text(lab, max_w, 13)[:2]
+            start_y = cy - (len(lines) * 11) / 2.0
+            for k, ln in enumerate(lines):
+                tb_out = slide.shapes.add_textbox(Inches((bend + 6) * PX),
+                                                  Inches((start_y + k * 11) * PX),
+                                                  Inches(max_w * PX), Inches(0.2))
+                otf = tb_out.text_frame
+                otf.vertical_anchor = MSO_ANCHOR.MIDDLE
+                op = otf.paragraphs[0]
+                or_ = op.add_run()
+                or_.text = ln
+                _set_run_font(or_, 13, C_APPLE_TEXT, False)
+
+
 def _content_layout(prs):
     for layout in prs.slide_layouts:
         if "content" in layout.name.lower():
@@ -167,7 +353,7 @@ def _add_dark_gantt_slide(prs, index, total):
     tag.fill.fore_color.rgb = RGBColor(0x16, 0x23, 0x3C)
     tag.line.fill.background()
     tag.shadow.inherit = False
-    tag.text_frame.text = "机台日志分析"
+    tag.text_frame.text = "设备效能"
     tag.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
     tag.text_frame.paragraphs[0].font.size = Pt(13)
     tag.text_frame.paragraphs[0].font.bold = True
@@ -443,15 +629,16 @@ def _report_title(process_name):
     prefix = _TITLE_PREFIX.get(process_name)
     if prefix:
         return f"{prefix}設備一鍵自動分析報告"
-    return "MC Log 分析报告"
+    return "设备效能分析报告"
 
 
-def _fill_template_cover(prs, process_name):
+def _fill_template_cover(prs, process_name, web=False):
     """替换封面标题中的制程字母（XX/LM/CAW/FR），其余内容与样式保持不变。
 
     兼容两种模板形态：
     - 旧模板：标题为独立 run（"LM" + "設備一鍵自動分析報告"）；
     - 新模板（成品视觉稿）：标题为整段单 run（"LM設備一鍵自動分析報告"）。
+    web=True 时把「一鍵自動分析」替换为「联网」，标题如「LM設備联网分析報告」。
     """
     if not prs.slides:
         return
@@ -459,6 +646,18 @@ def _fill_template_cover(prs, process_name):
     if prefix is None:
         return
     cover = prs.slides[0]
+    if web:
+        # 新模板封面标题：XX設備能效報告 → 站位前缀替换
+        for shape in cover.shapes:
+            if not shape.has_text_frame:
+                continue
+            tf = shape.text_frame
+            if "能效報告" in tf.text and tf.paragraphs and tf.paragraphs[0].runs:
+                runs = tf.paragraphs[0].runs
+                runs[0].text = f"{prefix}設備能效報告"
+                for r in runs[1:]:
+                    r.text = ""
+                return
     for shape in cover.shapes:
         if not shape.has_text_frame:
             continue
@@ -473,7 +672,61 @@ def _fill_template_cover(prs, process_name):
                 runs[0].text = prefix + old[len(head):]
                 for r in runs[1:]:
                     r.text = ""
+            if web and "一鍵自動分析" in tf.text:
+                for para in tf.paragraphs:
+                    for run in para.runs:
+                        if "一鍵自動分析" in run.text:
+                            run.text = run.text.replace("一鍵自動分析", "联网")
         return
+
+
+def _add_web_kpi_cards(slide, kpis):
+    """封面底部 KPI 摘要卡：[(标签, 值), ...] 横向排列，深色驾驶舱风格。"""
+    if not kpis:
+        return
+    margin_l, top, gap, height = 0.53, 5.82, 0.28, 1.05
+    total_w = 12.27
+    card_w = (total_w - gap * (len(kpis) - 1)) / len(kpis)
+    panel = RGBColor.from_string(_TEMPLATE_DESIGN["theme_panel"])
+    line = RGBColor.from_string(_TEMPLATE_DESIGN["theme_panel_line"])
+    accent = RGBColor.from_string(_TEMPLATE_DESIGN["theme_accent"])
+    sub = RGBColor.from_string(_TEMPLATE_DESIGN["theme_sub"])
+    for i, (label, value) in enumerate(kpis):
+        left = margin_l + i * (card_w + gap)
+        card = slide.shapes.add_shape(
+            MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top),
+            Inches(card_w), Inches(height),
+        )
+        card.fill.solid()
+        card.fill.fore_color.rgb = panel
+        card.line.color.rgb = line
+        card.shadow.inherit = False
+        tf = card.text_frame
+        tf.word_wrap = True
+        tf.margin_top = Inches(0.06)
+        tf.margin_bottom = Inches(0.06)
+        p0 = tf.paragraphs[0]
+        p0.text = str(value)
+        p0.font.size = Pt(30)
+        p0.font.bold = True
+        p0.font.color.rgb = accent
+        p0.alignment = PP_ALIGN.CENTER
+        p1 = tf.add_paragraph()
+        p1.text = str(label)
+        p1.font.size = Pt(13)
+        p1.font.color.rgb = sub
+        p1.alignment = PP_ALIGN.CENTER
+
+
+def _move_slide(prs, from_index, to_index):
+    """按索引移动幻灯片（用于设备效能报告把趋势页前置）。"""
+    sld_id_lst = prs.slides._sldIdLst
+    sld_ids = list(sld_id_lst)
+    if not (0 <= from_index < len(sld_ids) and 0 <= to_index < len(sld_ids)):
+        return
+    el = sld_ids[from_index]
+    sld_id_lst.remove(el)
+    sld_id_lst.insert(to_index, el)
 
 
 def _delete_slide(prs, index):
@@ -645,16 +898,30 @@ def _update_table(slide, df, max_rows=12):
         elif len(trs) > need:
             for tr in trs[need:]:
                 t_el.remove(tr)
-        # 行高均分到模块高度（不溢出）
-        row_h_in = box_h / need
-        for ri in range(need):
-            table.rows[ri].height = Inches(row_h_in)
-        # 列数变化时按模块宽度重新均分；不变时保留模板原始列宽
-        if need_cols != original_cols and need_cols > 0:
-            col_w_in = box_w / need_cols
-            for ci in range(need_cols):
-                table.columns[ci].width = Inches(col_w_in)
+        # 行高固定：表头 0.38、数据行 0.30；行多时压缩到模块高度内（≥0.25）
+        header_h = 0.38
+        data_h = 0.30
+        total_h = header_h + rows * data_h
+        if total_h > box_h:
+            data_h = max(0.25, (box_h - header_h) / max(rows, 1))
+        table.rows[0].height = Inches(header_h)
+        for ri in range(1, need):
+            table.rows[ri].height = Inches(data_h)
+        # 列数变化时按内容长度加权分配列宽，避免窄面板多列被挤压
         n_cols = min(cols, need_cols)
+        if need_cols != original_cols and need_cols > 0:
+            lens = []
+            for j in range(n_cols):
+                m = sum(2 if ord(ch) > 127 else 1 for ch in str(data.columns[j]))
+                for i in range(rows):
+                    s = _display_value(data.columns[j], data.iloc[i, j])
+                    m = max(m, sum(2 if ord(ch) > 127 else 1 for ch in str(s)))
+                lens.append(max(m, 5))
+            total_len = sum(lens)
+            raw = [max(box_w * ln / total_len, 0.55) for ln in lens]
+            scale = box_w / sum(raw)
+            for ci in range(need_cols):
+                table.columns[ci].width = Inches(raw[ci] * scale)
         for j in range(n_cols):
             _set_text_preserving(table.cell(0, j).text_frame, str(data.columns[j]))
         for i, (_, row) in enumerate(data.iterrows(), start=1):
@@ -747,9 +1014,38 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
         None,
     )
     prs = Presentation(template) if template else Presentation()
+    ame_early = _read_sheet(os.path.join(output_dir, "UPH_Analysis.xlsx"), "AMESummary")
+    web_mode = not ame_early.empty and "数据来源" in ame_early.columns
     if template:
-        _fill_template_cover(prs, process_name)
+        web_station = ""
+        if web_mode and not ame_early.empty:
+            web_station = str(ame_early.iloc[0].get("站位") or "").strip()
+        _fill_template_cover(prs, web_station or process_name, web=web_mode)
         _prepare_template_pages(prs)
+        if web_mode and not ame_early.empty:
+            eff_early = _read_sheet(os.path.join(output_dir, "EFF_Analysis.xlsx"), "Summary")
+            eff_val = ""
+            if not eff_early.empty and eff_early.iloc[0].get("EFF(%)") not in (None, ""):
+                eff_val = f"{eff_early.iloc[0].get('EFF(%)')}%"
+            row = ame_early.iloc[0]
+
+            def kpi_num(value):
+                try:
+                    return f"{int(float(value)):,}"
+                except (TypeError, ValueError):
+                    return str(value)
+
+            kpis = [
+                ("总产出(个)", kpi_num(row.get("总产出(个)") or "")),
+                ("实际UPH(pcs/h)", str(row.get("实际UPH(个/小时)") or "")),
+                ("综合EFF(%)", eff_val),
+            ]
+            if any(v for _, v in kpis):
+                if _web_kpi_count(prs) >= 3:
+                    # 新模板封面已带 KPI 卡：原位更新数值
+                    _update_web_kpi(prs, [v for _, v in kpis])
+                else:
+                    _add_web_kpi_cards(prs.slides[0], kpis)
     else:
         prs.slide_width = Inches(13.333)
         prs.slide_height = Inches(7.5)
@@ -767,8 +1063,34 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
         to_remove.append("UPH 分析")
     else:
         uph_summary = _read_sheet(os.path.join(output_dir, "UPH_Analysis.xlsx"), "Summary")
-        machine_mode = not ame.empty and "瓶颈机台" in ame.columns
-        if machine_mode:
+        if "数据来源" in ame.columns:
+            # 联网机台产出汇总：逐机台 产出/达成率 + 整机实际 UPH
+            total_out = str(ame.iloc[0].get("总产出(个)") or "")
+            uph_val = str(ame.iloc[0].get("实际UPH(个/小时)") or "")
+            n_mach = str(ame.iloc[0].get("机台数") or "")
+            period = str(ame.iloc[0].get("统计周期") or "")
+            subtitle = f"联网机台产出：总产出 {total_out} 个 · 实际UPH {uph_val}/h · {n_mach} 台机台"
+            if period:
+                subtitle += f"（{period}）"
+            slide = _section_slide(prs, "UPH 分析")
+            if slide is None:
+                slide = _add_slide(prs, "UPH 分析", subtitle)
+            else:
+                _set_subtitle(slide, subtitle)
+            if not uph_summary.empty:
+                _update_table(slide, uph_summary)
+                if "机台号" in uph_summary.columns and "产出(个)" in uph_summary.columns:
+                    chart = _refresh_chart(slide, XL_CHART_TYPE.COLUMN_CLUSTERED, "各机台产出（个）",
+                                           uph_summary["机台号"], uph_summary["产出(个)"])
+                    if chart is not None:
+                        # replace_data 保留模板样式但标题仍是旧文案，这里只更新标题文本
+                        chart.has_title = True
+                        chart.chart_title.text_frame.text = "各机台产出（个）"
+                # 同步面板标题文本框（模板遗留文案与图表标题不一致）
+                for shape in slide.shapes:
+                    if shape.has_text_frame and "UPH 对比" in shape.text_frame.text:
+                        _set_text_preserving(shape.text_frame, "各机台产出（个）")
+        elif "瓶颈机台" in ame.columns:
             # CAW 双机台：瓶颈机台 + 单颗CT + 整机 UPH，各机台 CT 用图展示
             b_name = str(ame.iloc[0].get("瓶颈机台") or "")
             b_ct = str(ame.iloc[0].get("瓶颈CT(秒)") or "")
@@ -860,14 +1182,29 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
                 # 有原因清单：以中文原因名称展示
                 labels = top['原因名称'].fillna('')
                 table_df = top[['原因名称', '次数', '总时长(秒)', '占比(%)']].copy()
-                subtitle = "按停机原因统计时长 Top10"
             else:
                 labels = top['ReasonID']
                 table_df = top[['ReasonID', '次数', '总时长(秒)', '占比(%)']]
-                subtitle = "按 ReasonID 统计停机时长 Top10"
+            t0 = top.iloc[0]
+            t_label = str(t0.get('原因名称') or t0.get('ReasonID') or '')
+            t_cnt = t0.get('次数')
+            t_pct = t0.get('占比(%)')
+            subtitle = f"停机主要集中在 {t_label}（{t_cnt} 次，占总停机 {t_pct}%），建议优先排查"
             _build_section(prs, "停机 Pareto", subtitle,
                            XL_CHART_TYPE.BAR_CLUSTERED, "停机时长（秒）",
                            labels, top["总时长(秒)"], table_df)
+            slide = _section_slide(prs, "停机 Pareto")
+            if slide is not None and web_mode:
+                bar_rows = []
+                for _, r in top.iterrows():
+                    sec = _to_float(r.get("总时长(秒)"))
+                    if sec is None:
+                        continue
+                    name = str(r.get('原因名称') or r.get('ReasonID') or '')
+                    pctv = _to_float(r.get("占比(%)"))
+                    bar_rows.append((name, sec, pctv))
+                if bar_rows:
+                    _redraw_bar_list(slide, bar_rows, "停机时长（秒）", top3=True)
 
     # ---------- 报警分析 ----------
     by_kw = _read_sheet(os.path.join(output_dir, "Alarm_Analysis.xlsx"), "ByKeyword")
@@ -880,6 +1217,17 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
             _build_section(prs, "报警分析", "按关键词与模块统计报警",
                            XL_CHART_TYPE.COLUMN_CLUSTERED, "报警次数 Top10",
                            top["命中关键词"], top["报警次数"], top)
+            slide = _section_slide(prs, "报警分析")
+            if slide is not None and web_mode:
+                bar_rows = []
+                for _, r in top.iterrows():
+                    try:
+                        c = int(float(r.get("报警次数")))
+                    except (TypeError, ValueError):
+                        continue
+                    bar_rows.append((str(r.get("命中关键词")), c))
+                if bar_rows:
+                    _redraw_bar_list(slide, bar_rows, "报警次数 Top10", top3=True)
         else:
             _build_section(prs, "报警分析", "按关键词与模块统计报警",
                            XL_CHART_TYPE.COLUMN_CLUSTERED, "报警次数 Top10",
@@ -892,18 +1240,44 @@ def build_ppt_report(output_dir, process_name=None, report_name="Analysis_Report
     else:
         cats = list(status["状态"])
         vals = [_to_float(v) for v in status["总时长(秒)"]]
-        _build_section(prs, "机台状态汇总", "RUN / IDLE / DOWN / WARN 时长与占比",
+        total_s = pd.to_numeric(status["总时长(秒)"], errors="coerce").sum()
+        run_mask = status["状态"] == "RUN"
+        run_s = pd.to_numeric(status.loc[run_mask, "总时长(秒)"], errors="coerce").sum() if run_mask.any() else 0
+        run_pct = run_s / total_s * 100 if total_s else 0
+        flag = "🟢" if run_pct >= 75 else ("🟡" if run_pct >= 60 else "🔴")
+        _build_section(prs, "机台状态汇总",
+                       f"正常运行占比 {run_pct:.1f}%（行业基准 ≥75%）{flag}",
                        XL_CHART_TYPE.PIE, "状态时长（秒）", cats, vals, status)
         hourly = _read_sheet(os.path.join(output_dir, "Status_Analysis.xlsx"), "Hourly")
         if hourly.empty or "EFF(%)" not in hourly.columns:
             to_remove.append("机台状态趋势")
         else:
-            _build_section(prs, "机台状态趋势", "每小时 EFF 趋势",
+            nums = pd.to_numeric(hourly["EFF(%)"], errors="coerce")
+            if nums.notna().any():
+                low_idx = nums.idxmin()
+                low_h = str(hourly.loc[low_idx, "小时"])
+                low_v = nums.loc[low_idx]
+                trend_subtitle = f"每小时 EFF 趋势（低点 {low_h}：EFF {low_v:.1f}%，建议结合停机 Pareto 排查）"
+            else:
+                trend_subtitle = "每小时 EFF 趋势"
+            _build_section(prs, "机台状态趋势", trend_subtitle,
                            XL_CHART_TYPE.LINE_MARKERS, "每小时 EFF(%)",
                            hourly["小时"], hourly["EFF(%)"], pd.DataFrame(), chart_full=True)
 
     for title in to_remove:
         _delete_slide_by_title(prs, title)
+
+    if web_mode:
+        # 报告逻辑流：趋势全貌前置到第 2 页，再看归因
+        for idx, s in enumerate(prs.slides):
+            if _slide_has_title(s, "机台状态趋势"):
+                _move_slide(prs, idx, 1)
+                break
+        # 页头 chip 改为联网口径
+        for s in prs.slides:
+            for shape in s.shapes:
+                if shape.has_text_frame and shape.text_frame.text.strip() == "机台日志分析":
+                    _set_text_preserving(shape.text_frame, "设备能效")
 
     _update_page_numbers(prs)
     for i, slide in enumerate(prs.slides, start=1):
